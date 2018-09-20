@@ -33,5 +33,14 @@ When dealing with unaligned and arbitrary-bit-sized elements in a data stream, t
 
 ### [galois_field.hh](galois_field.hh)
 
-We have to thank [Évariste Galois](https://en.wikipedia.org/wiki/%C3%89variste_Galois)' contribution of the [Finite field](https://en.wikipedia.org/wiki/Finite_field) to mathematics, which laid the cornerstone for a variety of applications that we take for granted today.
+We have to thank [Évariste Galois](https://en.wikipedia.org/wiki/%C3%89variste_Galois) for his contribution of the [Finite field](https://en.wikipedia.org/wiki/Finite_field) to mathematics, which laid the cornerstone for a variety of applications that we take for granted today.
+One of them is [Reed–Solomon error correction](https://en.wikipedia.org/wiki/Reed%E2%80%93Solomon_error_correction):
+
+### [reed_solomon_error_correction.hh](reed_solmon_error_correction.hh)
+
+Implemented are the following Encoders and Decoders:
+* [reed_solomon_encoder.hh](reed_solomon_encoder.hh)
+* [reed_solomon_decoder.hh](reed_solomon_decoder.hh)
+* [bose_chaudhuri_hocquenghem_encoder.hh](bose_chaudhuri_hocquenghem_encoder.hh)
+* [bose_chaudhuri_hocquenghem_decoder.hh](bose_chaudhuri_hocquenghem_decoder.hh)
 
