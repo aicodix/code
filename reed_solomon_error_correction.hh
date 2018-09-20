@@ -35,30 +35,49 @@ struct Chien
 };
 
 template <int NR, typename GF>
-struct FindLocations
+struct LocationFinder
 {
 	typedef typename GF::value_type value_type;
 	typedef typename GF::ValueType ValueType;
 	typedef typename GF::IndexType IndexType;
-	static int search(ValueType *locator, int locator_degree, IndexType *locations)
+	static const int Q = GF::Q, N = GF::N;
+	ValueType Artin_Schreier_imap[Q];
+	LocationFinder()
+	{
+		for (int i = 0; i < Q; ++i)
+			Artin_Schreier_imap[i] = ValueType(0);
+		for (int i = 2; i < N; i += 2) {
+			ValueType x(i);
+			ValueType xxx = x * x + x;
+			if (xxx == ValueType(N))
+				continue;
+			assert(xxx.v);
+			assert(!Artin_Schreier_imap[xxx.v].v);
+			Artin_Schreier_imap[xxx.v] = x;
+		}
+	}
+	ValueType imap(ValueType a) {
+		assert(a.v <= a.N);
+		assert(a.v);
+		return Artin_Schreier_imap[a.v];
+	}
+	int operator()(ValueType *locator, int locator_degree, IndexType *locations)
 	{
 		if (locator_degree == 1) {
 			locations[0] = (index(locator[0]) / index(locator[1])) / IndexType(1);
 			return 1;
 		}
-#if 0
 		if (locator_degree == 2) {
 			if (!locator[1] || !locator[0])
 				return 0;
 			ValueType a(locator[2]), b(locator[1]), c(locator[0]);
-			ValueType ba(b/a), R(Artin_Schreier_imap(a*c/(b*b)));
+			ValueType ba(b/a), R(imap(a*c/(b*b)));
 			if (!R)
 				return 0;
 			locations[0] = index(ba * R) / IndexType(1);
 			locations[1] = index(ba * R + ba) / IndexType(1);
 			return 2;
 		}
-#endif
 		return Chien<NR, GF>::search(locator, locator_degree, locations);
 	}
 };
@@ -171,7 +190,8 @@ struct ReedSolomonErrorCorrection
 	typedef typename GF::ValueType ValueType;
 	typedef typename GF::IndexType IndexType;
 	static const int N = GF::N, K = N - NR;
-	static int algorithm(ValueType *syndromes, IndexType *locations, ValueType *magnitudes, IndexType *erasures = 0, int erasures_count = 0)
+	RS::LocationFinder<NR, GF> search;
+	int operator()(ValueType *syndromes, IndexType *locations, ValueType *magnitudes, IndexType *erasures = 0, int erasures_count = 0)
 	{
 		assert(0 <= erasures_count && erasures_count <= NR);
 		ValueType locator[NR+1];
@@ -193,7 +213,7 @@ struct ReedSolomonErrorCorrection
 		while (!locator[locator_degree])
 			if (--locator_degree < 0)
 				return -1;
-		int count = RS::FindLocations<NR, GF>::search(locator, locator_degree, locations);
+		int count = search(locator, locator_degree, locations);
 		if (count < locator_degree)
 			return -1;
 		ValueType evaluator[NR];

@@ -19,7 +19,7 @@ public:
 	typedef typename GF::ValueType ValueType;
 	typedef typename GF::IndexType IndexType;
 	static const int N = GF::N, K = N - NR;
-	ReedSolomonDecoder() {}
+	ReedSolomonErrorCorrection<NR, FCR, GF> algorithm;
 	int compute_syndromes(ValueType *code, ValueType *syndromes)
 	{
 		// $syndromes_i = code(pe^{FCR+i})$
@@ -49,7 +49,7 @@ public:
 			return 0;
 		IndexType locations[NR];
 		ValueType magnitudes[NR];
-		int count = ReedSolomonErrorCorrection<NR, FCR, GF>::algorithm(syndromes, locations, magnitudes, erasures, erasures_count);
+		int count = algorithm(syndromes, locations, magnitudes, erasures, erasures_count);
 		if (count <= 0)
 			return count;
 		for (int i = 0; i < count; ++i)
