@@ -33,5 +33,5 @@ When dealing with unaligned and arbitrary-bit-sized elements in a data stream, t
 
 ### [galois_field.hh](galois_field.hh)
 
-We have to thank Évariste Galois' contribution of the [Finite field](https://en.wikipedia.org/wiki/Finite_field) to mathematics, which laid the cornerstone for a variety of applications that we take for granted today.
+We have to thank [Évariste Galois](https://en.wikipedia.org/wiki/%C3%89variste_Galois)' contribution of the [Finite field](https://en.wikipedia.org/wiki/Finite_field) to mathematics, which laid the cornerstone for a variety of applications that we take for granted today.
 
