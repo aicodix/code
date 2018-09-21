@@ -212,45 +212,45 @@ struct ReedSolomonErrorCorrection
 			static bool once;
 			if (!once) {
 				once = true;
-				std::cout << "syndromes =";
+				std::cerr << "syndromes =";
 				for (int i = 0; i < NR; ++i)
-					std::cout << " " << (int)syndromes[i];
-				std::cout << std::endl;
-				std::cout << "locator = ";
+					std::cerr << " " << (int)syndromes[i];
+				std::cerr << std::endl;
+				std::cerr << "locator = ";
 				for (int i = NR; i > 0; --i) {
 					if (!locator[i])
 						continue;
 					if (locator[i] != ValueType(1))
-						std::cout << (int)locator[i] << "*";
-					std::cout << "x";
+						std::cerr << (int)locator[i] << "*";
+					std::cerr << "x";
 					if (i != 1)
-						std::cout << "^" << i;
-					std::cout << " + ";
+						std::cerr << "^" << i;
+					std::cerr << " + ";
 				}
-				std::cout << (int)locator[0] << std::endl;
-				std::cout << "locations =";
+				std::cerr << (int)locator[0] << std::endl;
+				std::cerr << "locations =";
 				for (int i = 0; i < count; ++i)
-					std::cout << " " << (int)locations[i];
-				std::cout << std::endl;
-				std::cout << "evaluator = ";
+					std::cerr << " " << (int)locations[i];
+				std::cerr << std::endl;
+				std::cerr << "evaluator = ";
 				for (int i = evaluator_degree; i > 0; --i) {
 					if (!evaluator[i])
 						continue;
 					if (evaluator[i] != ValueType(1))
-						std::cout << (int)evaluator[i] << "*";
-					std::cout << "x";
+						std::cerr << (int)evaluator[i] << "*";
+					std::cerr << "x";
 					if (i != 1)
-						std::cout << "^" << i;
+						std::cerr << "^" << i;
 					if (i != 1 || evaluator[0])
-						std::cout << " + ";
+						std::cerr << " + ";
 				}
 				if (evaluator[0])
-					std::cout << (int)evaluator[0];
-				std::cout << std::endl;
-				std::cout << "magnitudes =";
+					std::cerr << (int)evaluator[0];
+				std::cerr << std::endl;
+				std::cerr << "magnitudes =";
 				for (int i = 0; i < count; ++i)
-					std::cout << " " << (int)magnitudes[i];
-				std::cout << std::endl;
+					std::cerr << " " << (int)magnitudes[i];
+				std::cerr << std::endl;
 			}
 		}
 		return count;

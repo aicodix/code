@@ -32,18 +32,18 @@ public:
 		}
 		tmp[NR] = ValueType(1);
 		if (0) {
-			std::cout << "generator = ";
+			std::cerr << "generator = ";
 			for (int i = NR; i > 0; --i) {
 				if (!tmp[i])
 					continue;
 				if (tmp[i] != ValueType(1))
-					std::cout << (int)tmp[i] << "*";
-				std::cout << "x";
+					std::cerr << (int)tmp[i] << "*";
+				std::cerr << "x";
 				if (i != 1)
-					std::cout << "^" << i;
-				std::cout << " + ";
+					std::cerr << "^" << i;
+				std::cerr << " + ";
 			}
-			std::cout << (int)tmp[0] << std::endl;
+			std::cerr << (int)tmp[0] << std::endl;
 		}
 		for (int i = 0; i <= NR; ++i)
 			generator[i] = index(tmp[i]);

@@ -52,10 +52,10 @@ public:
 				assert(!tmp);
 				root *= pe;
 			}
-			std::cout << "generator =";
+			std::cerr << "generator =";
 			for (int i = 0; i <= NP; ++i)
-				std::cout << " " << (int)generator[i];
-			std::cout << std::endl;
+				std::cerr << " " << (int)generator[i];
+			std::cerr << std::endl;
 		}
 	}
 	void operator()(ValueType *code)
