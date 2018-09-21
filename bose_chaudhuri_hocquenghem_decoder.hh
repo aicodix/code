@@ -62,6 +62,52 @@ public:
 			corrections_count += !!magnitudes[i];
 		return corrections_count;
 	}
+	int compute_syndromes(uint8_t *code, ValueType *syndromes)
+	{
+		// $syndromes_i = code(pe^{FCR+i})$
+		for (int i = 0; i < NR; ++i)
+			syndromes[i] = ValueType((code[0] >> 7) & 1);
+		for (int j = 1; j < N; ++j) {
+			IndexType root(FCR), pe(1);
+			for (int i = 0; i < NR; ++i) {
+				syndromes[i] = fma(root, syndromes[i], ValueType((code[j / 8] >> (7 - j % 8)) & 1));
+				root *= pe;
+			}
+		}
+		int nonzero = 0;
+		for (int i = 0; i < NR; ++i)
+			nonzero += !!syndromes[i];
+		return nonzero;
+	}
+	int compute_syndromes(uint8_t *code, value_type *syndromes)
+	{
+		return compute_syndromes(code, reinterpret_cast<ValueType *>(syndromes));
+	}
+	int operator()(uint8_t *code, value_type *erasures = 0, int erasures_count = 0)
+	{
+		assert(0 <= erasures_count && erasures_count <= NR);
+		if (0) {
+			for (int i = 0; i < erasures_count; ++i)
+				code[erasures[i] / 8] &= ~(128 >> (erasures[i] % 8));
+		}
+		ValueType syndromes[NR];
+		if (!compute_syndromes(code, syndromes))
+			return 0;
+		IndexType locations[NR];
+		ValueType magnitudes[NR];
+		int count = algorithm(syndromes, locations, magnitudes, reinterpret_cast<IndexType *>(erasures), erasures_count);
+		if (count <= 0)
+			return count;
+		for (int i = 0; i < count; ++i)
+			if (1 < (int)magnitudes[i])
+				return -1;
+		for (int i = 0; i < count; ++i)
+			code[(int)locations[i] / 8] ^= (int)magnitudes[i] << (7 - (int)locations[i] % 8);
+		int corrections_count = 0;
+		for (int i = 0; i < count; ++i)
+			corrections_count += !!magnitudes[i];
+		return corrections_count;
+	}
 };
 
 }

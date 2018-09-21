@@ -18,41 +18,49 @@ int main()
 		// NASA INTRO BCH(15, 5) T=3
 		typedef CODE::GaloisField<4, 0b10011, uint8_t> GF;
 		typedef CODE::BoseChaudhuriHocquenghemDecoder<6, 1, 5, GF> BCH;
+		const int L = (BCH::N + 7) / 8;
 		GF instance;
 		BCH decode;
-		uint8_t target[BCH::N] = { 1, 1, 0, 0, 1, 0, 0, 0, 1, 1, 1, 1, 0, 1, 0 };
-		uint8_t code[BCH::N];
-		for (int i = 0; i < BCH::N; ++i)
+		uint8_t target[L] = { 0b11001000, 0b11110100 };
+		uint8_t code[L];
+		for (int i = 0; i < L; ++i)
 			code[i] = target[i];
-		std::uniform_int_distribution<uint8_t> distribution(0, BCH::N-1);
+		std::uniform_int_distribution<int> distribution(0, BCH::N-1);
 		auto noise = std::bind(distribution, generator);
-		for (int i = 0; i < 3; ++i)
-			code[noise()] ^= 1;
-		decode(reinterpret_cast<GF::ValueType *>(code));
-		for (int i = 0; i < BCH::N; ++i)
+		for (int i = 0; i < 3; ++i) {
+			int n = noise();
+			code[n / 8] ^= 128 >> (n % 8);
+		}
+		decode(code);
+		for (int i = 0; i < L; ++i)
 			assert(code[i] == target[i]);
 	}
 	if (1) {
 		// DVB-S2 FULL BCH(65535, 65343) T=12
 		typedef CODE::GaloisField<16, 0b10000000000101101, uint16_t> GF;
 		typedef CODE::BoseChaudhuriHocquenghemDecoder<24, 1, 65343, GF> BCH;
+		const int L = (BCH::N + 7) / 8;
 		GF *instance = new GF();
 		BCH *decode = new BCH();
-		uint16_t *target = new uint16_t[BCH::N];
+		uint8_t *target = new uint8_t[L];
+		for (int i = 0; i < L; ++i)
+			target[i] = 0;
 		for (int i = 0, s = 0; i < BCH::K; ++i, s=(s*(s*s*51767+71287)+35149)&0xffffff)
-			target[i] = (s^=s>>7)&1;
-		uint16_t parity[BCH::NP] = { 0, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 0, 1, 1, 0, 1, 0, 0, 1, 0, 0, 1, 1, 1, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 1, 0, 1, 1, 0, 1, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1, 0, 0, 1, 1, 1, 0, 0, 0, 1, 0, 1, 0, 0, 1, 1, 0, 1, 1, 0, 1, 0, 1, 1, 0, 1, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 0, 0, 0, 1, 1, 0, 1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0, 1, 1, 0, 0, 1, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 0, 1, 0, 1, 0, 1, 1, 0, 0 };
+			target[i/8] |= ((s^=s>>7)&1) << (7-i%8);
+		bool parity[BCH::NP] = { 0, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 0, 1, 1, 0, 1, 0, 0, 1, 0, 0, 1, 1, 1, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 1, 0, 1, 1, 0, 1, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1, 0, 0, 1, 1, 1, 0, 0, 0, 1, 0, 1, 0, 0, 1, 1, 0, 1, 1, 0, 1, 0, 1, 1, 0, 1, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 0, 0, 0, 1, 1, 0, 1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0, 1, 1, 0, 0, 1, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 0, 1, 0, 1, 0, 1, 1, 0, 0 };
 		for (int i = 0; i < BCH::NP; ++i)
-			target[BCH::K+i] = parity[i];
-		uint16_t *code = new uint16_t[BCH::N];
-		for (int i = 0; i < BCH::N; ++i)
+			target[(BCH::K+i)/8] |= parity[i] << (7-(BCH::K+i)%8);
+		uint8_t *code = new uint8_t[L];
+		for (int i = 0; i < L; ++i)
 			code[i] = target[i];
-		std::uniform_int_distribution<uint16_t> distribution(0, BCH::N-1);
+		std::uniform_int_distribution<int> distribution(0, BCH::N-1);
 		auto noise = std::bind(distribution, generator);
-		for (int i = 0; i < 12; ++i)
-			code[noise()] ^= 1;
-		(*decode)(reinterpret_cast<GF::ValueType *>(code));
-		for (int i = 0; i < BCH::N; ++i)
+		for (int i = 0; i < 12; ++i) {
+			int n = noise();
+			code[n / 8] ^= 128 >> (n % 8);
+		}
+		(*decode)(code);
+		for (int i = 0; i < L; ++i)
 			assert(code[i] == target[i]);
 		delete[] target;
 		delete[] code;
