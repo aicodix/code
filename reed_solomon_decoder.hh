@@ -18,7 +18,7 @@ public:
 	typedef typename GF::value_type value_type;
 	typedef typename GF::ValueType ValueType;
 	typedef typename GF::IndexType IndexType;
-	static const int N = GF::N, K = N - NR;
+	static const int N = GF::N, K = N - NR, NP = NR;
 	ReedSolomonErrorCorrection<NR, FCR, GF> algorithm;
 	int compute_syndromes(ValueType *code, ValueType *syndromes)
 	{

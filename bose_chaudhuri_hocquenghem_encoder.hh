@@ -11,14 +11,14 @@ Copyright 2018 Ahmet Inan <inan@aicodix.de>
 
 namespace CODE {
 
-template <int NR, int FCR, int K, typename GF>
+template <int NR, int FCR, int MSG, typename GF>
 class BoseChaudhuriHocquenghemEncoder
 {
 public:
 	typedef typename GF::value_type value_type;
 	typedef typename GF::ValueType ValueType;
 	typedef typename GF::IndexType IndexType;
-	static const int N = GF::N, NP = N - K;
+	static const int N = GF::N, K = MSG, NP = N - K;
 	ValueType generator[NP+1];
 	BoseChaudhuriHocquenghemEncoder(std::initializer_list<int> minimal_polynomials)
 	{
