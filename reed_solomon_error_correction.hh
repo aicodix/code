@@ -13,17 +13,15 @@ namespace RS {
 template <int NR, typename GF>
 struct Chien
 {
-	typedef typename GF::value_type value_type;
 	typedef typename GF::ValueType ValueType;
 	typedef typename GF::IndexType IndexType;
-	static const int N = GF::N, K = N - NR;
 	static int search(ValueType *locator, int locator_degree, IndexType *locations)
 	{
 		ValueType tmp[locator_degree+1];
 		for (int i = 0; i <= locator_degree; ++i)
 			tmp[i] = locator[i];
 		int count = 0;
-		for (int i = 0; i < N; ++i) {
+		for (int i = 0; i < GF::N; ++i) {
 			ValueType sum(tmp[0]);
 			for (int j = 1; j <= locator_degree; ++j)
 				sum += tmp[j] *= IndexType(j);
@@ -37,19 +35,17 @@ struct Chien
 template <int NR, typename GF>
 struct LocationFinder
 {
-	typedef typename GF::value_type value_type;
 	typedef typename GF::ValueType ValueType;
 	typedef typename GF::IndexType IndexType;
-	static const int Q = GF::Q, N = GF::N;
-	ValueType Artin_Schreier_imap[Q];
+	ValueType Artin_Schreier_imap[GF::Q];
 	LocationFinder()
 	{
-		for (int i = 0; i < Q; ++i)
+		for (int i = 0; i < GF::Q; ++i)
 			Artin_Schreier_imap[i] = ValueType(0);
-		for (int i = 2; i < N; i += 2) {
+		for (int i = 2; i < GF::N; i += 2) {
 			ValueType x(i);
-			ValueType xxx = x * x + x;
-			if (xxx == ValueType(N))
+			ValueType xxx(x * x + x);
+			if (xxx == ValueType(GF::N))
 				continue;
 			assert(xxx.v);
 			assert(!Artin_Schreier_imap[xxx.v].v);
@@ -85,10 +81,8 @@ struct LocationFinder
 template <int NR, int FCR, typename GF>
 struct Forney
 {
-	typedef typename GF::value_type value_type;
 	typedef typename GF::ValueType ValueType;
 	typedef typename GF::IndexType IndexType;
-	static const int N = GF::N, K = N - NR;
 	static int compute_evaluator(ValueType *syndromes, ValueType *locator, int locator_degree, ValueType *evaluator)
 	{
 		// $evaluator = (syndromes * locator) \bmod{x^{NR}}$
@@ -143,10 +137,8 @@ struct Forney
 template <int NR, typename GF>
 struct BerlekampMassey
 {
-	typedef typename GF::value_type value_type;
 	typedef typename GF::ValueType ValueType;
 	typedef typename GF::IndexType IndexType;
-	static const int N = GF::N, K = N - NR;
 	static int algorithm(ValueType *s, ValueType *C, int count = 0)
 	{
 		ValueType B[NR+1];
@@ -186,10 +178,8 @@ struct BerlekampMassey
 template <int NR, int FCR, typename GF>
 struct ReedSolomonErrorCorrection
 {
-	typedef typename GF::value_type value_type;
 	typedef typename GF::ValueType ValueType;
 	typedef typename GF::IndexType IndexType;
-	static const int N = GF::N, K = N - NR;
 	RS::LocationFinder<NR, GF> search;
 	int operator()(ValueType *syndromes, IndexType *locations, ValueType *magnitudes, IndexType *erasures = 0, int erasures_count = 0)
 	{
@@ -200,9 +190,9 @@ struct ReedSolomonErrorCorrection
 			locator[i] = ValueType(0);
 		// $locator = \prod_{i=0}^{count}(1-x\,pe^{N-1-erasures_i})$
 		if (erasures_count)
-			locator[1] = value(IndexType(N-1) / erasures[0]);
+			locator[1] = value(IndexType(GF::N-1) / erasures[0]);
 		for (int i = 1; i < erasures_count; ++i) {
-			IndexType tmp(IndexType(N-1) / erasures[i]);
+			IndexType tmp(IndexType(GF::N-1) / erasures[i]);
 			for (int j = i; j >= 0; --j)
 				locator[j+1] += tmp * locator[j];
 		}
