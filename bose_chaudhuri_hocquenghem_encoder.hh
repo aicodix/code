@@ -75,10 +75,6 @@ public:
 			}
 		}
 	}
-	void operator()(value_type *code)
-	{
-		(*this)(reinterpret_cast<ValueType *>(code));
-	}
 };
 
 }

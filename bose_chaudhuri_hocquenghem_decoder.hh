@@ -62,14 +62,6 @@ public:
 			corrections_count += !!magnitudes[i];
 		return corrections_count;
 	}
-	int operator()(value_type *code, value_type *erasures = 0, int erasures_count = 0)
-	{
-		return (*this)(reinterpret_cast<ValueType *>(code), reinterpret_cast<IndexType *>(erasures), erasures_count);
-	}
-	int compute_syndromes(value_type *code, value_type *syndromes)
-	{
-		return compute_syndromes(reinterpret_cast<ValueType *>(code), reinterpret_cast<ValueType *>(syndromes));
-	}
 };
 
 }

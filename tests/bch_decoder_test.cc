@@ -28,7 +28,7 @@ int main()
 		auto noise = std::bind(distribution, generator);
 		for (int i = 0; i < 3; ++i)
 			code[noise()] ^= 1;
-		decode(code);
+		decode(reinterpret_cast<GF::ValueType *>(code));
 		for (int i = 0; i < 15; ++i)
 			assert(code[i] == target[i]);
 	}
@@ -51,7 +51,7 @@ int main()
 		auto noise = std::bind(distribution, generator);
 		for (int i = 0; i < 12; ++i)
 			code[noise()] ^= 1;
-		(*decode)(code);
+		(*decode)(reinterpret_cast<GF::ValueType *>(code));
 		for (int i = 0; i < 65535; ++i)
 			assert(code[i] == target[i]);
 		delete[] target;
