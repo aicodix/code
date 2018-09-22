@@ -70,11 +70,11 @@ int main()
 		typedef CODE::BoseChaudhuriHocquenghemDecoderReference<6, 1, 5, GF> BCH;
 		GF instance;
 		BCH decode;
-		uint8_t target[BCH::N] = { 1, 1, 0, 0, 1, 0, 0, 0, 1, 1, 1, 1, 0, 1, 0 };
-		uint8_t code[BCH::N];
+		BCH::value_type target[BCH::N] = { 1, 1, 0, 0, 1, 0, 0, 0, 1, 1, 1, 1, 0, 1, 0 };
+		BCH::value_type code[BCH::N];
 		for (int i = 0; i < BCH::N; ++i)
 			code[i] = target[i];
-		std::uniform_int_distribution<uint8_t> distribution(0, BCH::N-1);
+		std::uniform_int_distribution<BCH::value_type> distribution(0, BCH::N-1);
 		auto noise = std::bind(distribution, generator);
 		for (int i = 0; i < 3; ++i)
 			code[noise()] ^= 1;
@@ -88,16 +88,16 @@ int main()
 		typedef CODE::BoseChaudhuriHocquenghemDecoderReference<24, 1, 65343, GF> BCH;
 		GF *instance = new GF();
 		BCH *decode = new BCH();
-		uint16_t *target = new uint16_t[BCH::N];
+		BCH::value_type *target = new BCH::value_type[BCH::N];
 		for (int i = 0, s = 0; i < BCH::K; ++i, s=(s*(s*s*51767+71287)+35149)&0xffffff)
 			target[i] = (s^=s>>7)&1;
-		uint16_t parity[BCH::NP] = { 0, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 0, 1, 1, 0, 1, 0, 0, 1, 0, 0, 1, 1, 1, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 1, 0, 1, 1, 0, 1, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1, 0, 0, 1, 1, 1, 0, 0, 0, 1, 0, 1, 0, 0, 1, 1, 0, 1, 1, 0, 1, 0, 1, 1, 0, 1, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 0, 0, 0, 1, 1, 0, 1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0, 1, 1, 0, 0, 1, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 0, 1, 0, 1, 0, 1, 1, 0, 0 };
+		BCH::value_type parity[BCH::NP] = { 0, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 0, 1, 1, 0, 1, 0, 0, 1, 0, 0, 1, 1, 1, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 1, 0, 1, 1, 0, 1, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1, 0, 0, 1, 1, 1, 0, 0, 0, 1, 0, 1, 0, 0, 1, 1, 0, 1, 1, 0, 1, 0, 1, 1, 0, 1, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 0, 0, 0, 1, 1, 0, 1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0, 1, 1, 0, 0, 1, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 0, 1, 0, 1, 0, 1, 1, 0, 0 };
 		for (int i = 0; i < BCH::NP; ++i)
 			target[BCH::K+i] = parity[i];
-		uint16_t *code = new uint16_t[BCH::N];
+		BCH::value_type *code = new BCH::value_type[BCH::N];
 		for (int i = 0; i < BCH::N; ++i)
 			code[i] = target[i];
-		std::uniform_int_distribution<uint16_t> distribution(0, BCH::N-1);
+		std::uniform_int_distribution<BCH::value_type> distribution(0, BCH::N-1);
 		auto noise = std::bind(distribution, generator);
 		for (int i = 0; i < 12; ++i)
 			code[noise()] ^= 1;
