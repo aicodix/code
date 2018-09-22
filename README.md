@@ -31,6 +31,10 @@ Here a [Pseudorandom number generator](https://en.wikipedia.org/wiki/Pseudorando
 
 When dealing with unaligned and arbitrary-bit-sized elements in a data stream, the bitwise stream container might help avoiding some headaches.
 
+### [bitman.hh](bitman.hh)
+
+Simple bit manipulation on byte arrays.
+
 ### [galois_field.hh](galois_field.hh)
 
 We have to thank [Évariste Galois](https://en.wikipedia.org/wiki/%C3%89variste_Galois) for his contribution of the [Finite field](https://en.wikipedia.org/wiki/Finite_field) to mathematics, which laid the cornerstone for a variety of applications that we take for granted today.
