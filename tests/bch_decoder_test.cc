@@ -67,6 +67,51 @@ int main()
 		delete decode;
 		delete instance;
 	}
+	if (0) {
+		// NASA INTRO BCH(15, 5) T=3
+		typedef CODE::GaloisField<4, 0b10011, uint8_t> GF;
+		typedef CODE::BoseChaudhuriHocquenghemDecoderReference<6, 1, 5, GF> BCH;
+		GF instance;
+		BCH decode;
+		uint8_t target[BCH::N] = { 1, 1, 0, 0, 1, 0, 0, 0, 1, 1, 1, 1, 0, 1, 0 };
+		uint8_t code[BCH::N];
+		for (int i = 0; i < BCH::N; ++i)
+			code[i] = target[i];
+		std::uniform_int_distribution<uint8_t> distribution(0, BCH::N-1);
+		auto noise = std::bind(distribution, generator);
+		for (int i = 0; i < 3; ++i)
+			code[noise()] ^= 1;
+		decode(reinterpret_cast<GF::ValueType *>(code));
+		for (int i = 0; i < BCH::N; ++i)
+			assert(code[i] == target[i]);
+	}
+	if (0) {
+		// DVB-S2 FULL BCH(65535, 65343) T=12
+		typedef CODE::GaloisField<16, 0b10000000000101101, uint16_t> GF;
+		typedef CODE::BoseChaudhuriHocquenghemDecoderReference<24, 1, 65343, GF> BCH;
+		GF *instance = new GF();
+		BCH *decode = new BCH();
+		uint16_t *target = new uint16_t[BCH::N];
+		for (int i = 0, s = 0; i < BCH::K; ++i, s=(s*(s*s*51767+71287)+35149)&0xffffff)
+			target[i] = (s^=s>>7)&1;
+		uint16_t parity[BCH::NP] = { 0, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 0, 1, 1, 0, 1, 0, 0, 1, 0, 0, 1, 1, 1, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 1, 0, 1, 1, 0, 1, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1, 0, 0, 1, 1, 1, 0, 0, 0, 1, 0, 1, 0, 0, 1, 1, 0, 1, 1, 0, 1, 0, 1, 1, 0, 1, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 0, 0, 0, 1, 1, 0, 1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0, 1, 1, 0, 0, 1, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 0, 1, 0, 1, 0, 1, 1, 0, 0 };
+		for (int i = 0; i < BCH::NP; ++i)
+			target[BCH::K+i] = parity[i];
+		uint16_t *code = new uint16_t[BCH::N];
+		for (int i = 0; i < BCH::N; ++i)
+			code[i] = target[i];
+		std::uniform_int_distribution<uint16_t> distribution(0, BCH::N-1);
+		auto noise = std::bind(distribution, generator);
+		for (int i = 0; i < 12; ++i)
+			code[noise()] ^= 1;
+		(*decode)(reinterpret_cast<GF::ValueType *>(code));
+		for (int i = 0; i < BCH::N; ++i)
+			assert(code[i] == target[i]);
+		delete[] target;
+		delete[] code;
+		delete decode;
+		delete instance;
+	}
 	std::cerr << "Bose Chaudhuri Hocquenghem Decoder test passed!" << std::endl;
 	return 0;
 }
