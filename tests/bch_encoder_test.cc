@@ -6,6 +6,7 @@ Copyright 2018 Ahmet Inan <inan@aicodix.de>
 
 #include <cassert>
 #include <iostream>
+#include "bitman.hh"
 #include "galois_field.hh"
 #include "bose_chaudhuri_hocquenghem_encoder.hh"
 
@@ -31,13 +32,13 @@ int main()
 		for (int i = 0; i < L; ++i)
 			target[i] = 0;
 		for (int i = 0, s = 0; i < BCH::K; ++i, s=(s*(s*s*51767+71287)+35149)&0xffffff)
-			target[i/8] |= ((s^=s>>7)&1) << (7-i%8);
+			CODE::set_be_bit(target, i, (s^=s>>7)&1);
 		uint8_t *code = new uint8_t[L];
 		for (int i = 0; i < L; ++i)
 			code[i] = target[i];
 		bool parity[BCH::NP] = { 0, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 0, 1, 1, 0, 1, 0, 0, 1, 0, 0, 1, 1, 1, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 1, 0, 1, 1, 0, 1, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1, 0, 0, 1, 1, 1, 0, 0, 0, 1, 0, 1, 0, 0, 1, 1, 0, 1, 1, 0, 1, 0, 1, 1, 0, 1, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 0, 0, 0, 1, 1, 0, 1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0, 1, 1, 0, 0, 1, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 0, 1, 0, 1, 0, 1, 1, 0, 0 };
 		for (int i = 0; i < BCH::NP; ++i)
-			target[(BCH::K+i)/8] |= parity[i] << (7-(BCH::K+i)%8);
+			CODE::set_be_bit(target, BCH::K+i, parity[i]);
 		(*encode)(code);
 		for (int i = 0; i < L; ++i)
 			assert(code[i] == target[i]);

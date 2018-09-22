@@ -8,6 +8,7 @@ Copyright 2018 Ahmet Inan <inan@aicodix.de>
 #define BOSE_CHAUDHURI_HOCQUENGHEM_ENCODER_HH
 
 #include <initializer_list>
+#include "bitman.hh"
 
 namespace CODE {
 
@@ -32,12 +33,11 @@ public:
 			--m_degree;
 			assert(generator_degree + m_degree <= NP + 1);
 			for (int i = generator_degree; i >= 0; --i) {
-				if (!((generator[i/8]>>(i%8))&1))
+				if (!get_le_bit(generator, i))
 					continue;
-				generator[i/8] &= ~(1<<(i%8));
-				generator[i/8] |= (m&1)<<(i%8);
+				set_le_bit(generator, i, m&1);
 				for (int j = 1; j <= m_degree; ++j)
-					generator[(i+j)/8] ^= ((m>>j)&1)<<((i+j)%8);
+					xor_le_bit(generator, i+j, (m>>j)&1);
 			}
 			generator_degree += m_degree;
 		}
@@ -45,7 +45,7 @@ public:
 		if (0) {
 			std::cerr << "generator =";
 			for (int i = 0; i <= NP; ++i)
-				std::cerr << " " << int((generator[i/8] >> (i%8))&1);
+				std::cerr << " " << get_le_bit(generator, i);
 			std::cerr << std::endl;
 		}
 	}
@@ -53,21 +53,16 @@ public:
 	{
 		// $code = data * x^{NP} + (data * x^{NP}) \mod{generator}$
 		for (int i = 0; i < NP; ++i)
-			code[(K+i)/8] &= ~(128>>((K+i)%8));
+			set_be_bit(code, K+i, 0);
 		for (int i = 0; i < K; ++i) {
-			if (((code[i/8]>>(7-i%8))&1) != ((code[K/8]>>(7-K%8))&1)) {
-				for (int j = 1; j < NP; ++j) {
-					code[(K+j-1)/8] &= ~(128>>((K+j-1)%8));
-					code[(K+j-1)/8] |= (((generator[(NP-j)/8]>>((NP-j)%8))^(code[(K+j)/8]>>(7-(K+j)%8)))&1)<<(7-(K+j-1)%8);
-				}
-				code[(N-1)/8] &= ~(128>>((N-1)%8));
-				code[(N-1)/8] |= (generator[0]&1)<<(7-(N-1)%8);
+			if (get_be_bit(code, i) != get_be_bit(code, K)) {
+				for (int j = 1; j < NP; ++j)
+					set_be_bit(code, K+j-1, get_le_bit(generator, NP-j) != get_be_bit(code, K+j));
+				set_be_bit(code, N-1, get_le_bit(generator, 0));
 			} else {
-				for (int j = 1; j < NP; ++j) {
-					code[(K+j-1)/8] &= ~(128>>((K+j-1)%8));
-					code[(K+j-1)/8] |= ((code[(K+j)/8]>>(7-(K+j)%8))&1)<<(7-(K+j-1)%8);
-				}
-				code[(N-1)/8] &= ~(128>>((N-1)%8));
+				for (int j = 1; j < NP; ++j)
+					set_be_bit(code, K+j-1, get_be_bit(code, K+j));
+				set_be_bit(code, N-1, 0);
 			}
 		}
 	}
