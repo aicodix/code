@@ -27,6 +27,7 @@ public:
 		for (int i = 1; i < G; ++i)
 			generator[i] = 0;
 		for (auto m: minimal_polynomials) {
+			assert(0 < m);
 			int m_degree = 0;
 			while (m>>m_degree)
 				++m_degree;
