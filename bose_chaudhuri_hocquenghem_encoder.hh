@@ -53,15 +53,16 @@ public:
 	void operator()(uint8_t *code)
 	{
 		// $code = data * x^{NP} + (data * x^{NP}) \mod{generator}$
-		for (int i = 0; i < NP; ++i)
-			set_be_bit(code, K+i, 0);
+		static const uint8_t mask = (1<<(8-K%8))-1;
+		code[K/8] &= ~mask;
+		for (int l = K/8+1; l < N/8; ++l)
+			code[l] = 0;
 		for (int i = 0; i < K; ++i) {
 			if (get_be_bit(code, i) != get_be_bit(code, K)) {
 				for (int j = 1; j < NP; ++j)
 					set_be_bit(code, K+j-1, get_be_bit(generator, j) != get_be_bit(code, K+j));
 				set_be_bit(code, N-1, get_be_bit(generator, NP));
 			} else {
-				uint8_t mask = (1<<(8-K%8))-1;
 				code[K/8] = (~mask&code[K/8]) | (mask&((code[K/8]<<1)|(code[K/8+1]>>7)));
 				for (int l = K/8+1; l < (N-1)/8; ++l)
 					code[l] = (code[l]<<1) | (code[l+1]>>7);
