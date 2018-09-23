@@ -61,9 +61,9 @@ public:
 					set_be_bit(code, K+j-1, get_le_bit(generator, NP-j) != get_be_bit(code, K+j));
 				set_be_bit(code, N-1, get_le_bit(generator, 0));
 			} else {
-				for (int j = K; j < 8*((K+7)/8); ++j)
-					set_be_bit(code, j, get_be_bit(code, j+1));
-				for (int l = (K+7)/8; l < (N-1)/8; ++l)
+				uint8_t mask = (1<<(8-K%8))-1;
+				code[K/8] = (~mask&code[K/8]) | (mask&((code[K/8]<<1)|(code[K/8+1]>>7)));
+				for (int l = K/8+1; l < (N-1)/8; ++l)
 					code[l] = (code[l]<<1) | (code[l+1]>>7);
 				code[(N-1)/8] <<= 1;
 			}
