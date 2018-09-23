@@ -23,9 +23,9 @@ public:
 	{
 		// $generator(x) = \prod_i(minpoly_i(x))$
 		int generator_degree = 1;
-		generator[0] = 1;
-		for (int i = 1; i < G; ++i)
+		for (int i = 0; i < G; ++i)
 			generator[i] = 0;
+		set_be_bit(generator, NP, 1);
 		for (auto m: minimal_polynomials) {
 			assert(0 < m);
 			int m_degree = 0;
@@ -34,11 +34,11 @@ public:
 			--m_degree;
 			assert(generator_degree + m_degree <= NP + 1);
 			for (int i = generator_degree; i >= 0; --i) {
-				if (!get_le_bit(generator, i))
+				if (!get_be_bit(generator, NP-i))
 					continue;
-				set_le_bit(generator, i, m&1);
+				set_be_bit(generator, NP-i, m&1);
 				for (int j = 1; j <= m_degree; ++j)
-					xor_le_bit(generator, i+j, (m>>j)&1);
+					xor_be_bit(generator, NP-(i+j), (m>>j)&1);
 			}
 			generator_degree += m_degree;
 		}
@@ -46,7 +46,7 @@ public:
 		if (0) {
 			std::cerr << "generator =";
 			for (int i = 0; i <= NP; ++i)
-				std::cerr << " " << get_le_bit(generator, i);
+				std::cerr << " " << get_be_bit(generator, NP-i);
 			std::cerr << std::endl;
 		}
 	}
@@ -58,8 +58,8 @@ public:
 		for (int i = 0; i < K; ++i) {
 			if (get_be_bit(code, i) != get_be_bit(code, K)) {
 				for (int j = 1; j < NP; ++j)
-					set_be_bit(code, K+j-1, get_le_bit(generator, NP-j) != get_be_bit(code, K+j));
-				set_be_bit(code, N-1, get_le_bit(generator, 0));
+					set_be_bit(code, K+j-1, get_be_bit(generator, j) != get_be_bit(code, K+j));
+				set_be_bit(code, N-1, get_be_bit(generator, NP));
 			} else {
 				uint8_t mask = (1<<(8-K%8))-1;
 				code[K/8] = (~mask&code[K/8]) | (mask&((code[K/8]<<1)|(code[K/8+1]>>7)));
