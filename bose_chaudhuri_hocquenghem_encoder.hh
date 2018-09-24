@@ -69,14 +69,16 @@ public:
 		for (int l = K/8+1; l < N/8; ++l)
 			code[l] = 0;
 		for (int i = 0; i < K; ++i) {
-			bool fb = get_be_bit(code, i) != get_be_bit(code, K);
-			code[K/8] = (~mask&code[K/8]) | (mask&((code[K/8]<<1)|(code[K/8+1]>>7)));
-			for (int l = K/8+1; l < (N-1)/8; ++l)
-				code[l] = (code[l]<<1) | (code[l+1]>>7);
-			code[(N-1)/8] <<= 1;
-			if (fb) {
-				for (int l = 0; l <= N/8-K/8; ++l)
-					code[l+K/8] ^= generator[l];
+			if (get_be_bit(code, i) != get_be_bit(code, K)) {
+				code[K/8] = generator[0] ^ ((~mask&code[K/8])|(mask&((code[K/8]<<1)|(code[K/8+1]>>7))));
+				for (int l = K/8+1; l < (N-1)/8; ++l)
+					code[l] = generator[l-K/8] ^ ((code[l]<<1)|(code[l+1]>>7));
+				code[(N-1)/8] = generator[NP/8] ^ (code[(N-1)/8]<<1);
+			} else {
+				code[K/8] = (~mask&code[K/8]) | (mask&((code[K/8]<<1)|(code[K/8+1]>>7)));
+				for (int l = K/8+1; l < (N-1)/8; ++l)
+					code[l] = (code[l]<<1) | (code[l+1]>>7);
+				code[(N-1)/8] <<= 1;
 			}
 		}
 	}
