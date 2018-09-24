@@ -17,7 +17,7 @@ class BoseChaudhuriHocquenghemEncoder
 {
 public:
 	static const int N = LEN, K = MSG, NP = N - K;
-	static const int G = ((NP+1)+7)/8;
+	static const int G = ((NP+1+K%8)+7)/8;
 	uint8_t generator[G];
 	BoseChaudhuriHocquenghemEncoder(std::initializer_list<int> minimal_polynomials)
 	{
@@ -49,6 +49,17 @@ public:
 				std::cerr << " " << get_be_bit(generator, NP-i);
 			std::cerr << std::endl;
 		}
+		if (K%8 == 1) {
+			set_be_bit(generator, 0, 0);
+		} else if (K%8) {
+			int shift = K%8-1;
+			set_be_bit(generator, 0, 0);
+			for (int i = NP; i >= 0; --i)
+				set_be_bit(generator, i+shift, get_be_bit(generator, i));
+		} else {
+			for (int i = 0; i <= NP; ++i)
+				set_be_bit(generator, i, get_be_bit(generator, i+1));
+		}
 	}
 	void operator()(uint8_t *code)
 	{
@@ -64,8 +75,8 @@ public:
 				code[l] = (code[l]<<1) | (code[l+1]>>7);
 			code[(N-1)/8] <<= 1;
 			if (fb) {
-				for (int j = 0; j <= NP; ++j)
-					xor_be_bit(code, K+j, get_be_bit(generator, j+1));
+				for (int l = 0; l <= N/8-K/8; ++l)
+					code[l+K/8] ^= generator[l];
 			}
 		}
 	}
