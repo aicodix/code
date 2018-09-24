@@ -58,15 +58,14 @@ public:
 		for (int l = K/8+1; l < N/8; ++l)
 			code[l] = 0;
 		for (int i = 0; i < K; ++i) {
-			if (get_be_bit(code, i) != get_be_bit(code, K)) {
-				for (int j = 1; j < NP; ++j)
-					set_be_bit(code, K+j-1, get_be_bit(generator, j) != get_be_bit(code, K+j));
-				set_be_bit(code, N-1, get_be_bit(generator, NP));
-			} else {
-				code[K/8] = (~mask&code[K/8]) | (mask&((code[K/8]<<1)|(code[K/8+1]>>7)));
-				for (int l = K/8+1; l < (N-1)/8; ++l)
-					code[l] = (code[l]<<1) | (code[l+1]>>7);
-				code[(N-1)/8] <<= 1;
+			bool fb = get_be_bit(code, i) != get_be_bit(code, K);
+			code[K/8] = (~mask&code[K/8]) | (mask&((code[K/8]<<1)|(code[K/8+1]>>7)));
+			for (int l = K/8+1; l < (N-1)/8; ++l)
+				code[l] = (code[l]<<1) | (code[l+1]>>7);
+			code[(N-1)/8] <<= 1;
+			if (fb) {
+				for (int j = 0; j <= NP; ++j)
+					xor_be_bit(code, K+j, get_be_bit(generator, j+1));
 			}
 		}
 	}
