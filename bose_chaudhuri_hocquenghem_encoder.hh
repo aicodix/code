@@ -18,7 +18,13 @@ class BoseChaudhuriHocquenghemEncoder
 public:
 	static const int N = LEN, K = MSG, NP = N - K;
 	static const int G = ((NP+1+K%8)+7)/8;
+private:
 	uint8_t generator[G];
+	static constexpr uint8_t slb1(uint8_t *buf, int pos)
+	{
+		return (buf[pos]<<1) | (buf[pos+1]>>7);
+	}
+public:
 	BoseChaudhuriHocquenghemEncoder(std::initializer_list<int> minimal_polynomials)
 	{
 		// $generator(x) = \prod_i(minpoly_i(x))$
@@ -70,14 +76,14 @@ public:
 			code[l] = 0;
 		for (int i = 0; i < K; ++i) {
 			if (get_be_bit(code, i) != get_be_bit(code, K)) {
-				code[K/8] = generator[0] ^ ((~mask&code[K/8])|(mask&((code[K/8]<<1)|(code[K/8+1]>>7))));
-				for (int l = K/8+1; l < (N-1)/8; ++l)
-					code[l] = generator[l-K/8] ^ ((code[l]<<1)|(code[l+1]>>7));
+				code[K/8] = generator[0] ^ ((~mask&code[K/8])|(mask&slb1(code, K/8)));
+				for (int l = 1; l < NP/8; ++l)
+					code[l+K/8] = generator[l] ^ slb1(code, l+K/8);
 				code[(N-1)/8] = generator[NP/8] ^ (code[(N-1)/8]<<1);
 			} else {
-				code[K/8] = (~mask&code[K/8]) | (mask&((code[K/8]<<1)|(code[K/8+1]>>7)));
+				code[K/8] = (~mask&code[K/8]) | (mask&slb1(code, K/8));
 				for (int l = K/8+1; l < (N-1)/8; ++l)
-					code[l] = (code[l]<<1) | (code[l+1]>>7);
+					code[l] = slb1(code, l);
 				code[(N-1)/8] <<= 1;
 			}
 		}
