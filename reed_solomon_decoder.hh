@@ -23,12 +23,14 @@ public:
 	int compute_syndromes(ValueType *code, ValueType *syndromes)
 	{
 		// $syndromes_i = code(pe^{FCR+i})$
+		ValueType coeff(code[0]);
 		for (int i = 0; i < NR; ++i)
-			syndromes[i] = code[0];
+			syndromes[i] = coeff;
 		for (int j = 1; j < N; ++j) {
+			ValueType coeff(code[j]);
 			IndexType root(FCR), pe(1);
 			for (int i = 0; i < NR; ++i) {
-				syndromes[i] = fma(root, syndromes[i], code[j]);
+				syndromes[i] = fma(root, syndromes[i], coeff);
 				root *= pe;
 			}
 		}
