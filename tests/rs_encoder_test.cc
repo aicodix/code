@@ -19,7 +19,7 @@ int main()
 		RS encode;
 		RS::value_type code[RS::N] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 };
 		RS::value_type target[RS::N] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 3, 3, 12, 12 };
-		encode(code);
+		encode(code, code + RS::K);
 		for (int i = 0; i < RS::N; ++i)
 			assert(code[i] == target[i]);
 	}
@@ -35,7 +35,7 @@ int main()
 		RS::value_type parity[RS::NP] = { 1, 126, 147, 48, 155, 224, 3, 157, 29, 226, 40, 114, 61, 30, 244, 75 };
 		for (int i = 0; i < RS::NP; ++i)
 			target[RS::K+i] = parity[i];
-		encode(code);
+		encode(code, code + RS::K);
 		for (int i = 0; i < RS::N; ++i)
 			assert(code[i] == target[i]);
 	}
@@ -52,7 +52,7 @@ int main()
 		RS::value_type parity[RS::NP] = { 25271, 26303, 22052, 31318, 31233, 6076, 40148, 29468, 47507, 32655, 12404, 13265, 23901, 38403, 50967, 50433, 40818, 226, 62296, 23636, 56393, 12952, 11476, 44416, 518, 50014, 10037, 57582, 33421, 42654, 54025, 7157, 4826, 52148, 17167, 23294, 6427, 40953, 11168, 35305, 18209, 1868, 39971, 54928, 27566, 1424, 4846, 25347, 34710, 42190, 56452, 21859, 49805, 28028, 41657, 25756, 22014, 24479, 28758, 17438, 12976, 61743, 46735, 1557 };
 		for (int i = 0; i < RS::NP; ++i)
 			target[RS::K+i] = parity[i];
-		(*encode)(code);
+		(*encode)(code, code + RS::K);
 		for (int i = 0; i < RS::N; ++i)
 			assert(code[i] == target[i]);
 		delete[] target;

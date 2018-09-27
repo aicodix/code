@@ -17,7 +17,7 @@ class BoseChaudhuriHocquenghemEncoder
 {
 public:
 	static const int N = LEN, K = MSG, NP = N - K;
-	static const int G = ((NP+1+K%8)+7)/8;
+	static const int G = ((NP+1)+7)/8;
 private:
 	uint8_t generator[G];
 	static constexpr uint8_t slb1(uint8_t *buf, int pos)
@@ -55,36 +55,24 @@ public:
 				std::cerr << " " << get_be_bit(generator, NP-i);
 			std::cerr << std::endl;
 		}
-		if (K%8 == 1) {
-			set_be_bit(generator, 0, 0);
-		} else if (K%8) {
-			int shift = K%8-1;
-			set_be_bit(generator, 0, 0);
-			for (int i = NP; i >= 0; --i)
-				set_be_bit(generator, i+shift, get_be_bit(generator, i));
-		} else {
-			for (int i = 0; i <= NP; ++i)
-				set_be_bit(generator, i, get_be_bit(generator, i+1));
-		}
+		for (int i = 0; i < NP; ++i)
+			set_be_bit(generator, i, get_be_bit(generator, i+1));
+		set_be_bit(generator, NP, 0);
 	}
-	void operator()(uint8_t *code)
+	void operator()(uint8_t *data, uint8_t *parity)
 	{
 		// $code = data * x^{NP} + (data * x^{NP}) \mod{generator}$
-		static const uint8_t mask = (1<<(8-K%8))-1;
-		code[K/8] &= ~mask;
-		for (int l = K/8+1; l < N/8; ++l)
-			code[l] = 0;
+		for (int l = 0; l < NP/8; ++l)
+			parity[l] = 0;
 		for (int i = 0; i < K; ++i) {
-			if (get_be_bit(code, i) != get_be_bit(code, K)) {
-				code[K/8] = generator[0] ^ ((~mask&code[K/8])|(mask&slb1(code, K/8)));
-				for (int l = 1; l < NP/8; ++l)
-					code[l+K/8] = generator[l] ^ slb1(code, l+K/8);
-				code[(N-1)/8] = generator[NP/8] ^ (code[(N-1)/8]<<1);
+			if (get_be_bit(data, i) != get_be_bit(parity, 0)) {
+				for (int l = 0; l < (NP-1)/8; ++l)
+					parity[l] = generator[l] ^ slb1(parity, l);
+				parity[(NP-1)/8] = generator[(NP-1)/8] ^ (parity[(NP-1)/8]<<1);
 			} else {
-				code[K/8] = (~mask&code[K/8]) | (mask&slb1(code, K/8));
-				for (int l = K/8+1; l < (N-1)/8; ++l)
-					code[l] = slb1(code, l);
-				code[(N-1)/8] <<= 1;
+				for (int l = 0; l < (NP-1)/8; ++l)
+					parity[l] = slb1(parity, l);
+				parity[(NP-1)/8] <<= 1;
 			}
 		}
 	}
@@ -137,20 +125,20 @@ public:
 			std::cerr << std::endl;
 		}
 	}
-	void operator()(ValueType *code)
+	void operator()(ValueType *data, ValueType *parity)
 	{
 		// $code = data * x^{NP} + (data * x^{NP}) \mod{generator}$
 		for (int i = 0; i < NP; ++i)
-			code[K+i] = ValueType(0);
+			parity[i] = ValueType(0);
 		for (int i = 0; i < K; ++i) {
-			if (code[i] != code[K]) {
+			if (data[i] != parity[0]) {
 				for (int j = 1; j < NP; ++j)
-					code[K+j-1] = generator[NP-j] + code[K+j];
-				code[N-1] = generator[0];
+					parity[j-1] = generator[NP-j] + parity[j];
+				parity[NP-1] = generator[0];
 			} else {
 				for (int j = 1; j < NP; ++j)
-					code[K+j-1] = code[K+j];
-				code[N-1] = ValueType(0);
+					parity[j-1] = parity[j];
+				parity[NP-1] = ValueType(0);
 			}
 		}
 	}

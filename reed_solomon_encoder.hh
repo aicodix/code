@@ -48,28 +48,28 @@ public:
 		for (int i = 0; i <= NR; ++i)
 			generator[i] = index(tmp[i]);
 	}
-	void operator()(ValueType *code)
+	void operator()(ValueType *data, ValueType *parity)
 	{
 		// $code = data * x^{NR} + (data * x^{NR}) \mod{generator}$
 		for (int i = 0; i < NR; ++i)
-			code[K+i] = ValueType(0);
+			parity[i] = ValueType(0);
 		for (int i = 0; i < K; ++i) {
-			ValueType feedback = code[i] + code[K];
+			ValueType feedback = data[i] + parity[0];
 			if (feedback) {
 				IndexType fb = index(feedback);
 				for (int j = 1; j < NR; ++j)
-					code[K+j-1] = fma(fb, generator[NR-j], code[K+j]);
-				code[N-1] = value(generator[0] * fb);
+					parity[j-1] = fma(fb, generator[NR-j], parity[j]);
+				parity[NP-1] = value(generator[0] * fb);
 			} else {
 				for (int j = 1; j < NR; ++j)
-					code[K+j-1] = code[K+j];
-				code[N-1] = ValueType(0);
+					parity[j-1] = parity[j];
+				parity[NP-1] = ValueType(0);
 			}
 		}
 	}
-	void operator()(value_type *code)
+	void operator()(value_type *data, value_type *parity)
 	{
-		(*this)(reinterpret_cast<ValueType *>(code));
+		(*this)(reinterpret_cast<ValueType *>(data), reinterpret_cast<ValueType *>(parity));
 	}
 };
 

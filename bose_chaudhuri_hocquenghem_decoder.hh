@@ -34,31 +34,37 @@ private:
 		}
 	}
 public:
-	int compute_syndromes(uint8_t *code, ValueType *syndromes)
+	int compute_syndromes(uint8_t *data, uint8_t *parity, ValueType *syndromes)
 	{
 		// $syndromes_i = code(pe^{FCR+i})$
-		ValueType coeff(get_be_bit(code, 0));
+		ValueType coeff(get_be_bit(data, 0));
 		for (int i = 0; i < NR; ++i)
 			syndromes[i] = coeff;
-		update_syndromes(code, syndromes, 1, N);
+		update_syndromes(data, syndromes, 1, K);
+		update_syndromes(parity, syndromes, 0, NP);
 		int nonzero = 0;
 		for (int i = 0; i < NR; ++i)
 			nonzero += !!syndromes[i];
 		return nonzero;
 	}
-	int compute_syndromes(uint8_t *code, value_type *syndromes)
+	int compute_syndromes(uint8_t *data, uint8_t *parity, value_type *syndromes)
 	{
-		return compute_syndromes(code, reinterpret_cast<ValueType *>(syndromes));
+		return compute_syndromes(data, parity, reinterpret_cast<ValueType *>(syndromes));
 	}
-	int operator()(uint8_t *code, value_type *erasures = 0, int erasures_count = 0)
+	int operator()(uint8_t *data, uint8_t *parity, value_type *erasures = 0, int erasures_count = 0)
 	{
 		assert(0 <= erasures_count && erasures_count <= NR);
 		if (0) {
-			for (int i = 0; i < erasures_count; ++i)
-				set_be_bit(code, erasures[i], 0);
+			for (int i = 0; i < erasures_count; ++i) {
+				int idx = (int)erasures[i];
+				if (idx < K)
+					set_be_bit(data, idx, 0);
+				else
+					set_be_bit(parity, idx-K, 0);
+			}
 		}
 		ValueType syndromes[NR];
-		if (!compute_syndromes(code, syndromes))
+		if (!compute_syndromes(data, parity, syndromes))
 			return 0;
 		IndexType locations[NR];
 		ValueType magnitudes[NR];
@@ -68,8 +74,14 @@ public:
 		for (int i = 0; i < count; ++i)
 			if (1 < (int)magnitudes[i])
 				return -1;
-		for (int i = 0; i < count; ++i)
-			xor_be_bit(code, (int)locations[i], (bool)magnitudes[i]);
+		for (int i = 0; i < count; ++i) {
+			int idx = (int)locations[i];
+			bool err = (bool)magnitudes[i];
+			if (idx < K)
+				xor_be_bit(data, idx, err);
+			else
+				xor_be_bit(parity, idx-K, err);
+		}
 		int corrections_count = 0;
 		for (int i = 0; i < count; ++i)
 			corrections_count += !!magnitudes[i];
@@ -99,27 +111,33 @@ private:
 		}
 	}
 public:
-	int compute_syndromes(ValueType *code, ValueType *syndromes)
+	int compute_syndromes(ValueType *data, ValueType *parity, ValueType *syndromes)
 	{
 		// $syndromes_i = code(pe^{FCR+i})$
-		ValueType coeff(code[0]);
+		ValueType coeff(data[0]);
 		for (int i = 0; i < NR; ++i)
 			syndromes[i] = coeff;
-		update_syndromes(code, syndromes, 1, N);
+		update_syndromes(data, syndromes, 1, K);
+		update_syndromes(parity, syndromes, 0, NP);
 		int nonzero = 0;
 		for (int i = 0; i < NR; ++i)
 			nonzero += !!syndromes[i];
 		return nonzero;
 	}
-	int operator()(ValueType *code, IndexType *erasures = 0, int erasures_count = 0)
+	int operator()(ValueType *data, ValueType *parity, IndexType *erasures = 0, int erasures_count = 0)
 	{
 		assert(0 <= erasures_count && erasures_count <= NR);
 		if (0) {
-			for (int i = 0; i < erasures_count; ++i)
-				code[(int)erasures[i]] = ValueType(0);
+			for (int i = 0; i < erasures_count; ++i) {
+				int idx = (int)erasures[i];
+				if (idx < K)
+					data[idx] = ValueType(0);
+				else
+					parity[idx-K] = ValueType(0);
+			}
 		}
 		ValueType syndromes[NR];
-		if (!compute_syndromes(code, syndromes))
+		if (!compute_syndromes(data, parity, syndromes))
 			return 0;
 		IndexType locations[NR];
 		ValueType magnitudes[NR];
@@ -129,8 +147,13 @@ public:
 		for (int i = 0; i < count; ++i)
 			if (1 < (int)magnitudes[i])
 				return -1;
-		for (int i = 0; i < count; ++i)
-			code[(int)locations[i]] += magnitudes[i];
+		for (int i = 0; i < count; ++i) {
+			int idx = (int)locations[i];
+			if (idx < K)
+				data[idx] += magnitudes[i];
+			else
+				parity[idx-K] += magnitudes[i];
+		}
 		int corrections_count = 0;
 		for (int i = 0; i < count; ++i)
 			corrections_count += !!magnitudes[i];

@@ -28,7 +28,7 @@ int main()
 		auto val = std::bind(std::uniform_int_distribution<RS::value_type>(0, RS::N), generator);
 		for (int i = 0; i < 2; ++i)
 			code[pos()] = val();
-		decode(code);
+		decode(code, code + RS::K);
 		for (int i = 0; i < RS::N; ++i)
 			assert(code[i] == target[i]);
 	}
@@ -51,7 +51,7 @@ int main()
 		auto val = std::bind(std::uniform_int_distribution<RS::value_type>(0, RS::N), generator);
 		for (int i = 0; i < 8; ++i)
 			code[pos()] = val();
-		decode(code);
+		decode(code, code + RS::K);
 		for (int i = 0; i < RS::N; ++i)
 			assert(code[i] == target[i]);
 	}
@@ -74,7 +74,7 @@ int main()
 		auto val = std::bind(std::uniform_int_distribution<RS::value_type>(0, RS::N), generator);
 		for (int i = 0; i < 32; ++i)
 			code[pos()] = val();
-		(*decode)(code);
+		(*decode)(code, code + RS::K);
 		for (int i = 0; i < RS::N; ++i)
 			assert(code[i] == target[i]);
 		delete[] target;
