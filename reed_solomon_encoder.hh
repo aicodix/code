@@ -48,12 +48,13 @@ public:
 		for (int i = 0; i <= NR; ++i)
 			generator[i] = index(tmp[i]);
 	}
-	void operator()(ValueType *data, ValueType *parity)
+	void operator()(ValueType *data, ValueType *parity, int data_len = K)
 	{
+		assert(0 < data_len && data_len <= K);
 		// $code = data * x^{NR} + (data * x^{NR}) \mod{generator}$
 		for (int i = 0; i < NR; ++i)
 			parity[i] = ValueType(0);
-		for (int i = 0; i < K; ++i) {
+		for (int i = 0; i < data_len; ++i) {
 			ValueType feedback = data[i] + parity[0];
 			if (feedback) {
 				IndexType fb = index(feedback);
@@ -67,9 +68,9 @@ public:
 			}
 		}
 	}
-	void operator()(value_type *data, value_type *parity)
+	void operator()(value_type *data, value_type *parity, int data_len = K)
 	{
-		(*this)(reinterpret_cast<ValueType *>(data), reinterpret_cast<ValueType *>(parity));
+		(*this)(reinterpret_cast<ValueType *>(data), reinterpret_cast<ValueType *>(parity), data_len);
 	}
 };
 

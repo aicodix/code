@@ -59,12 +59,13 @@ public:
 			set_be_bit(generator, i, get_be_bit(generator, i+1));
 		set_be_bit(generator, NP, 0);
 	}
-	void operator()(uint8_t *data, uint8_t *parity)
+	void operator()(uint8_t *data, uint8_t *parity, int data_len = K)
 	{
+		assert(0 < data_len && data_len <= K);
 		// $code = data * x^{NP} + (data * x^{NP}) \mod{generator}$
 		for (int l = 0; l < NP/8; ++l)
 			parity[l] = 0;
-		for (int i = 0; i < K; ++i) {
+		for (int i = 0; i < data_len; ++i) {
 			if (get_be_bit(data, i) != get_be_bit(parity, 0)) {
 				for (int l = 0; l < (NP-1)/8; ++l)
 					parity[l] = generator[l] ^ slb1(parity, l);
@@ -125,12 +126,13 @@ public:
 			std::cerr << std::endl;
 		}
 	}
-	void operator()(ValueType *data, ValueType *parity)
+	void operator()(ValueType *data, ValueType *parity, int data_len = K)
 	{
+		assert(0 < data_len && data_len <= K);
 		// $code = data * x^{NP} + (data * x^{NP}) \mod{generator}$
 		for (int i = 0; i < NP; ++i)
 			parity[i] = ValueType(0);
-		for (int i = 0; i < K; ++i) {
+		for (int i = 0; i < data_len; ++i) {
 			if (data[i] != parity[0]) {
 				for (int j = 1; j < NP; ++j)
 					parity[j-1] = generator[NP-j] + parity[j];

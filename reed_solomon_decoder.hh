@@ -33,33 +33,39 @@ private:
 		}
 	}
 public:
-	int compute_syndromes(ValueType *data, ValueType *parity, ValueType *syndromes)
+	int compute_syndromes(ValueType *data, ValueType *parity, ValueType *syndromes, int data_len = K)
 	{
+		assert(0 < data_len && data_len <= K);
 		// $syndromes_i = code(pe^{FCR+i})$
 		ValueType coeff(data[0]);
 		for (int i = 0; i < NR; ++i)
 			syndromes[i] = coeff;
-		update_syndromes(data, syndromes, 1, K);
+		update_syndromes(data, syndromes, 1, data_len);
 		update_syndromes(parity, syndromes, 0, NP);
 		int nonzero = 0;
 		for (int i = 0; i < NR; ++i)
 			nonzero += !!syndromes[i];
 		return nonzero;
 	}
-	int operator()(ValueType *data, ValueType *parity, IndexType *erasures = 0, int erasures_count = 0)
+	int operator()(ValueType *data, ValueType *parity, IndexType *erasures = 0, int erasures_count = 0, int data_len = K)
 	{
 		assert(0 <= erasures_count && erasures_count <= NR);
+		assert(0 < data_len && data_len <= K);
 		if (0) {
 			for (int i = 0; i < erasures_count; ++i) {
 				int idx = (int)erasures[i];
-				if (idx < K)
+				if (idx < data_len)
 					data[idx] = ValueType(0);
 				else
-					parity[idx-K] = ValueType(0);
+					parity[idx-data_len] = ValueType(0);
 			}
 		}
+		if (erasures_count && data_len < K) {
+			for (int i = 0; i < erasures_count; ++i)
+				erasures[i] = IndexType((int)erasures[i] + K - data_len);
+		}
 		ValueType syndromes[NR];
-		if (!compute_syndromes(data, parity, syndromes))
+		if (!compute_syndromes(data, parity, syndromes, data_len))
 			return 0;
 		IndexType locations[NR];
 		ValueType magnitudes[NR];
@@ -67,24 +73,24 @@ public:
 		if (count <= 0)
 			return count;
 		for (int i = 0; i < count; ++i) {
-			int idx = (int)locations[i];
-			if (idx < K)
+			int idx = (int)locations[i] + data_len - K;
+			if (idx < data_len)
 				data[idx] += magnitudes[i];
 			else
-				parity[idx-K] += magnitudes[i];
+				parity[idx-data_len] += magnitudes[i];
 		}
 		int corrections_count = 0;
 		for (int i = 0; i < count; ++i)
 			corrections_count += !!magnitudes[i];
 		return corrections_count;
 	}
-	int operator()(value_type *data, value_type *parity, value_type *erasures = 0, int erasures_count = 0)
+	int operator()(value_type *data, value_type *parity, value_type *erasures = 0, int erasures_count = 0, int data_len = K)
 	{
-		return (*this)(reinterpret_cast<ValueType *>(data), reinterpret_cast<ValueType *>(parity), reinterpret_cast<IndexType *>(erasures), erasures_count);
+		return (*this)(reinterpret_cast<ValueType *>(data), reinterpret_cast<ValueType *>(parity), reinterpret_cast<IndexType *>(erasures), erasures_count, data_len);
 	}
-	int compute_syndromes(value_type *data, value_type *parity, value_type *syndromes)
+	int compute_syndromes(value_type *data, value_type *parity, value_type *syndromes, int data_len = K)
 	{
-		return compute_syndromes(reinterpret_cast<ValueType *>(data), reinterpret_cast<ValueType *>(parity), reinterpret_cast<ValueType *>(syndromes));
+		return compute_syndromes(reinterpret_cast<ValueType *>(data), reinterpret_cast<ValueType *>(parity), reinterpret_cast<ValueType *>(syndromes), data_len);
 	}
 };
 
