@@ -71,7 +71,7 @@ public:
 				erasures[i] += K - data_len;
 		}
 		ValueType syndromes[NR];
-		if (!compute_syndromes(data, parity, syndromes))
+		if (!compute_syndromes(data, parity, syndromes, data_len))
 			return 0;
 		IndexType locations[NR];
 		ValueType magnitudes[NR];
@@ -154,7 +154,7 @@ public:
 				erasures[i] = IndexType((int)erasures[i] + K - data_len);
 		}
 		ValueType syndromes[NR];
-		if (!compute_syndromes(data, parity, syndromes))
+		if (!compute_syndromes(data, parity, syndromes, data_len))
 			return 0;
 		IndexType locations[NR];
 		ValueType magnitudes[NR];
