@@ -72,6 +72,9 @@ public:
 		int count = algorithm(syndromes, locations, magnitudes, erasures, erasures_count);
 		if (count <= 0)
 			return count;
+		for (int i = 0; i < count; ++i)
+			if ((int)locations[i] < K - data_len)
+				return -1;
 		for (int i = 0; i < count; ++i) {
 			int idx = (int)locations[i] + data_len - K;
 			if (idx < data_len)
