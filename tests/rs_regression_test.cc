@@ -19,12 +19,13 @@ void rs_test(int trials)
 	GF instance;
 	DEC decode;
 	ENC encode;
-	auto rnd_cnt = std::bind(std::uniform_int_distribution<typename ENC::value_type>(0, ENC::NP), generator);
-	auto rnd_len = std::bind(std::uniform_int_distribution<typename ENC::value_type>(1, ENC::K), generator);
-	auto rnd_val = std::bind(std::uniform_int_distribution<typename ENC::value_type>(0, ENC::N), generator);
+	typedef std::uniform_int_distribution<typename ENC::value_type> distribution;
+	auto rnd_cnt = std::bind(distribution(0, ENC::NP), generator);
+	auto rnd_len = std::bind(distribution(1, ENC::K), generator);
+	auto rnd_val = std::bind(distribution(0, ENC::N), generator);
 	while (--trials) {
 		int data_len = rnd_len();
-		auto rnd_pos = std::bind(std::uniform_int_distribution<typename ENC::value_type>(0, data_len + ENC::NP - 1), generator);
+		auto rnd_pos = std::bind(distribution(0, data_len + ENC::NP - 1), generator);
 		typename ENC::value_type data[data_len], orig_data[data_len];
 		for (int i = 0; i < data_len; ++i)
 			data[i] = orig_data[i] = rnd_val();

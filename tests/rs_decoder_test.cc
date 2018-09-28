@@ -24,8 +24,9 @@ int main()
 		RS::value_type code[RS::N];
 		for (int i = 0; i < RS::N; ++i)
 			code[i] = target[i];
-		auto pos = std::bind(std::uniform_int_distribution<RS::value_type>(0, RS::N-1), generator);
-		auto val = std::bind(std::uniform_int_distribution<RS::value_type>(0, RS::N), generator);
+		typedef std::uniform_int_distribution<RS::value_type> distribution;
+		auto pos = std::bind(distribution(0, RS::N-1), generator);
+		auto val = std::bind(distribution(0, RS::N), generator);
 		for (int i = 0; i < 2; ++i)
 			code[pos()] = val();
 		decode(code, code + RS::K);
@@ -47,8 +48,9 @@ int main()
 		RS::value_type code[RS::N];
 		for (int i = 0; i < RS::N; ++i)
 			code[i] = target[i];
-		auto pos = std::bind(std::uniform_int_distribution<RS::value_type>(0, RS::N-1), generator);
-		auto val = std::bind(std::uniform_int_distribution<RS::value_type>(0, RS::N), generator);
+		typedef std::uniform_int_distribution<RS::value_type> distribution;
+		auto pos = std::bind(distribution(0, RS::N-1), generator);
+		auto val = std::bind(distribution(0, RS::N), generator);
 		for (int i = 0; i < 8; ++i)
 			code[pos()] = val();
 		decode(code, code + RS::K);
@@ -70,8 +72,9 @@ int main()
 		RS::value_type *code = new RS::value_type[RS::N];
 		for (int i = 0; i < RS::N; ++i)
 			code[i] = target[i];
-		auto pos = std::bind(std::uniform_int_distribution<RS::value_type>(0, RS::N-1), generator);
-		auto val = std::bind(std::uniform_int_distribution<RS::value_type>(0, RS::N), generator);
+		typedef std::uniform_int_distribution<RS::value_type> distribution;
+		auto pos = std::bind(distribution(0, RS::N-1), generator);
+		auto val = std::bind(distribution(0, RS::N), generator);
 		for (int i = 0; i < 32; ++i)
 			code[pos()] = val();
 		(*decode)(code, code + RS::K);
