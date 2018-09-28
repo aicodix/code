@@ -34,7 +34,7 @@ void bch_reference_test(ENC *encode, DEC *decode, int trials)
 		for (int i = 0; i < ENC::NP; ++i)
 			orig_parity[i] = parity[i];
 		int error_count = rnd_cnt() / 2;
-		typename ENC::value_type errors[error_count];
+		typename ENC::value_type errors[ENC::NR];
 		for (int i = 0; i < error_count; ++i) {
 			int pos = rnd_pos();
 			for (int j = 0; j < i; ++j) {
@@ -53,12 +53,13 @@ void bch_reference_test(ENC *encode, DEC *decode, int trials)
 		typename ENC::value_type erasures[erasures_count];
 		for (int i = 0; i < erasures_count; ++i) {
 			int pos = rnd_pos();
-			for (int j = 0; j < i; ++j) {
-				if (erasures[j] == pos) {
+			for (int j = 0; j < error_count + i; ++j) {
+				if (errors[j] == pos) {
 					pos = rnd_pos();
 					j = -1;
 				}
 			}
+			errors[error_count + i] = pos;
 			erasures[i] = pos;
 			if (pos < data_len)
 				data[pos] ^= 1;
