@@ -12,13 +12,14 @@ Copyright 2018 Ahmet Inan <inan@aicodix.de>
 
 namespace CODE {
 
-template <int NR, int FCR, int MSG, typename GF>
+template <int ROOTS, int FCR, int MSG, typename GF>
 class BoseChaudhuriHocquenghemDecoder
 {
 public:
 	typedef typename GF::value_type value_type;
 	typedef typename GF::ValueType ValueType;
 	typedef typename GF::IndexType IndexType;
+	static const int NR = ROOTS;
 	static const int N = GF::N, K = MSG, NP = N - K;
 private:
 	ReedSolomonErrorCorrection<NR, FCR, GF> algorithm;
@@ -98,13 +99,14 @@ public:
 	}
 };
 
-template <int NR, int FCR, int MSG, typename GF>
+template <int ROOTS, int FCR, int MSG, typename GF>
 class BoseChaudhuriHocquenghemDecoderReference
 {
 public:
 	typedef typename GF::value_type value_type;
 	typedef typename GF::ValueType ValueType;
 	typedef typename GF::IndexType IndexType;
+	static const int NR = ROOTS;
 	static const int N = GF::N, K = MSG, NP = N - K;
 private:
 	ReedSolomonErrorCorrection<NR, FCR, GF> algorithm;

@@ -27,7 +27,7 @@ int main()
 		typedef std::uniform_int_distribution<RS::value_type> distribution;
 		auto pos = std::bind(distribution(0, RS::N-1), generator);
 		auto val = std::bind(distribution(0, RS::N), generator);
-		for (int i = 0; i < 2; ++i)
+		for (int i = 0; i < RS::NR/2; ++i)
 			code[pos()] = val();
 		decode(code, code + RS::K);
 		for (int i = 0; i < RS::N; ++i)
@@ -51,7 +51,7 @@ int main()
 		typedef std::uniform_int_distribution<RS::value_type> distribution;
 		auto pos = std::bind(distribution(0, RS::N-1), generator);
 		auto val = std::bind(distribution(0, RS::N), generator);
-		for (int i = 0; i < 8; ++i)
+		for (int i = 0; i < RS::NR/2; ++i)
 			code[pos()] = val();
 		decode(code, code + RS::K);
 		for (int i = 0; i < RS::N; ++i)
@@ -75,7 +75,7 @@ int main()
 		typedef std::uniform_int_distribution<RS::value_type> distribution;
 		auto pos = std::bind(distribution(0, RS::N-1), generator);
 		auto val = std::bind(distribution(0, RS::N), generator);
-		for (int i = 0; i < 32; ++i)
+		for (int i = 0; i < RS::NR/2; ++i)
 			code[pos()] = val();
 		(*decode)(code, code + RS::K);
 		for (int i = 0; i < RS::N; ++i)

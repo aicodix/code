@@ -79,15 +79,18 @@ public:
 	}
 };
 
-template <int NR, int FCR, int MSG, typename GF>
+template <int ROOTS, int FCR, int MSG, typename GF>
 class BoseChaudhuriHocquenghemEncoderReference
 {
 public:
 	typedef typename GF::value_type value_type;
 	typedef typename GF::ValueType ValueType;
 	typedef typename GF::IndexType IndexType;
+	static const int NR = ROOTS;
 	static const int N = GF::N, K = MSG, NP = N - K;
+private:
 	ValueType generator[NP+1];
+public:
 	BoseChaudhuriHocquenghemEncoderReference(std::initializer_list<int> minimal_polynomials)
 	{
 		// $generator(x) = \prod_i(minpoly_i(x))$

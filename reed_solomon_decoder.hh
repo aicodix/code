@@ -11,13 +11,14 @@ Copyright 2018 Ahmet Inan <inan@aicodix.de>
 
 namespace CODE {
 
-template <int NR, int FCR, typename GF>
+template <int ROOTS, int FCR, typename GF>
 class ReedSolomonDecoder
 {
 public:
 	typedef typename GF::value_type value_type;
 	typedef typename GF::ValueType ValueType;
 	typedef typename GF::IndexType IndexType;
+	static const int NR = ROOTS;
 	static const int N = GF::N, K = N - NR, NP = NR;
 private:
 	ReedSolomonErrorCorrection<NR, FCR, GF> algorithm;

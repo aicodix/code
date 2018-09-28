@@ -17,7 +17,7 @@ void rs_test(ENC *encode, DEC *decode, int trials)
 	std::random_device rd;
 	std::default_random_engine generator(rd());
 	typedef std::uniform_int_distribution<typename ENC::value_type> distribution;
-	auto rnd_cnt = std::bind(distribution(0, ENC::NP), generator);
+	auto rnd_cnt = std::bind(distribution(0, ENC::NR), generator);
 	auto rnd_len = std::bind(distribution(1, ENC::K), generator);
 	auto rnd_val = std::bind(distribution(0, ENC::N), generator);
 	while (--trials) {
@@ -49,7 +49,7 @@ void rs_test(ENC *encode, DEC *decode, int trials)
 			else
 				parity[pos-data_len] = rnd_val();
 		}
-		int erasures_count = ENC::NP - 2 * error_count;
+		int erasures_count = ENC::NR - 2 * error_count;
 		typename ENC::value_type erasures[erasures_count];
 		for (int i = 0; i < erasures_count; ++i) {
 			int pos = rnd_pos();

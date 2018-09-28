@@ -30,7 +30,7 @@ int main()
 			code[i] = target[i];
 		typedef std::uniform_int_distribution<BCH::value_type> distribution;
 		auto noise = std::bind(distribution(0, BCH::N-1), generator);
-		for (int i = 0; i < 3; ++i) {
+		for (int i = 0; i < BCH::NR/2; ++i) {
 			int n = noise();
 			if (n < BCH::K)
 				CODE::xor_be_bit(code, n, 1);
@@ -63,7 +63,7 @@ int main()
 			code[i] = target[i];
 		typedef std::uniform_int_distribution<BCH::value_type> distribution;
 		auto noise = std::bind(distribution(0, BCH::N-1), generator);
-		for (int i = 0; i < 12; ++i) {
+		for (int i = 0; i < BCH::NR/2; ++i) {
 			int n = noise();
 			if (n < BCH::K)
 				CODE::xor_be_bit(code, n, 1);
@@ -90,7 +90,7 @@ int main()
 			code[i] = target[i];
 		typedef std::uniform_int_distribution<BCH::value_type> distribution;
 		auto noise = std::bind(distribution(0, BCH::N-1), generator);
-		for (int i = 0; i < 3; ++i)
+		for (int i = 0; i < BCH::NR/2; ++i)
 			code[noise()] ^= 1;
 		decode(reinterpret_cast<GF::ValueType *>(code), reinterpret_cast<GF::ValueType *>(code) + BCH::K);
 		for (int i = 0; i < BCH::N; ++i)
@@ -113,7 +113,7 @@ int main()
 			code[i] = target[i];
 		typedef std::uniform_int_distribution<BCH::value_type> distribution;
 		auto noise = std::bind(distribution(0, BCH::N-1), generator);
-		for (int i = 0; i < 12; ++i)
+		for (int i = 0; i < BCH::NR/2; ++i)
 			code[noise()] ^= 1;
 		(*decode)(reinterpret_cast<GF::ValueType *>(code), reinterpret_cast<GF::ValueType *>(code) + BCH::K);
 		for (int i = 0; i < BCH::N; ++i)
