@@ -63,7 +63,7 @@ public:
 	{
 		assert(0 < data_len && data_len <= K);
 		// $code = data * x^{NP} + (data * x^{NP}) \mod{generator}$
-		for (int l = 0; l < NP/8; ++l)
+		for (int l = 0; l <= (NP-1)/8; ++l)
 			parity[l] = 0;
 		for (int i = 0; i < data_len; ++i) {
 			if (get_be_bit(data, i) != get_be_bit(parity, 0)) {
