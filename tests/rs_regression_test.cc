@@ -8,17 +8,14 @@ Copyright 2018 Ahmet Inan <inan@aicodix.de>
 #include <random>
 #include <iostream>
 #include "galois_field.hh"
-#include "reed_solomon_decoder.hh"
 #include "reed_solomon_encoder.hh"
+#include "reed_solomon_decoder.hh"
 
-template <typename GF, typename ENC, typename DEC>
-void rs_test(int trials)
+template <typename ENC, typename DEC>
+void rs_test(ENC *encode, DEC *decode, int trials)
 {
 	std::random_device rd;
 	std::default_random_engine generator(rd());
-	GF instance;
-	DEC decode;
-	ENC encode;
 	typedef std::uniform_int_distribution<typename ENC::value_type> distribution;
 	auto rnd_cnt = std::bind(distribution(0, ENC::NP), generator);
 	auto rnd_len = std::bind(distribution(1, ENC::K), generator);
@@ -30,7 +27,7 @@ void rs_test(int trials)
 		for (int i = 0; i < data_len; ++i)
 			data[i] = orig_data[i] = rnd_val();
 		typename ENC::value_type parity[ENC::NP];
-		encode(data, parity, data_len);
+		(*encode)(data, parity, data_len);
 		for (int i = 0; i < data_len; ++i)
 			assert(data[i] == orig_data[i]);
 		typename ENC::value_type orig_parity[ENC::NP];
@@ -68,7 +65,7 @@ void rs_test(int trials)
 			else
 				parity[pos-data_len] = rnd_val();
 		}
-		int ret = decode(data, parity, erasures, erasures_count, data_len);
+		int ret = (*decode)(data, parity, erasures, erasures_count, data_len);
 		assert(ret >= 0);
 		for (int i = 0; i < data_len; ++i)
 			assert(data[i] == orig_data[i]);
@@ -82,23 +79,26 @@ int main()
 	if (1) {
 		// BBC WHP031 RS(15, 11) T=2
 		typedef CODE::GaloisField<4, 0b10011, uint8_t> GF;
-		typedef CODE::ReedSolomonDecoder<4, 0, GF> Decoder;
-		typedef CODE::ReedSolomonEncoder<4, 0, GF> Encoder;
-		rs_test<GF, Encoder, Decoder>(1000000);
+		GF instance;
+		CODE::ReedSolomonEncoder<4, 0, GF> encoder;
+		CODE::ReedSolomonDecoder<4, 0, GF> decoder;
+		rs_test(&encoder, &decoder, 1000000);
 	}
 	if (1) {
 		// DVB-T RS(255, 239) T=8
 		typedef CODE::GaloisField<8, 0b100011101, uint8_t> GF;
-		typedef CODE::ReedSolomonDecoder<16, 0, GF> Decoder;
-		typedef CODE::ReedSolomonEncoder<16, 0, GF> Encoder;
-		rs_test<GF, Encoder, Decoder>(100000);
+		GF instance;
+		CODE::ReedSolomonEncoder<16, 0, GF> encoder;
+		CODE::ReedSolomonDecoder<16, 0, GF> decoder;
+		rs_test(&encoder, &decoder, 100000);
 	}
 	if (1) {
 		// FUN RS(65535, 65471) T=32
 		typedef CODE::GaloisField<16, 0b10001000000001011, uint16_t> GF;
-		typedef CODE::ReedSolomonDecoder<64, 1, GF> Decoder;
-		typedef CODE::ReedSolomonEncoder<64, 1, GF> Encoder;
-		rs_test<GF, Encoder, Decoder>(100);
+		GF instance;
+		CODE::ReedSolomonEncoder<64, 1, GF> encoder;
+		CODE::ReedSolomonDecoder<64, 1, GF> decoder;
+		rs_test(&encoder, &decoder, 100);
 	}
 	std::cerr << "Reed Solomon regression test passed!" << std::endl;
 	return 0;
