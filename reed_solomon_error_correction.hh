@@ -32,31 +32,39 @@ struct Chien
 	}
 };
 
-template <int NR, typename GF>
-struct LocationFinder
+template <typename GF>
+struct ArtinSchreier
 {
 	typedef typename GF::ValueType ValueType;
 	typedef typename GF::IndexType IndexType;
-	ValueType Artin_Schreier_imap[GF::Q];
-	LocationFinder()
+	ValueType imap[GF::Q];
+	ArtinSchreier()
 	{
 		for (int i = 0; i < GF::Q; ++i)
-			Artin_Schreier_imap[i] = ValueType(0);
+			imap[i] = ValueType(0);
 		for (int i = 2; i < GF::N; i += 2) {
 			ValueType x(i);
 			ValueType xxx(x * x + x);
 			if (xxx == ValueType(GF::N))
 				continue;
 			assert(xxx.v);
-			assert(!Artin_Schreier_imap[xxx.v].v);
-			Artin_Schreier_imap[xxx.v] = x;
+			assert(!imap[xxx.v].v);
+			imap[xxx.v] = x;
 		}
 	}
-	ValueType imap(ValueType a) {
+	ValueType operator()(ValueType a) {
 		assert(a.v <= a.N);
 		assert(a.v);
-		return Artin_Schreier_imap[a.v];
+		return imap[a.v];
 	}
+};
+
+template <int NR, typename GF>
+struct LocationFinder
+{
+	typedef typename GF::ValueType ValueType;
+	typedef typename GF::IndexType IndexType;
+	ArtinSchreier<GF> imap;
 	int operator()(ValueType *locator, int locator_degree, IndexType *locations)
 	{
 		if (locator_degree == 1) {
