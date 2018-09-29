@@ -113,8 +113,10 @@ struct Tables
 		EXP = exp_;
 		log_[exp_[N] = 0] = N;
 		TYPE a = 1;
-		for (int i = 0; i < N; ++i, a = next(a))
+		for (int i = 0; i < N; ++i, a = next(a)) {
 			log_[exp_[i] = a] = i;
+			assert(!i || a != 1);
+		}
 		assert(1 == a);
 	}
 	~Tables()
