@@ -48,3 +48,20 @@ Implemented are the following Encoders and Decoders:
 * [bose_chaudhuri_hocquenghem_encoder.hh](bose_chaudhuri_hocquenghem_encoder.hh)
 * [bose_chaudhuri_hocquenghem_decoder.hh](bose_chaudhuri_hocquenghem_decoder.hh)
 
+### [exclusive_reduce.hh](exclusive_reduce.hh)
+
+Reduce N times while excluding ith input element
+
+It computes the following, but having only O(N) complexity and using O(1) extra storage:
+
+```
+	output[0] = input[1];
+	output[1] = input[0];
+	for (int i = 2; i < N; ++i)
+		output[i] = op(input[0], input[1]);
+	for (int i = 0; i < N; ++i)
+		for (int j = 2; j < N; ++j)
+			if (i != j)
+				output[i] = op(output[i], input[j]);
+```
+
