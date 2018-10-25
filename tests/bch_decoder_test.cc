@@ -7,6 +7,7 @@ Copyright 2018 Ahmet Inan <inan@aicodix.de>
 #include <cassert>
 #include <random>
 #include <iostream>
+#include <functional>
 #include "bitman.hh"
 #include "galois_field.hh"
 #include "bose_chaudhuri_hocquenghem_decoder.hh"

@@ -7,6 +7,7 @@ Copyright 2018 Ahmet Inan <inan@aicodix.de>
 #include <cassert>
 #include <random>
 #include <iostream>
+#include <functional>
 #include "galois_field.hh"
 #include "reed_solomon_encoder.hh"
 #include "reed_solomon_decoder.hh"
