@@ -48,6 +48,15 @@ Implemented are the following Encoders and Decoders:
 * [bose_chaudhuri_hocquenghem_encoder.hh](bose_chaudhuri_hocquenghem_encoder.hh)
 * [bose_chaudhuri_hocquenghem_decoder.hh](bose_chaudhuri_hocquenghem_decoder.hh)
 
+
+### [ldpc_encoder.hh](ldpc_encoder.hh)
+
+[Low-density parity-check](https://en.wikipedia.org/wiki/Low-density_parity-check_code) encoder
+
+### [ldpc_decoder.hh](ldpc_decoder.hh)
+
+[Low-density parity-check](https://en.wikipedia.org/wiki/Low-density_parity-check_code) layered decoder
+
 ### [exclusive_reduce.hh](exclusive_reduce.hh)
 
 Reduce N times while excluding ith input element
