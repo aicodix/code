@@ -8,7 +8,7 @@ CXX = clang++ -stdlib=libc++
 tests := $(basename $(wildcard *_test.*))
 
 test: $(tests)
-	$(patsubst %,./%;,$(tests))
+	$(patsubst %,./%>/dev/null;,$(tests))
 
 clean:
 	rm -f *_test
