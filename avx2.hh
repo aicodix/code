@@ -892,6 +892,62 @@ inline SIMD<uint64_t, 4> vcltz(SIMD<int64_t, 4> a)
 }
 
 template <>
+inline SIMD<uint32_t, 8> vclez(SIMD<float, 8> a)
+{
+	SIMD<uint32_t, 8> tmp;
+	tmp.m = (__m256i)_mm256_cmp_ps(a.m, _mm256_setzero_ps(), _CMP_LE_OQ);
+	return tmp;
+}
+
+template <>
+inline SIMD<uint64_t, 4> vclez(SIMD<double, 4> a)
+{
+	SIMD<uint64_t, 4> tmp;
+	tmp.m = (__m256i)_mm256_cmp_pd(a.m, _mm256_setzero_pd(), _CMP_LE_OQ);
+	return tmp;
+}
+
+template <>
+inline SIMD<uint8_t, 32> vclez(SIMD<int8_t, 32> a)
+{
+	SIMD<uint8_t, 32> tmp;
+	tmp.m = _mm256_or_si256(
+		_mm256_cmpeq_epi8(a.m, _mm256_setzero_si256()),
+		_mm256_cmpgt_epi8(_mm256_setzero_si256(), a.m));
+	return tmp;
+}
+
+template <>
+inline SIMD<uint16_t, 16> vclez(SIMD<int16_t, 16> a)
+{
+	SIMD<uint16_t, 16> tmp;
+	tmp.m = _mm256_or_si256(
+		_mm256_cmpeq_epi16(a.m, _mm256_setzero_si256()),
+		_mm256_cmpgt_epi16(_mm256_setzero_si256(), a.m));
+	return tmp;
+}
+
+template <>
+inline SIMD<uint32_t, 8> vclez(SIMD<int32_t, 8> a)
+{
+	SIMD<uint32_t, 8> tmp;
+	tmp.m = _mm256_or_si256(
+		_mm256_cmpeq_epi32(a.m, _mm256_setzero_si256()),
+		_mm256_cmpgt_epi32(_mm256_setzero_si256(), a.m));
+	return tmp;
+}
+
+template <>
+inline SIMD<uint64_t, 4> vclez(SIMD<int64_t, 4> a)
+{
+	SIMD<uint64_t, 4> tmp;
+	tmp.m = _mm256_or_si256(
+		_mm256_cmpeq_epi64(a.m, _mm256_setzero_si256()),
+		_mm256_cmpgt_epi64(_mm256_setzero_si256(), a.m));
+	return tmp;
+}
+
+template <>
 inline SIMD<float, 8> vmin(SIMD<float, 8> a, SIMD<float, 8> b)
 {
 	SIMD<float, 8> tmp;

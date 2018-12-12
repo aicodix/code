@@ -777,6 +777,38 @@ inline SIMD<uint32_t, 4> vcltz(SIMD<int32_t, 4> a)
 }
 
 template <>
+inline SIMD<uint32_t, 4> vclez(SIMD<float, 4> a)
+{
+	SIMD<uint32_t, 4> tmp;
+	tmp.m = vcleq_f32(a.m, vdupq_n_f32(0.f));
+	return tmp;
+}
+
+template <>
+inline SIMD<uint8_t, 16> vclez(SIMD<int8_t, 16> a)
+{
+	SIMD<uint8_t, 16> tmp;
+	tmp.m = vcleq_s8(a.m, vdupq_n_s8(0));
+	return tmp;
+}
+
+template <>
+inline SIMD<uint16_t, 8> vclez(SIMD<int16_t, 8> a)
+{
+	SIMD<uint16_t, 8> tmp;
+	tmp.m = vcleq_s16(a.m, vdupq_n_s16(0));
+	return tmp;
+}
+
+template <>
+inline SIMD<uint32_t, 4> vclez(SIMD<int32_t, 4> a)
+{
+	SIMD<uint32_t, 4> tmp;
+	tmp.m = vcleq_s32(a.m, vdupq_n_s32(0));
+	return tmp;
+}
+
+template <>
 inline SIMD<float, 4> vmin(SIMD<float, 4> a, SIMD<float, 4> b)
 {
 	SIMD<float, 4> tmp;

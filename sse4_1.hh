@@ -893,6 +893,62 @@ inline SIMD<uint64_t, 2> vcltz(SIMD<int64_t, 2> a)
 }
 
 template <>
+inline SIMD<uint32_t, 4> vclez(SIMD<float, 4> a)
+{
+	SIMD<uint32_t, 4> tmp;
+	tmp.m = (__m128i)_mm_cmple_ps(a.m, _mm_setzero_ps());
+	return tmp;
+}
+
+template <>
+inline SIMD<uint64_t, 2> vclez(SIMD<double, 2> a)
+{
+	SIMD<uint64_t, 2> tmp;
+	tmp.m = (__m128i)_mm_cmple_pd(a.m, _mm_setzero_pd());
+	return tmp;
+}
+
+template <>
+inline SIMD<uint8_t, 16> vclez(SIMD<int8_t, 16> a)
+{
+	SIMD<uint8_t, 16> tmp;
+	tmp.m = _mm_or_si128(
+		_mm_cmpeq_epi8(a.m, _mm_setzero_si128()),
+		_mm_cmpgt_epi8(_mm_setzero_si128(), a.m));
+	return tmp;
+}
+
+template <>
+inline SIMD<uint16_t, 8> vclez(SIMD<int16_t, 8> a)
+{
+	SIMD<uint16_t, 8> tmp;
+	tmp.m = _mm_or_si128(
+		_mm_cmpeq_epi16(a.m, _mm_setzero_si128()),
+		_mm_cmpgt_epi16(_mm_setzero_si128(), a.m));
+	return tmp;
+}
+
+template <>
+inline SIMD<uint32_t, 4> vclez(SIMD<int32_t, 4> a)
+{
+	SIMD<uint32_t, 4> tmp;
+	tmp.m = _mm_or_si128(
+		_mm_cmpeq_epi32(a.m, _mm_setzero_si128()),
+		_mm_cmpgt_epi32(_mm_setzero_si128(), a.m));
+	return tmp;
+}
+
+template <>
+inline SIMD<uint64_t, 2> vclez(SIMD<int64_t, 2> a)
+{
+	SIMD<uint64_t, 2> tmp;
+	tmp.m = _mm_or_si128(
+		_mm_cmpeq_epi64(a.m, _mm_setzero_si128()),
+		_mm_cmpgt_epi64(_mm_setzero_si128(), a.m));
+	return tmp;
+}
+
+template <>
 inline SIMD<float, 4> vmin(SIMD<float, 4> a, SIMD<float, 4> b)
 {
 	SIMD<float, 4> tmp;
