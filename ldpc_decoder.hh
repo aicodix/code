@@ -8,7 +8,6 @@ Copyright 2018 Ahmet Inan <inan@aicodix.de>
 #define LDPC_DECODER_HH
 
 #include <algorithm>
-#include "exclusive_reduce.hh"
 #include "simd.hh"
 
 namespace CODE {
@@ -40,9 +39,17 @@ class LDPCDecoder
 	{
 		return vreinterpret<TYPE>(veor(vmask(a), vmask(b)));
 	}
-	static TYPE min(TYPE a, TYPE b)
+	static TYPE orr(TYPE a, TYPE b)
 	{
-		return vmin(a, b);
+		return vreinterpret<TYPE>(vorr(vmask(a), vmask(b)));
+	}
+	static TYPE other(TYPE a, TYPE b, TYPE c)
+	{
+		return vreinterpret<TYPE>(vbsl(vceq(a, b), vmask(c), vmask(b)));
+	}
+	static TYPE mine(TYPE a, TYPE b)
+	{
+		return orr(eor(a, b), vdup<TYPE>(127));
 	}
 	static void finalp(TYPE *links, int cnt)
 	{
@@ -51,16 +58,20 @@ class LDPCDecoder
 		for (int i = 0; i < cnt; ++i)
 			mags[i] = vsigned(vqsub(vunsigned(vqabs(links[i])), beta));
 
-		TYPE mins[cnt];
-		exclusive_reduce(mags, mins, cnt, min);
+		TYPE mins[2];
+		mins[0] = vmin(mags[0], mags[1]);
+		mins[1] = vmax(mags[0], mags[1]);
+		for (int i = 2; i < cnt; ++i) {
+			mins[1] = vmin(mins[1], vmax(mins[0], mags[i]));
+			mins[0] = vmin(mins[0], mags[i]);
+		}
 
-		TYPE signs[cnt];
-		exclusive_reduce(links, signs, cnt, eor);
-		for (int i = 0; i < cnt; ++i)
-			signs[i] = vreinterpret<TYPE>(vorr(vmask(signs[i]), vmask(vdup<TYPE>(127))));
+		TYPE signs = links[0];
+		for (int i = 1; i < cnt; ++i)
+			signs = eor(signs, links[i]);
 
 		for (int i = 0; i < cnt; ++i)
-			links[i] = vsign(mins[i], signs[i]);
+			links[i] = vsign(other(mags[i], mins[0], mins[1]), mine(signs, links[i]));
 	}
 
 	bool bad(int8_t *data, int8_t *parity)
