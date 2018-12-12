@@ -1028,4 +1028,44 @@ inline SIMD<int32_t, 4> vmax(SIMD<int32_t, 4> a, SIMD<int32_t, 4> b)
 	return tmp;
 }
 
+template <>
+inline SIMD<float, 4> vclamp(SIMD<float, 4> x, float a, float b)
+{
+	SIMD<float, 4> tmp;
+	tmp.m = _mm_min_ps(_mm_max_ps(x.m, _mm_set1_ps(a)), _mm_set1_ps(b));
+	return tmp;
+}
+
+template <>
+inline SIMD<double, 2> vclamp(SIMD<double, 2> x, double a, double b)
+{
+	SIMD<double, 2> tmp;
+	tmp.m = _mm_min_pd(_mm_max_pd(x.m, _mm_set1_pd(a)), _mm_set1_pd(b));
+	return tmp;
+}
+
+template <>
+inline SIMD<int8_t, 16> vclamp(SIMD<int8_t, 16> x, int8_t a, int8_t b)
+{
+	SIMD<int8_t, 16> tmp;
+	tmp.m = _mm_min_epi8(_mm_max_epi8(x.m, _mm_set1_epi8(a)), _mm_set1_epi8(b));
+	return tmp;
+}
+
+template <>
+inline SIMD<int16_t, 8> vclamp(SIMD<int16_t, 8> x, int16_t a, int16_t b)
+{
+	SIMD<int16_t, 8> tmp;
+	tmp.m = _mm_min_epi16(_mm_max_epi16(x.m, _mm_set1_epi16(a)), _mm_set1_epi16(b));
+	return tmp;
+}
+
+template <>
+inline SIMD<int32_t, 4> vclamp(SIMD<int32_t, 4> x, int32_t a, int32_t b)
+{
+	SIMD<int32_t, 4> tmp;
+	tmp.m = _mm_min_epi32(_mm_max_epi32(x.m, _mm_set1_epi32(a)), _mm_set1_epi32(b));
+	return tmp;
+}
+
 #endif

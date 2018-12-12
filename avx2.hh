@@ -1043,4 +1043,52 @@ inline SIMD<int64_t, 4> vmax(SIMD<int64_t, 4> a, SIMD<int64_t, 4> b)
 	return tmp;
 }
 
+template <>
+inline SIMD<float, 8> vclamp(SIMD<float, 8> x, float a, float b)
+{
+	SIMD<float, 8> tmp;
+	tmp.m = _mm256_min_ps(_mm256_max_ps(x.m, _mm256_set1_ps(a)), _mm256_set1_ps(b));
+	return tmp;
+}
+
+template <>
+inline SIMD<double, 4> vclamp(SIMD<double, 4> x, double a, double b)
+{
+	SIMD<double, 4> tmp;
+	tmp.m = _mm256_min_pd(_mm256_max_pd(x.m, _mm256_set1_pd(a)), _mm256_set1_pd(b));
+	return tmp;
+}
+
+template <>
+inline SIMD<int8_t, 32> vclamp(SIMD<int8_t, 32> x, int8_t a, int8_t b)
+{
+	SIMD<int8_t, 32> tmp;
+	tmp.m = _mm256_min_epi8(_mm256_max_epi8(x.m, _mm256_set1_epi8(a)), _mm256_set1_epi8(b));
+	return tmp;
+}
+
+template <>
+inline SIMD<int16_t, 16> vclamp(SIMD<int16_t, 16> x, int16_t a, int16_t b)
+{
+	SIMD<int16_t, 16> tmp;
+	tmp.m = _mm256_min_epi16(_mm256_max_epi16(x.m, _mm256_set1_epi16(a)), _mm256_set1_epi16(b));
+	return tmp;
+}
+
+template <>
+inline SIMD<int32_t, 8> vclamp(SIMD<int32_t, 8> x, int32_t a, int32_t b)
+{
+	SIMD<int32_t, 8> tmp;
+	tmp.m = _mm256_min_epi32(_mm256_max_epi32(x.m, _mm256_set1_epi32(a)), _mm256_set1_epi32(b));
+	return tmp;
+}
+
+template <>
+inline SIMD<int64_t, 4> vclamp(SIMD<int64_t, 4> x, int64_t a, int64_t b)
+{
+	SIMD<int64_t, 4> tmp;
+	tmp.m = _mm256_min_epi64(_mm256_max_epi64(x.m, _mm256_set1_epi64x(a)), _mm256_set1_epi64x(b));
+	return tmp;
+}
+
 #endif

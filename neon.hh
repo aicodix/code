@@ -872,4 +872,36 @@ inline SIMD<int32_t, 4> vmax(SIMD<int32_t, 4> a, SIMD<int32_t, 4> b)
 	return tmp;
 }
 
+template <>
+inline SIMD<float, 4> vclamp(SIMD<float, 4> x, float a, float b)
+{
+	SIMD<float, 4> tmp;
+	tmp.m = vminq_f32(vmaxq_f32(x.m, vdupq_n_f32(a)), vdupq_n_f32(b));
+	return tmp;
+}
+
+template <>
+inline SIMD<int8_t, 16> vclamp(SIMD<int8_t, 16> x, int8_t a, int8_t b)
+{
+	SIMD<int8_t, 16> tmp;
+	tmp.m = vminq_s8(vmaxq_s8(x.m, vdupq_n_s8(a)), vdupq_n_s8(b));
+	return tmp;
+}
+
+template <>
+inline SIMD<int16_t, 8> vclamp(SIMD<int16_t, 8> x, int16_t a, int16_t b)
+{
+	SIMD<int16_t, 8> tmp;
+	tmp.m = vminq_s16(vmaxq_s16(x.m, vdupq_n_s16(a)), vdupq_n_s16(b));
+	return tmp;
+}
+
+template <>
+inline SIMD<int32_t, 4> vclamp(SIMD<int32_t, 4> x, int32_t a, int32_t b)
+{
+	SIMD<int32_t, 4> tmp;
+	tmp.m = vminq_s32(vmaxq_s32(x.m, vdupq_n_s32(a)), vdupq_n_s32(b));
+	return tmp;
+}
+
 #endif

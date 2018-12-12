@@ -1011,6 +1011,60 @@ static inline SIMD<int64_t, WIDTH> vmax(SIMD<int64_t, WIDTH> a, SIMD<int64_t, WI
 }
 
 template <int WIDTH>
+static inline SIMD<float, WIDTH> vclamp(SIMD<float, WIDTH> x, float a, float b)
+{
+	SIMD<float, WIDTH> tmp;
+	for (int i = 0; i < WIDTH; ++i)
+		tmp.v[i] = std::min(std::max(x.v[i], a), b);
+	return tmp;
+}
+
+template <int WIDTH>
+static inline SIMD<double, WIDTH> vclamp(SIMD<double, WIDTH> x, double a, double b)
+{
+	SIMD<double, WIDTH> tmp;
+	for (int i = 0; i < WIDTH; ++i)
+		tmp.v[i] = std::min(std::max(x.v[i], a), b);
+	return tmp;
+}
+
+template <int WIDTH>
+static inline SIMD<int8_t, WIDTH> vclamp(SIMD<int8_t, WIDTH> x, int8_t a, int8_t b)
+{
+	SIMD<int8_t, WIDTH> tmp;
+	for (int i = 0; i < WIDTH; ++i)
+		tmp.v[i] = std::min(std::max(x.v[i], a), b);
+	return tmp;
+}
+
+template <int WIDTH>
+static inline SIMD<int16_t, WIDTH> vclamp(SIMD<int16_t, WIDTH> x, int16_t a, int16_t b)
+{
+	SIMD<int16_t, WIDTH> tmp;
+	for (int i = 0; i < WIDTH; ++i)
+		tmp.v[i] = std::min(std::max(x.v[i], a), b);
+	return tmp;
+}
+
+template <int WIDTH>
+static inline SIMD<int32_t, WIDTH> vclamp(SIMD<int32_t, WIDTH> x, int32_t a, int32_t b)
+{
+	SIMD<int32_t, WIDTH> tmp;
+	for (int i = 0; i < WIDTH; ++i)
+		tmp.v[i] = std::min(std::max(x.v[i], a), b);
+	return tmp;
+}
+
+template <int WIDTH>
+static inline SIMD<int64_t, WIDTH> vclamp(SIMD<int64_t, WIDTH> x, int64_t a, int64_t b)
+{
+	SIMD<int64_t, WIDTH> tmp;
+	for (int i = 0; i < WIDTH; ++i)
+		tmp.v[i] = std::min(std::max(x.v[i], a), b);
+	return tmp;
+}
+
+template <int WIDTH>
 static inline SIMD<float, WIDTH> vadd(SIMD<float, WIDTH> a, SIMD<float, WIDTH> b)
 {
 	SIMD<float, WIDTH> tmp;
