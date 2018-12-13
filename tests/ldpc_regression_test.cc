@@ -126,10 +126,79 @@ struct DVB_T2_TABLE_A1
 	};
 };
 
+struct DVB_T2_TABLE_B7
+{
+	static const int M = 360;
+	static const int N = 16200;
+	static const int K = 13320;
+	static const int LINKS_MIN_CN = 15;
+	static const int LINKS_MAX_CN = 19;
+	static const int LINKS_TOTAL = 49319;
+	static const int DEG_MAX = 13;
+	static constexpr int DEG[] = {
+		13, 3, 0
+	};
+	static constexpr int LEN[] = {
+		1, 36, 0
+	};
+	static constexpr int POS[] = {
+		3,	2409,	499,	1481,	908,	559,	716,	1270,	333,	2508,	2264,	1702,	2805,
+		4,	2447,	1926,
+		5,	414,	1224,
+		6,	2114,	842,
+		7,	212,	573,
+		0,	2383,	2112,
+		1,	2286,	2348,
+		2,	545,	819,
+		3,	1264,	143,
+		4,	1701,	2258,
+		5,	964,	166,
+		6,	114,	2413,
+		7,	2243,	81,
+		0,	1245,	1581,
+		1,	775,	169,
+		2,	1696,	1104,
+		3,	1914,	2831,
+		4,	532,	1450,
+		5,	91,	974,
+		6,	497,	2228,
+		7,	2326,	1579,
+		0,	2482,	256,
+		1,	1117,	1261,
+		2,	1257,	1658,
+		3,	1478,	1225,
+		4,	2511,	980,
+		5,	2320,	2675,
+		6,	435,	1278,
+		7,	228,	503,
+		0,	1885,	2369,
+		1,	57,	483,
+		2,	838,	1050,
+		3,	1231,	1990,
+		4,	1738,	68,
+		5,	2392,	951,
+		6,	163,	645,
+		7,	2644,	1704,
+	};
+};
+
 constexpr int DVB_T2_TABLE_A1::DEG[];
 constexpr int DVB_T2_TABLE_A1::LEN[];
 constexpr int DVB_T2_TABLE_A1::POS[];
+
+constexpr int DVB_T2_TABLE_B7::DEG[];
+constexpr int DVB_T2_TABLE_B7::LEN[];
+constexpr int DVB_T2_TABLE_B7::POS[];
+
+#if 0
 typedef DVB_T2_TABLE_A1 TABLE;
+static const float QEF_SNR = -1.8;
+static const int BCH_T = 12;
+#else
+typedef DVB_T2_TABLE_B7 TABLE;
+static const float QEF_SNR = 2.5;
+static const int BCH_T = 12;
+#endif
 
 int main()
 {
@@ -207,7 +276,7 @@ int main()
 			decoder_errors += code[i] * orig[i] <= 0 && orig[i] * noisy[i] > 0;
 		float bit_error_rate = (float)uncorrected_errors / (float)(CODE_LEN);
 
-		if (!uncorrected_errors)
+		if (uncorrected_errors <= BCH_T)
 			min_SNR = std::min(min_SNR, SNR);
 		min_mbs = std::min(min_mbs, mbs);
 		max_mbs = std::max(max_mbs, mbs);
@@ -237,7 +306,7 @@ int main()
 	delete[] symb;
 
 	std::cerr << "QEF at: " << min_SNR << " SNR, speed min: " << min_mbs << " Mb/s and speed max: " << max_mbs << " Mb/s." << std::endl;
-	assert(min_SNR < -1.8);
+	assert(min_SNR < QEF_SNR);
 	std::cerr << "Low-density parity-check code regression test passed!" << std::endl;
 	return 0;
 }
