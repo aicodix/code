@@ -90,7 +90,7 @@ class LDPCDecoder
 						for (int n = 0; n < num; ++n)
 							par[0].v[n] = parity[j+(q-1)*M-1+n];
 					} else {
-						par[0].v[0] = 1;
+						par[0].v[0] = 127;
 						for (int n = 1; n < num; ++n)
 							par[0].v[n] = parity[j+(q-1)*M-1+n];
 					}
@@ -133,7 +133,7 @@ class LDPCDecoder
 						for (int n = 0; n < num; ++n)
 							par[0].v[n] = parity[j+(q-1)*M-1+n];
 					} else {
-						par[0].v[0] = 1;
+						par[0].v[0] = 127;
 						for (int n = 1; n < num; ++n)
 							par[0].v[n] = parity[j+(q-1)*M-1+n];
 					}
