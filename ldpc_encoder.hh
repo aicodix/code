@@ -20,29 +20,37 @@ class LDPCEncoder
 	static const int CNC = TABLE::LINKS_MAX_CN - 2;
 
 	uint16_t pos[R * CNC];
-	uint8_t cnc[R];
+	uint8_t cnc[q];
 public:
 	LDPCEncoder()
 	{
-		for (int i = 0; i < R; ++i)
+		for (int i = 0; i < q; ++i)
 			cnc[i] = 0;
 		int bit_pos = 0;
 		const int *row_ptr = TABLE::POS;
 		for (int g = 0; TABLE::LEN[g]; ++g) {
 			int bit_deg = TABLE::DEG[g];
 			for (int r = 0; r < TABLE::LEN[g]; ++r) {
-				int acc_pos[bit_deg];
-				for (int d = 0; d < bit_deg; ++d)
-					acc_pos[d] = row_ptr[d];
+				for (int d = 0; d < bit_deg; ++d) {
+					int n = row_ptr[d] % q;
+					int m = row_ptr[d] / q;
+					pos[CNC*n+cnc[n]++] = bit_pos + (M - m) % M;
+				}
 				row_ptr += bit_deg;
-				for (int j = 0; j < M; ++j) {
-					for (int d = 0; d < bit_deg; ++d) {
-						int n = acc_pos[d];
-						pos[CNC*n+cnc[n]++] = bit_pos;
-					}
-					++bit_pos;
-					for (int d = 0; d < bit_deg; ++d)
-						acc_pos[d] = (acc_pos[d] + q) % R;
+				bit_pos += M;
+			}
+		}
+		for (int i = 0; i < q; ++i) {
+			int cnt = cnc[i];
+			int offset[cnt], shift[cnt];
+			for (int c = 0; c < cnt; ++c) {
+				shift[c] = pos[CNC*i+c] % M;
+				offset[c] = pos[CNC*i+c] - shift[c];
+			}
+			for (int j = 1; j < M; ++j) {
+				for (int c = 0; c < cnt; ++c) {
+					shift[c] = (shift[c] + 1) % M;
+					pos[CNC*(q*j+i)+c] = offset[c] + shift[c];
 				}
 			}
 		}
@@ -50,10 +58,13 @@ public:
 	void operator()(int8_t *data, int8_t *parity)
 	{
 		int8_t tmp = 1;
-		for (int i = 0; i < R; ++i) {
-			for (int j = 0; j < cnc[i]; ++j)
-				tmp *= data[pos[CNC*i+j]];
-			parity[i] = tmp;
+		for (int j = 0; j < M; ++j) {
+			for (int i = 0; i < q; ++i) {
+				int cnt = cnc[i];
+				for (int c = 0; c < cnt; ++c)
+					tmp *= data[pos[CNC*(q*j+i)+c]];
+				parity[q*j+i] = tmp;
+			}
 		}
 	}
 };
