@@ -208,20 +208,13 @@ public:
 		for (int g = 0; TABLE::LEN[g]; ++g) {
 			int bit_deg = TABLE::DEG[g];
 			for (int r = 0; r < TABLE::LEN[g]; ++r) {
-				int acc_pos[bit_deg];
-				for (int d = 0; d < bit_deg; ++d)
-					acc_pos[d] = row_ptr[d];
-				row_ptr += bit_deg;
-				for (int j = 0; j < M; ++j) {
-					for (int d = 0; d < bit_deg; ++d) {
-						int n = acc_pos[d];
-						if (n < q)
-							pos[CNC*n+cnc[n]++] = bit_pos;
-					}
-					++bit_pos;
-					for (int d = 0; d < bit_deg; ++d)
-						acc_pos[d] = (acc_pos[d] + q) % R;
+				for (int d = 0; d < bit_deg; ++d) {
+					int n = row_ptr[d] % q;
+					int m = row_ptr[d] / q;
+					pos[CNC*n+cnc[n]++] = bit_pos + (M - m) % M;
 				}
+				row_ptr += bit_deg;
+				bit_pos += M;
 			}
 		}
 	}
