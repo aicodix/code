@@ -85,15 +85,13 @@ class LDPCDecoder
 				if (i) {
 					for (int n = 0; n < num; ++n)
 						par[0].v[n] = parity[M*(i-1)+j+n];
+				} else if (j) {
+					for (int n = 0; n < num; ++n)
+						par[0].v[n] = parity[M*(q-1)-1+j+n];
 				} else {
-					if (j) {
-						for (int n = 0; n < num; ++n)
-							par[0].v[n] = parity[j+(q-1)*M-1+n];
-					} else {
-						par[0].v[0] = 127;
-						for (int n = 1; n < num; ++n)
-							par[0].v[n] = parity[j+(q-1)*M-1+n];
-					}
+					par[0].v[0] = 127;
+					for (int n = 1; n < num; ++n)
+						par[0].v[n] = parity[M*(q-1)-1+j+n];
 				}
 				for (int n = 0; n < num; ++n)
 					par[1].v[n] = parity[M*i+j+n];
@@ -128,15 +126,13 @@ class LDPCDecoder
 				if (i) {
 					for (int n = 0; n < num; ++n)
 						par[0].v[n] = parity[M*(i-1)+j+n];
+				} else if (j) {
+					for (int n = 0; n < num; ++n)
+						par[0].v[n] = parity[M*(q-1)-1+j+n];
 				} else {
-					if (j) {
-						for (int n = 0; n < num; ++n)
-							par[0].v[n] = parity[j+(q-1)*M-1+n];
-					} else {
-						par[0].v[0] = 127;
-						for (int n = 1; n < num; ++n)
-							par[0].v[n] = parity[j+(q-1)*M-1+n];
-					}
+					par[0].v[0] = 127;
+					for (int n = 1; n < num; ++n)
+						par[0].v[n] = parity[M*(q-1)-1+j+n];
 				}
 				for (int n = 0; n < num; ++n)
 					par[1].v[n] = parity[M*i+j+n];
@@ -159,14 +155,12 @@ class LDPCDecoder
 				if (i) {
 					for (int n = 0; n < num; ++n)
 						parity[M*(i-1)+j+n] = par[0].v[n];
+				} else if (j) {
+					for (int n = 0; n < num; ++n)
+						parity[M*(q-1)-1+j+n] = par[0].v[n];
 				} else {
-					if (j) {
-						for (int n = 0; n < num; ++n)
-							parity[j+(q-1)*M-1+n] = par[0].v[n];
-					} else {
-						for (int n = 1; n < num; ++n)
-							parity[j+(q-1)*M-1+n] = par[0].v[n];
-					}
+					for (int n = 1; n < num; ++n)
+						parity[M*(q-1)-1+j+n] = par[0].v[n];
 				}
 				for (int n = 0; n < num; ++n)
 					parity[M*i+j+n] = par[1].v[n];
