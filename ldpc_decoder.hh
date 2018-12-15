@@ -101,9 +101,13 @@ class LDPCDecoder
 				for (int n = 0; n < num; ++n)
 					par[1].v[n] = parity[M*i+j+n];
 				TYPE dat[cnt];
-				for (int c = 0; c < cnt; ++c)
-					for (int n = 0; n < num; ++n)
-						dat[c].v[n] = data[offset[c]+(shift[c]+n)%M];
+				for (int c = 0; c < cnt; ++c) {
+					int tmp = std::min(num, M - shift[c]);
+					for (int n = 0; n < tmp; ++n)
+						dat[c].v[n] = data[offset[c]+shift[c]+n];
+					for (int n = tmp; n < num; ++n)
+						dat[c].v[n] = data[offset[c]+n-tmp];
+				}
 				TYPE cnv = vdup<TYPE>(1);
 				for (int c = 0; c < 2; ++c)
 					cnv = vsign(cnv, par[c]);
@@ -149,9 +153,13 @@ class LDPCDecoder
 				for (int n = 0; n < num; ++n)
 					par[1].v[n] = parity[M*i+j+n];
 				TYPE dat[cnt];
-				for (int c = 0; c < cnt; ++c)
-					for (int n = 0; n < num; ++n)
-						dat[c].v[n] = data[offset[c]+(shift[c]+n)%M];
+				for (int c = 0; c < cnt; ++c) {
+					int tmp = std::min(num, M - shift[c]);
+					for (int n = 0; n < tmp; ++n)
+						dat[c].v[n] = data[offset[c]+shift[c]+n];
+					for (int n = tmp; n < num; ++n)
+						dat[c].v[n] = data[offset[c]+n-tmp];
+				}
 				TYPE inp[deg], out[deg];
 				for (int c = 0; c < cnt; ++c)
 					inp[c] = out[c] = vqsub(dat[c], bl[c]);
@@ -176,9 +184,13 @@ class LDPCDecoder
 				}
 				for (int n = 0; n < num; ++n)
 					parity[M*i+j+n] = par[1].v[n];
-				for (int c = 0; c < cnt; ++c)
-					for (int n = 0; n < num; ++n)
-						data[offset[c]+(shift[c]+n)%M] = dat[c].v[n];
+				for (int c = 0; c < cnt; ++c) {
+					int tmp = std::min(num, M - shift[c]);
+					for (int n = 0; n < tmp; ++n)
+						data[offset[c]+shift[c]+n] = dat[c].v[n];
+					for (int n = tmp; n < num; ++n)
+						data[offset[c]+n-tmp] = dat[c].v[n];
+				}
 				for (int c = 0; c < cnt; ++c)
 					shift[c] = (shift[c] + num) % M;
 			}
