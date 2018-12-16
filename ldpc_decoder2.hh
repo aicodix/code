@@ -1,7 +1,7 @@
 /*
-LDPC SISO layered decoder
+LDPC SISO layered decoder v2
 
-This version stores only the first q bit positions
+This version stores and uses all bit positions
 
 Copyright 2018 Ahmet Inan <inan@aicodix.de>
 */
@@ -34,7 +34,7 @@ class LDPCDecoder
 
 	TYPE bnl[BNL];
 	int8_t pty[R];
-	uint16_t pos[q * CNC];
+	uint16_t pos[R * CNC];
 	uint8_t cnc[q];
 
 	static TYPE eor(TYPE a, TYPE b)
@@ -80,11 +80,6 @@ class LDPCDecoder
 	{
 		for (int i = 0; i < q; ++i) {
 			int cnt = cnc[i];
-			int offset[cnt], shift[cnt];
-			for (int c = 0; c < cnt; ++c) {
-				shift[c] = pos[CNC*i+c] % M;
-				offset[c] = pos[CNC*i+c] - shift[c];
-			}
 			auto res = vmask(vzero<TYPE>());
 			for (int j = 0; j < M; j += SIMD_SIZE) {
 				int num = std::min(M - j, SIMD_SIZE);
@@ -103,13 +98,9 @@ class LDPCDecoder
 				for (int n = 0; n < num; ++n)
 					par[1].v[n] = parity[M*i+j+n];
 				TYPE dat[cnt];
-				for (int c = 0; c < cnt; ++c) {
-					int tmp = std::min(num, M - shift[c]);
-					for (int n = 0; n < tmp; ++n)
-						dat[c].v[n] = data[offset[c]+shift[c]+n];
-					for (int n = tmp; n < num; ++n)
-						dat[c].v[n] = data[offset[c]+n-tmp];
-				}
+				for (int c = 0; c < cnt; ++c)
+					for (int n = 0; n < num; ++n)
+						dat[c].v[n] = data[pos[CNC*(M*i+j+n)+c]];
 				TYPE cnv = vdup<TYPE>(1);
 				for (int c = 0; c < 2; ++c)
 					cnv = vsign(cnv, par[c]);
@@ -118,8 +109,6 @@ class LDPCDecoder
 				for (int n = num; n < SIMD_SIZE; ++n)
 					cnv.v[n] = 1;
 				res = vorr(res, vclez(cnv));
-				for (int c = 0; c < cnt; ++c)
-					shift[c] = (shift[c] + num) % M;
 			}
 			for (int n = 0; n < SIMD_SIZE; ++n)
 				if (res.v[n])
@@ -132,11 +121,6 @@ class LDPCDecoder
 		TYPE *bl = bnl;
 		for (int i = 0; i < q; ++i) {
 			int cnt = cnc[i];
-			int offset[cnt], shift[cnt];
-			for (int c = 0; c < cnt; ++c) {
-				shift[c] = pos[CNC*i+c] % M;
-				offset[c] = pos[CNC*i+c] - shift[c];
-			}
 			int deg = cnt + 2;
 			for (int j = 0; j < M; j += SIMD_SIZE) {
 				int num = std::min(M - j, SIMD_SIZE);
@@ -155,13 +139,9 @@ class LDPCDecoder
 				for (int n = 0; n < num; ++n)
 					par[1].v[n] = parity[M*i+j+n];
 				TYPE dat[cnt];
-				for (int c = 0; c < cnt; ++c) {
-					int tmp = std::min(num, M - shift[c]);
-					for (int n = 0; n < tmp; ++n)
-						dat[c].v[n] = data[offset[c]+shift[c]+n];
-					for (int n = tmp; n < num; ++n)
-						dat[c].v[n] = data[offset[c]+n-tmp];
-				}
+				for (int c = 0; c < cnt; ++c)
+					for (int n = 0; n < num; ++n)
+						dat[c].v[n] = data[pos[CNC*(M*i+j+n)+c]];
 				TYPE inp[deg], out[deg];
 				for (int c = 0; c < cnt; ++c)
 					inp[c] = out[c] = vqsub(dat[c], bl[c]);
@@ -186,15 +166,9 @@ class LDPCDecoder
 				}
 				for (int n = 0; n < num; ++n)
 					parity[M*i+j+n] = par[1].v[n];
-				for (int c = 0; c < cnt; ++c) {
-					int tmp = std::min(num, M - shift[c]);
-					for (int n = 0; n < tmp; ++n)
-						data[offset[c]+shift[c]+n] = dat[c].v[n];
-					for (int n = tmp; n < num; ++n)
-						data[offset[c]+n-tmp] = dat[c].v[n];
-				}
 				for (int c = 0; c < cnt; ++c)
-					shift[c] = (shift[c] + num) % M;
+					for (int n = 0; n < num; ++n)
+						data[pos[CNC*(M*i+j+n)+c]] = dat[c].v[n];
 			}
 		}
 		//assert(bl <= bnl + BNL);
@@ -213,10 +187,24 @@ public:
 				for (int d = 0; d < bit_deg; ++d) {
 					int n = row_ptr[d] % q;
 					int m = row_ptr[d] / q;
-					pos[CNC*n+cnc[n]++] = bit_pos + (M - m) % M;
+					pos[CNC*M*n+cnc[n]++] = bit_pos + (M - m) % M;
 				}
 				row_ptr += bit_deg;
 				bit_pos += M;
+			}
+		}
+		for (int i = 0; i < q; ++i) {
+			int cnt = cnc[i];
+			int offset[cnt], shift[cnt];
+			for (int c = 0; c < cnt; ++c) {
+				shift[c] = pos[CNC*M*i+c] % M;
+				offset[c] = pos[CNC*M*i+c] - shift[c];
+			}
+			for (int j = 1; j < M; ++j) {
+				for (int c = 0; c < cnt; ++c) {
+					shift[c] = (shift[c] + 1) % M;
+					pos[CNC*(M*i+j)+c] = offset[c] + shift[c];
+				}
 			}
 		}
 	}

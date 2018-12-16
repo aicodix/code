@@ -55,7 +55,13 @@ Implemented are the following Encoders and Decoders:
 
 ### [ldpc_decoder.hh](ldpc_decoder.hh)
 
-[Low-density parity-check](https://en.wikipedia.org/wiki/Low-density_parity-check_code) layered decoder
+[Low-density parity-check](https://en.wikipedia.org/wiki/Low-density_parity-check_code) layered decoder  
+This version stores only the first q bit positions and might be faster on low power systems.
+
+### [ldpc_decoder2.hh](ldpc_decoder2.hh)
+
+[Low-density parity-check](https://en.wikipedia.org/wiki/Low-density_parity-check_code) layered decoder  
+This version stores and uses all bit positions and might be faster on high performance workstations.
 
 ### [exclusive_reduce.hh](exclusive_reduce.hh)
 
