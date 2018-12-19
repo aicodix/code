@@ -229,11 +229,13 @@ int main()
 	float min_SNR = 20, min_mbs = 1000, max_mbs = 0;
 
 	for (float SNR = -5; SNR <= 15; SNR += 0.1) {
-		float mean = 1;
-		float sigma = std::sqrt(mean * mean / (2 * std::pow(10, SNR / 10)));
+		//float mean_signal = 0;
+		float sigma_signal = 1;
+		float mean_noise = 0;
+		float sigma_noise = std::sqrt(sigma_signal * sigma_signal / (2 * std::pow(10, SNR / 10)));
 
 		auto data = std::bind(uniform(0, 1), generator);
-		auto awgn = std::bind(normal(0.0, sigma), generator);
+		auto awgn = std::bind(normal(mean_noise, sigma_noise), generator);
 
 		for (int i = 0; i < DATA_LEN; ++i)
 			code[i] = 1 - 2 * data();
@@ -252,7 +254,7 @@ int main()
 		// $LLR=log(\frac{p(x=+1|y)}{p(x=-1|y)})$
 		// $p(x|\mu,\sigma)=\frac{1}{\sqrt{2\pi}\sigma}}e^{-\frac{(x-\mu)^2}{2\sigma^2}}$
 		float DIST = 2; // BPSK
-		float fact = DIST * FACTOR / (sigma * sigma);
+		float fact = DIST * FACTOR / (sigma_noise * sigma_noise);
 		for (int i = 0; i < CODE_LEN; ++i)
 			code[i] = std::min<float>(std::max<float>(std::nearbyint(fact * symb[i]), -128), 127);
 
@@ -286,7 +288,7 @@ int main()
 		max_mbs = std::max(max_mbs, mbs);
 
 		if (0) {
-			std::cerr << SNR << " Es/N0 => standard deviation of " << sigma << " with mean " << mean << std::endl;
+			std::cerr << SNR << " Es/N0 => AWGN with standard deviation of " << sigma_noise << " and mean " << mean_noise << std::endl;
 			std::cerr << awgn_errors << " errors caused by AWGN." << std::endl;
 			std::cerr << quantization_erasures << " erasures caused by quantization." << std::endl;
 			std::cerr << decoder_errors << " errors caused by decoder." << std::endl;
