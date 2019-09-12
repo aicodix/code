@@ -708,7 +708,7 @@ template <int WIDTH>
 static inline SIMD<uint32_t, WIDTH> vclez(SIMD<float, WIDTH> a)
 {
 	SIMD<uint32_t, WIDTH> tmp;
-	for (int i = 0; i <= WIDTH; ++i)
+	for (int i = 0; i < WIDTH; ++i)
 		tmp.v[i] = -(a.v[i] <= 0.f);
 	return tmp;
 }
@@ -717,7 +717,7 @@ template <int WIDTH>
 static inline SIMD<uint64_t, WIDTH> vclez(SIMD<double, WIDTH> a)
 {
 	SIMD<uint64_t, WIDTH> tmp;
-	for (int i = 0; i <= WIDTH; ++i)
+	for (int i = 0; i < WIDTH; ++i)
 		tmp.v[i] = -(a.v[i] <= 0.);
 	return tmp;
 }
@@ -726,7 +726,7 @@ template <int WIDTH>
 static inline SIMD<uint8_t, WIDTH> vclez(SIMD<int8_t, WIDTH> a)
 {
 	SIMD<uint8_t, WIDTH> tmp;
-	for (int i = 0; i <= WIDTH; ++i)
+	for (int i = 0; i < WIDTH; ++i)
 		tmp.v[i] = -(a.v[i] <= 0);
 	return tmp;
 }
@@ -735,7 +735,7 @@ template <int WIDTH>
 static inline SIMD<uint16_t, WIDTH> vclez(SIMD<int16_t, WIDTH> a)
 {
 	SIMD<uint16_t, WIDTH> tmp;
-	for (int i = 0; i <= WIDTH; ++i)
+	for (int i = 0; i < WIDTH; ++i)
 		tmp.v[i] = -(a.v[i] <= 0);
 	return tmp;
 }
@@ -744,7 +744,7 @@ template <int WIDTH>
 static inline SIMD<uint32_t, WIDTH> vclez(SIMD<int32_t, WIDTH> a)
 {
 	SIMD<uint32_t, WIDTH> tmp;
-	for (int i = 0; i <= WIDTH; ++i)
+	for (int i = 0; i < WIDTH; ++i)
 		tmp.v[i] = -(a.v[i] <= 0);
 	return tmp;
 }
@@ -753,7 +753,7 @@ template <int WIDTH>
 static inline SIMD<uint64_t, WIDTH> vclez(SIMD<int64_t, WIDTH> a)
 {
 	SIMD<uint64_t, WIDTH> tmp;
-	for (int i = 0; i <= WIDTH; ++i)
+	for (int i = 0; i < WIDTH; ++i)
 		tmp.v[i] = -(a.v[i] <= 0);
 	return tmp;
 }
