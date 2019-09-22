@@ -61,7 +61,7 @@ This version stores only the first q bit positions and might be faster on low po
 ### [ldpc_decoder2.hh](ldpc_decoder2.hh)
 
 [Low-density parity-check](https://en.wikipedia.org/wiki/Low-density_parity-check_code) layered decoder  
-This version stores and uses all bit positions and might be faster on high performance workstations.
+This version stores and uses all word positions and might be faster on high performance workstations.
 
 ### [exclusive_reduce.hh](exclusive_reduce.hh)
 

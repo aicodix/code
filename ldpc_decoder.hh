@@ -19,21 +19,32 @@ class LDPCDecoder
 {
 #ifdef __AVX2__
 	static const int SIMD_SIZE = 32;
+	// M = 360 = 30 * 12
+	static const int WORD_SIZE = 30;
 #else
 	static const int SIMD_SIZE = 16;
+	// M = 360 = 15 * 24
+	static const int WORD_SIZE = 15;
 #endif
+	static_assert(TABLE::M % WORD_SIZE == 0, "M must be multiple of word size");
+	static_assert(WORD_SIZE <= SIMD_SIZE, "SIMD size must be bigger or equal word size");
 	static const int M = TABLE::M;
 	static const int N = TABLE::N;
 	static const int K = TABLE::K;
 	static const int R = N-K;
 	static const int q = R/M;
+	static const int D = WORD_SIZE;
+	static const int W = M/D;
+	static const int PTY = R/D;
+	static const int MSG = K/D;
 	static const int CNC = TABLE::LINKS_MAX_CN - 2;
-	static const int BNL = TABLE::LINKS_TOTAL / SIMD_SIZE + TABLE::LINKS_MAX_CN * q;
+	static const int BNL = (TABLE::LINKS_TOTAL + D-1) / D;
 
 	typedef SIMD<int8_t, SIMD_SIZE> TYPE;
 
 	TYPE bnl[BNL];
-	int8_t pty[R];
+	TYPE msg[MSG];
+	TYPE pty[PTY];
 	uint16_t pos[q * CNC];
 	uint8_t cnc[q];
 
@@ -75,8 +86,21 @@ class LDPCDecoder
 		for (int i = 0; i < cnt; ++i)
 			links[i] = vsign(other(mags[i], mins[0], mins[1]), mine(signs, links[i]));
 	}
+	static TYPE rotate(TYPE a, int s)
+	{
+		if (s < 0)
+			s += D;
+		int t = D - s;
+		TYPE ret;
+		// TODO: I can has barrel shifter?
+		for (int n = 0; n < s; ++n)
+			ret.v[n] = a.v[n+t];
+		for (int n = 0; n < t; ++n)
+			ret.v[n+s] = a.v[n];
+		return ret;
+	}
 
-	bool bad(int8_t *data, int8_t *parity)
+	bool bad()
 	{
 		for (int i = 0; i < q; ++i) {
 			int cnt = cnc[i];
@@ -86,48 +110,36 @@ class LDPCDecoder
 				offset[c] = pos[CNC*i+c] - shift[c];
 			}
 			auto res = vmask(vzero<TYPE>());
-			for (int j = 0; j < M; j += SIMD_SIZE) {
-				int num = std::min(M - j, SIMD_SIZE);
+			for (int j = 0; j < W; ++j) {
 				TYPE par[2];
 				if (i) {
-					for (int n = 0; n < num; ++n)
-						par[0].v[n] = parity[M*(i-1)+j+n];
+					par[0] = pty[W*(i-1)+j];
 				} else if (j) {
-					for (int n = 0; n < num; ++n)
-						par[0].v[n] = parity[M*(q-1)-1+j+n];
+					par[0] = pty[W*(q-1)+j-1];
 				} else {
+					par[0] = rotate(pty[PTY-1], 1);
 					par[0].v[0] = 127;
-					for (int n = 1; n < num; ++n)
-						par[0].v[n] = parity[M*(q-1)-1+j+n];
 				}
-				for (int n = 0; n < num; ++n)
-					par[1].v[n] = parity[M*i+j+n];
-				TYPE dat[cnt];
-				for (int c = 0; c < cnt; ++c) {
-					int tmp = std::min(num, M - shift[c]);
-					for (int n = 0; n < tmp; ++n)
-						dat[c].v[n] = data[offset[c]+shift[c]+n];
-					for (int n = tmp; n < num; ++n)
-						dat[c].v[n] = data[offset[c]+n-tmp];
-				}
+				par[1] = pty[W*i+j];
+				TYPE mes[cnt];
+				for (int c = 0; c < cnt; ++c)
+					mes[c] = rotate(msg[offset[c]/D+shift[c]%W], -shift[c]/W);
 				TYPE cnv = vdup<TYPE>(1);
 				for (int c = 0; c < 2; ++c)
 					cnv = vsign(cnv, par[c]);
 				for (int c = 0; c < cnt; ++c)
-					cnv = vsign(cnv, dat[c]);
-				for (int n = num; n < SIMD_SIZE; ++n)
-					cnv.v[n] = 1;
+					cnv = vsign(cnv, mes[c]);
 				res = vorr(res, vclez(cnv));
 				for (int c = 0; c < cnt; ++c)
-					shift[c] = (shift[c] + num) % M;
+					shift[c] = (shift[c] + 1) % M;
 			}
-			for (int n = 0; n < SIMD_SIZE; ++n)
+			for (int n = 0; n < D; ++n)
 				if (res.v[n])
 					return true;
 		}
 		return false;
 	}
-	void update(int8_t *data, int8_t *parity)
+	void update()
 	{
 		TYPE *bl = bnl;
 		for (int i = 0; i < q; ++i) {
@@ -138,63 +150,45 @@ class LDPCDecoder
 				offset[c] = pos[CNC*i+c] - shift[c];
 			}
 			int deg = cnt + 2;
-			for (int j = 0; j < M; j += SIMD_SIZE) {
-				int num = std::min(M - j, SIMD_SIZE);
+			for (int j = 0; j < W; ++j) {
 				TYPE par[2];
 				if (i) {
-					for (int n = 0; n < num; ++n)
-						par[0].v[n] = parity[M*(i-1)+j+n];
+					par[0] = pty[W*(i-1)+j];
 				} else if (j) {
-					for (int n = 0; n < num; ++n)
-						par[0].v[n] = parity[M*(q-1)-1+j+n];
+					par[0] = pty[W*(q-1)+j-1];
 				} else {
+					par[0] = rotate(pty[PTY-1], 1);
 					par[0].v[0] = 127;
-					for (int n = 1; n < num; ++n)
-						par[0].v[n] = parity[M*(q-1)-1+j+n];
 				}
-				for (int n = 0; n < num; ++n)
-					par[1].v[n] = parity[M*i+j+n];
-				TYPE dat[cnt];
-				for (int c = 0; c < cnt; ++c) {
-					int tmp = std::min(num, M - shift[c]);
-					for (int n = 0; n < tmp; ++n)
-						dat[c].v[n] = data[offset[c]+shift[c]+n];
-					for (int n = tmp; n < num; ++n)
-						dat[c].v[n] = data[offset[c]+n-tmp];
-				}
+				par[1] = pty[W*i+j];
+				TYPE mes[cnt];
+				for (int c = 0; c < cnt; ++c)
+					mes[c] = rotate(msg[offset[c]/D+shift[c]%W], -shift[c]/W);
 				TYPE inp[deg], out[deg];
 				for (int c = 0; c < cnt; ++c)
-					inp[c] = out[c] = vqsub(dat[c], bl[c]);
+					inp[c] = out[c] = vqsub(mes[c], bl[c]);
 				inp[cnt] = out[cnt] = vqsub(par[0], bl[cnt]);
 				inp[cnt+1] = out[cnt+1] = vqsub(par[1], bl[cnt+1]);
 				finalp(out, deg);
 				for (int c = 0; c < cnt; ++c)
-					dat[c] = vqadd(inp[c], out[c]);
+					mes[c] = vqadd(inp[c], out[c]);
 				par[0] = vqadd(inp[cnt], out[cnt]);
 				par[1] = vqadd(inp[cnt+1], out[cnt+1]);
 				for (int d = 0; d < deg; ++d)
 					*bl++ = vclamp(out[d], -32, 31);
 				if (i) {
-					for (int n = 0; n < num; ++n)
-						parity[M*(i-1)+j+n] = par[0].v[n];
+					pty[W*(i-1)+j] = par[0];
 				} else if (j) {
-					for (int n = 0; n < num; ++n)
-						parity[M*(q-1)-1+j+n] = par[0].v[n];
+					pty[W*(q-1)+j-1] = par[0];
 				} else {
-					for (int n = 1; n < num; ++n)
-						parity[M*(q-1)-1+j+n] = par[0].v[n];
+					par[0].v[0] = pty[PTY-1].v[D-1];
+					pty[PTY-1] = rotate(par[0], -1);
 				}
-				for (int n = 0; n < num; ++n)
-					parity[M*i+j+n] = par[1].v[n];
-				for (int c = 0; c < cnt; ++c) {
-					int tmp = std::min(num, M - shift[c]);
-					for (int n = 0; n < tmp; ++n)
-						data[offset[c]+shift[c]+n] = dat[c].v[n];
-					for (int n = tmp; n < num; ++n)
-						data[offset[c]+n-tmp] = dat[c].v[n];
-				}
+				pty[W*i+j] = par[1];
 				for (int c = 0; c < cnt; ++c)
-					shift[c] = (shift[c] + num) % M;
+					msg[offset[c]/D+shift[c]%W] = rotate(mes[c], shift[c]/W);
+				for (int c = 0; c < cnt; ++c)
+					shift[c] = (shift[c] + 1) % M;
 			}
 		}
 		//assert(bl <= bnl + BNL);
@@ -220,18 +214,28 @@ public:
 			}
 		}
 	}
-	int operator()(int8_t *data, int8_t *parity, int trials = 25)
+	int operator()(int8_t *message, int8_t *parity, int trials = 25)
 	{
 		for (int i = 0; i < BNL; ++i)
 			bnl[i] = vzero<TYPE>();
+		for (int i = 0; i < K/M; ++i)
+			for (int j = 0; j < W; ++j)
+				for (int n = 0; n < D; ++n)
+					msg[W*i+j].v[n] = message[M*i+W*n+j];
 		for (int i = 0; i < q; ++i)
-			for (int j = 0; j < M; ++j)
-				pty[M*i+j] = parity[q*j+i];
-		while (bad(data, pty) && --trials >= 0)
-			update(data, pty);
+			for (int j = 0; j < W; ++j)
+				for (int n = 0; n < D; ++n)
+					pty[W*i+j].v[n] = parity[q*(W*n+j)+i];
+		while (bad() && --trials >= 0)
+			update();
+		for (int i = 0; i < K/M; ++i)
+			for (int j = 0; j < W; ++j)
+				for (int n = 0; n < D; ++n)
+					message[M*i+W*n+j] = msg[W*i+j].v[n];
 		for (int i = 0; i < q; ++i)
-			for (int j = 0; j < M; ++j)
-				parity[q*j+i] = pty[M*i+j];
+			for (int j = 0; j < W; ++j)
+				for (int n = 0; n < D; ++n)
+					parity[q*(W*n+j)+i] = pty[W*i+j].v[n];
 		return trials;
 	}
 };
