@@ -87,3 +87,7 @@ Single instruction, multiple data ([SIMD](https://en.wikipedia.org/wiki/SIMD)) w
 * [Intel SSE4.1](https://en.wikipedia.org/wiki/SSE4) ([sse4_1.hh](sse4_1.hh))
 * [Intel AVX2](https://en.wikipedia.org/wiki/Advanced_Vector_Extensions) ([avx2.hh](avx2.hh))
 
+### [rotate.hh](rotate.hh)
+
+([SIMD](https://en.wikipedia.org/wiki/SIMD)) element wise horizontal rotation
+
