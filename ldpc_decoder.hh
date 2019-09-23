@@ -86,6 +86,10 @@ class LDPCDecoder
 		for (int i = 0; i < cnt; ++i)
 			out[i] = vsign(other(mags[i], mins[0], mins[1]), mine(signs, inp[i]));
 	}
+	static TYPE selfcorr(TYPE a, TYPE b)
+	{
+		return vreinterpret<TYPE>(vand(vmask(b), vorr(vceqz(a), veor(vcgtz(a), vcltz(b)))));
+	}
 	static TYPE rotate(TYPE a, int s)
 	{
 		if (s < 0)
@@ -172,6 +176,8 @@ class LDPCDecoder
 				cnp(out, inp, deg);
 				for (int d = 0; d < deg; ++d)
 					out[d] = vclamp(out[d], -32, 31);
+				for (int d = 0; d < deg; ++d)
+					out[d] = selfcorr(bl[d], out[d]);
 				for (int d = 0; d < deg; ++d)
 					*bl++ = out[d];
 				for (int c = 0; c < cnt; ++c)
