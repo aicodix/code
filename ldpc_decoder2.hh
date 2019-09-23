@@ -46,7 +46,6 @@ class LDPCDecoder
 	TYPE bnl[BNL];
 	TYPE msg[MSG];
 	TYPE pty[PTY];
-	uint16_t pos[q * CNC];
 	uint16_t off[POS];
 	uint8_t shi[POS];
 	uint8_t cnc[q];
@@ -194,6 +193,7 @@ class LDPCDecoder
 public:
 	LDPCDecoder()
 	{
+		uint16_t pos[q * CNC];
 		for (int i = 0; i < q; ++i)
 			cnc[i] = 0;
 		int bit_pos = 0;
