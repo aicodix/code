@@ -39,7 +39,7 @@ class LDPCDecoder
 	static const int MSG = K/D;
 	static const int CNC = TABLE::LINKS_MAX_CN - 2;
 	static const int BNL = (TABLE::LINKS_TOTAL + D-1) / D;
-	static const int POS = PTY * CNC;
+	static const int POS = (TABLE::LINKS_TOTAL - (2*R-1) + D-1) / D;
 
 	typedef SIMD<int8_t, SIMD_SIZE> TYPE;
 
