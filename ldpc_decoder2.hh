@@ -11,6 +11,7 @@ Copyright 2018 Ahmet Inan <inan@aicodix.de>
 
 #include <algorithm>
 #include "simd.hh"
+#include "rotate.hh"
 
 namespace CODE {
 
@@ -42,6 +43,7 @@ class LDPCDecoder
 	static const int POS = (TABLE::LINKS_TOTAL - (2*R-1) + D-1) / D;
 
 	typedef SIMD<int8_t, SIMD_SIZE> TYPE;
+	Rotate<TYPE, D> rotate;
 
 	TYPE bnl[BNL];
 	TYPE msg[MSG];
@@ -96,19 +98,6 @@ class LDPCDecoder
 	static TYPE selfcorr(TYPE a, TYPE b)
 	{
 		return vreinterpret<TYPE>(vand(vmask(b), vorr(vceqz(a), veor(vcgtz(a), vcltz(b)))));
-	}
-	static TYPE rotate(TYPE a, int s)
-	{
-		if (s < 0)
-			s += D;
-		int t = D - s;
-		TYPE ret;
-		// TODO: I can has barrel shifter?
-		for (int n = 0; n < s; ++n)
-			ret.v[n] = a.v[n+t];
-		for (int n = 0; n < t; ++n)
-			ret.v[n+s] = a.v[n];
-		return ret;
 	}
 
 	bool bad()
