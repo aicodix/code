@@ -66,12 +66,12 @@ class LDPCDecoder
 	{
 		return orr(eor(a, b), vdup<TYPE>(127));
 	}
-	static void finalp(TYPE *links, int cnt)
+	static void cnp(TYPE *out, const TYPE *inp, int cnt)
 	{
 		auto beta = vunsigned(vdup<TYPE>(BETA));
 		TYPE mags[cnt];
 		for (int i = 0; i < cnt; ++i)
-			mags[i] = vsigned(vqsub(vunsigned(vqabs(links[i])), beta));
+			mags[i] = vsigned(vqsub(vunsigned(vqabs(inp[i])), beta));
 
 		TYPE mins[2];
 		mins[0] = vmin(mags[0], mags[1]);
@@ -81,12 +81,12 @@ class LDPCDecoder
 			mins[0] = vmin(mins[0], mags[i]);
 		}
 
-		TYPE signs = links[0];
+		TYPE signs = inp[0];
 		for (int i = 1; i < cnt; ++i)
-			signs = eor(signs, links[i]);
+			signs = eor(signs, inp[i]);
 
 		for (int i = 0; i < cnt; ++i)
-			links[i] = vsign(other(mags[i], mins[0], mins[1]), mine(signs, links[i]));
+			out[i] = vsign(other(mags[i], mins[0], mins[1]), mine(signs, inp[i]));
 	}
 	static TYPE rotate(TYPE a, int s)
 	{
@@ -162,10 +162,10 @@ class LDPCDecoder
 					mes[c] = rotate(msg[of[c]], -sh[c]);
 				TYPE inp[deg], out[deg];
 				for (int c = 0; c < cnt; ++c)
-					inp[c] = out[c] = vqsub(mes[c], bl[c]);
-				inp[cnt] = out[cnt] = vqsub(par[0], bl[cnt]);
-				inp[cnt+1] = out[cnt+1] = vqsub(par[1], bl[cnt+1]);
-				finalp(out, deg);
+					inp[c] = vqsub(mes[c], bl[c]);
+				inp[cnt] = vqsub(par[0], bl[cnt]);
+				inp[cnt+1] = vqsub(par[1], bl[cnt+1]);
+				cnp(out, inp, deg);
 				for (int c = 0; c < cnt; ++c)
 					mes[c] = vqadd(inp[c], out[c]);
 				par[0] = vqadd(inp[cnt], out[cnt]);
