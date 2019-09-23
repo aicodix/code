@@ -170,12 +170,14 @@ class LDPCDecoder
 				inp[cnt] = vqsub(par[0], bl[cnt]);
 				inp[cnt+1] = vqsub(par[1], bl[cnt+1]);
 				cnp(out, inp, deg);
+				for (int d = 0; d < deg; ++d)
+					out[d] = vclamp(out[d], -32, 31);
+				for (int d = 0; d < deg; ++d)
+					*bl++ = out[d];
 				for (int c = 0; c < cnt; ++c)
 					mes[c] = vqadd(inp[c], out[c]);
 				par[0] = vqadd(inp[cnt], out[cnt]);
 				par[1] = vqadd(inp[cnt+1], out[cnt+1]);
-				for (int d = 0; d < deg; ++d)
-					*bl++ = vclamp(out[d], -32, 31);
 				if (i) {
 					pty[W*(i-1)+j] = par[0];
 				} else if (j) {
