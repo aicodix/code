@@ -66,10 +66,15 @@ class LDPCDecoder
 	}
 	static void cnp(TYPE *out, const TYPE *inp, int cnt)
 	{
-		auto beta = vunsigned(vdup<TYPE>(BETA));
 		TYPE mags[cnt];
 		for (int i = 0; i < cnt; ++i)
-			mags[i] = vsigned(vqsub(vunsigned(vqabs(inp[i])), beta));
+			mags[i] = vqabs(inp[i]);
+
+		if (BETA) {
+			auto beta = vunsigned(vdup<TYPE>(BETA));
+			for (int i = 0; i < cnt; ++i)
+				mags[i] = vsigned(vqsub(vunsigned(mags[i]), beta));
+		}
 
 		TYPE mins[2];
 		mins[0] = vmin(mags[0], mags[1]);
