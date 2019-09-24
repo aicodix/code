@@ -89,5 +89,17 @@ Single instruction, multiple data ([SIMD](https://en.wikipedia.org/wiki/SIMD)) w
 
 ### [rotate.hh](rotate.hh)
 
-([SIMD](https://en.wikipedia.org/wiki/SIMD)) element wise horizontal rotation
+[SIMD](https://en.wikipedia.org/wiki/SIMD) element wise horizontal rotation
+
+It computes the following, but faster:
+
+```
+SIMD<int8_t, SIZE> rotate(SIMD<int8_t, SIZE> input, int shift, int WIDTH)
+{
+	SIMD<int8_t, SIZE> output;
+	for (int n = 0; n < WIDTH; ++n)
+		output.v[(n + shift + WIDTH) % WIDTH] = input.v[n];
+	return output;
+}
+```
 
