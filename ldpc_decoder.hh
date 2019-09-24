@@ -51,6 +51,7 @@ class LDPCDecoder
 	TYPE pty[PTY];
 	Loc loc[LOC];
 	wdm_t wdm[PTY];
+	int16_t csh[MSG];
 	uint8_t cnc[q];
 
 	static TYPE eor(TYPE a, TYPE b)
@@ -86,7 +87,11 @@ class LDPCDecoder
 				for (int k = 0; k < deg; ++k) {
 					TYPE tmp;
 					if (k < cnt) {
-						tmp = rotate(msg[lo[k].off], -lo[k].shi);
+						int offset = lo[k].off;
+						int shift = -lo[k].shi;
+						shift -= csh[offset];
+						shift %= D;
+						tmp = rotate(msg[offset], shift);
 					} else if (k == cnt) {
 						tmp = pty[W*i+j];
 					} else {
@@ -131,6 +136,8 @@ class LDPCDecoder
 					if (k < cnt) {
 						int offset = lo[k].off;
 						int shift = -lo[k].shi;
+						shift -= csh[offset];
+						shift %= D;
 						tmp = rotate(msg[offset], shift);
 						if (last_offset == offset)
 							write_conflict = true;
@@ -180,7 +187,10 @@ class LDPCDecoder
 					if (k < cnt) {
 						if (!write_conflict || !((*wd>>k)&1)) {
 							bl[k] = out;
-							msg[lo[k].off] = rotate(tmp, lo[k].shi);
+							int offset = lo[k].off;
+							int shift = -lo[k].shi;
+							msg[offset] = tmp;
+							csh[offset] = shift;
 						}
 					} else if (k == cnt) {
 						bl[k] = out;
@@ -275,6 +285,8 @@ public:
 	{
 		for (int i = 0; i < BNL; ++i)
 			bnl[i] = vzero<TYPE>();
+		for (int i = 0; i < MSG; ++i)
+			csh[i] = 0;
 		for (int i = 0; i < K/M; ++i)
 			for (int j = 0; j < W; ++j)
 				for (int n = 0; n < D; ++n)
@@ -285,6 +297,8 @@ public:
 					pty[W*i+j].v[n] = parity[q*(W*n+j)+i];
 		while (bad() && --trials >= 0)
 			update();
+		for (int i = 0; i < MSG; ++i)
+			msg[i] = rotate(msg[i], -csh[i]);
 		for (int i = 0; i < K/M; ++i)
 			for (int j = 0; j < W; ++j)
 				for (int n = 0; n < D; ++n)
