@@ -30,6 +30,37 @@ public:
 	}
 };
 
+#ifdef __ARM_NEON__
+template <int WIDTH>
+class Rotate<SIMD<int8_t, 16>, WIDTH>
+{
+	static const int SIZE = 16;
+	static_assert(WIDTH <= SIZE, "width must be smaller or equal to SIMD size");
+	typedef SIMD<int8_t, SIZE> TYPE;
+	TYPE rot[WIDTH];
+public:
+	Rotate()
+	{
+		for (int i = 0; i < WIDTH; ++i) {
+			rot[i] = vdup<TYPE>(0x80);
+			for (int j = 0; j < WIDTH; ++j)
+				rot[i].v[j] = (j - i + WIDTH) % WIDTH;
+		}
+	}
+	TYPE operator()(TYPE a, int s)
+	{
+		if (s < 0)
+			s += WIDTH;
+		int8x8x2_t b { vget_low_s8(a.m), vget_high_s8(a.m) };
+		int8x8_t c = vtbl2_s8(b, vget_low_s8(rot[s].m));
+		int8x8_t d = vtbl2_s8(b, vget_high_s8(rot[s].m));
+		TYPE ret;
+		ret.m = vcombine_s8(c, d);
+		return ret;
+	}
+};
+#endif
+
 #ifdef __SSE4_1__
 template <int WIDTH>
 class Rotate<SIMD<int8_t, 16>, WIDTH>
