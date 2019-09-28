@@ -109,6 +109,12 @@ class LDPCDecoder
 			}
 			auto res = vmask(vzero<TYPE>());
 			for (int j = 0; j < W; ++j) {
+				int of[cnt], sh[cnt];
+				for (int c = 0; c < cnt; ++c) {
+					of[c] = offset[c] / D + shift[c] % W;
+					sh[c] = shift[c] / W;
+					shift[c] = (shift[c] + 1) % M;
+				}
 				TYPE par[2];
 				if (i) {
 					par[0] = pty[W*(i-1)+j];
@@ -121,15 +127,13 @@ class LDPCDecoder
 				par[1] = pty[W*i+j];
 				TYPE mes[cnt];
 				for (int c = 0; c < cnt; ++c)
-					mes[c] = rotate(msg[offset[c]/D+shift[c]%W], -shift[c]/W);
+					mes[c] = rotate(msg[of[c]], -sh[c]);
 				TYPE cnv = vdup<TYPE>(1);
 				for (int c = 0; c < 2; ++c)
 					cnv = vsign(cnv, par[c]);
 				for (int c = 0; c < cnt; ++c)
 					cnv = vsign(cnv, mes[c]);
 				res = vorr(res, vclez(cnv));
-				for (int c = 0; c < cnt; ++c)
-					shift[c] = (shift[c] + 1) % M;
 			}
 			for (int n = 0; n < D; ++n)
 				if (res.v[n])
@@ -149,6 +153,12 @@ class LDPCDecoder
 			}
 			int deg = cnt + 2;
 			for (int j = 0; j < W; ++j) {
+				int of[cnt], sh[cnt];
+				for (int c = 0; c < cnt; ++c) {
+					of[c] = offset[c] / D + shift[c] % W;
+					sh[c] = shift[c] / W;
+					shift[c] = (shift[c] + 1) % M;
+				}
 				TYPE par[2];
 				if (i) {
 					par[0] = pty[W*(i-1)+j];
@@ -161,7 +171,7 @@ class LDPCDecoder
 				par[1] = pty[W*i+j];
 				TYPE mes[cnt];
 				for (int c = 0; c < cnt; ++c)
-					mes[c] = rotate(msg[offset[c]/D+shift[c]%W], -shift[c]/W);
+					mes[c] = rotate(msg[of[c]], -sh[c]);
 				TYPE inp[deg], out[deg];
 				for (int c = 0; c < cnt; ++c)
 					inp[c] = vqsub(mes[c], bl[c]);
@@ -188,9 +198,7 @@ class LDPCDecoder
 				}
 				pty[W*i+j] = par[1];
 				for (int c = 0; c < cnt; ++c)
-					msg[offset[c]/D+shift[c]%W] = rotate(mes[c], shift[c]/W);
-				for (int c = 0; c < cnt; ++c)
-					shift[c] = (shift[c] + 1) % M;
+					msg[of[c]] = rotate(mes[c], sh[c]);
 			}
 		}
 		//assert(bl <= bnl + BNL);
