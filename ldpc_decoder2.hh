@@ -169,7 +169,7 @@ class LDPCDecoder
 				for (int d = 0; d < deg; ++d)
 					out[d] = selfcorr(bl[d], out[d]);
 				for (int d = 0; d < deg; ++d)
-					*bl++ = out[d];
+					bl[d] = out[d];
 				for (int c = 0; c < cnt; ++c)
 					mes[c] = vqadd(inp[c], out[c]);
 				par[0] = vqadd(inp[cnt], out[cnt]);
@@ -187,6 +187,7 @@ class LDPCDecoder
 					msg[of[c]] = rotate(mes[c], sh[c]);
 				of += cnt;
 				sh += cnt;
+				bl += deg;
 			}
 		}
 		//assert(bl <= bnl + BNL);
@@ -223,10 +224,12 @@ public:
 			}
 			for (int j = 0; j < W; ++j) {
 				for (int c = 0; c < cnt; ++c) {
-					*of++ = offset[c] / D + shift[c] % W;
-					*sh++ = shift[c] / W;
+					of[c] = offset[c] / D + shift[c] % W;
+					sh[c] = shift[c] / W;
 					shift[c] = (shift[c] + 1) % M;
 				}
+				of += cnt;
+				sh += cnt;
 			}
 		}
 		//assert(of <= off + POS);
