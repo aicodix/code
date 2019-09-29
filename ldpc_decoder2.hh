@@ -142,13 +142,13 @@ class LDPCDecoder
 			int cnt = cnc[i];
 			int deg = cnt + 2;
 			for (int j = 0; j < W; ++j) {
-				bool wd[deg];
+				bool wd[deg], repeat;
 				for (int d = 0; d < deg; ++d)
 					wd[d] = false;
 				for (int c = 1; c < cnt; ++c)
 					if (lo[c].off == lo[c-1].off)
 						wd[c] = true;
-				for (bool repeat = true; repeat;) {
+				do {
 					TYPE par[2];
 					if (i) {
 						par[0] = pty[W*(i-1)+j];
@@ -198,7 +198,7 @@ class LDPCDecoder
 							repeat = true;
 							++c;
 						}
-				}
+				} while (repeat);
 				lo += cnt;
 				bl += deg;
 			}
