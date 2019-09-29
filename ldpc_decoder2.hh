@@ -40,16 +40,16 @@ class LDPCDecoder
 	static const int MSG = K/D;
 	static const int CNC = TABLE::LINKS_MAX_CN - 2;
 	static const int BNL = (TABLE::LINKS_TOTAL + D-1) / D;
-	static const int POS = (TABLE::LINKS_TOTAL - (2*R-1) + D-1) / D;
+	static const int LOC = (TABLE::LINKS_TOTAL - (2*R-1) + D-1) / D;
 
 	typedef SIMD<int8_t, SIMD_SIZE> TYPE;
+	typedef struct { uint16_t off; uint16_t shi; } Loc;
 	Rotate<TYPE, D> rotate;
 
 	TYPE bnl[BNL];
 	TYPE msg[MSG];
 	TYPE pty[PTY];
-	uint16_t off[POS];
-	uint8_t shi[POS];
+	Loc loc[LOC];
 	uint8_t cnc[q];
 
 	static TYPE eor(TYPE a, TYPE b)
@@ -102,8 +102,7 @@ class LDPCDecoder
 
 	bool bad()
 	{
-		uint16_t *of = off;
-		uint8_t *sh = shi;
+		Loc *lo = loc;
 		for (int i = 0; i < q; ++i) {
 			int cnt = cnc[i];
 			auto res = vmask(vzero<TYPE>());
@@ -120,15 +119,14 @@ class LDPCDecoder
 				par[1] = pty[W*i+j];
 				TYPE mes[cnt];
 				for (int c = 0; c < cnt; ++c)
-					mes[c] = rotate(msg[of[c]], -sh[c]);
+					mes[c] = rotate(msg[lo[c].off], -lo[c].shi);
 				TYPE cnv = vdup<TYPE>(1);
 				for (int c = 0; c < 2; ++c)
 					cnv = vsign(cnv, par[c]);
 				for (int c = 0; c < cnt; ++c)
 					cnv = vsign(cnv, mes[c]);
 				res = vorr(res, vclez(cnv));
-				of += cnt;
-				sh += cnt;
+				lo += cnt;
 			}
 			for (int n = 0; n < D; ++n)
 				if (res.v[n])
@@ -139,8 +137,7 @@ class LDPCDecoder
 	void update()
 	{
 		TYPE *bl = bnl;
-		uint16_t *of = off;
-		uint8_t *sh = shi;
+		Loc *lo = loc;
 		for (int i = 0; i < q; ++i) {
 			int cnt = cnc[i];
 			int deg = cnt + 2;
@@ -157,7 +154,7 @@ class LDPCDecoder
 				par[1] = pty[W*i+j];
 				TYPE mes[cnt];
 				for (int c = 0; c < cnt; ++c)
-					mes[c] = rotate(msg[of[c]], -sh[c]);
+					mes[c] = rotate(msg[lo[c].off], -lo[c].shi);
 				TYPE inp[deg], out[deg];
 				for (int c = 0; c < cnt; ++c)
 					inp[c] = vqsub(mes[c], bl[c]);
@@ -184,9 +181,8 @@ class LDPCDecoder
 				}
 				pty[W*i+j] = par[1];
 				for (int c = 0; c < cnt; ++c)
-					msg[of[c]] = rotate(mes[c], sh[c]);
-				of += cnt;
-				sh += cnt;
+					msg[lo[c].off] = rotate(mes[c], lo[c].shi);
+				lo += cnt;
 				bl += deg;
 			}
 		}
@@ -213,8 +209,7 @@ public:
 				bit_pos += M;
 			}
 		}
-		uint16_t *of = off;
-		uint8_t *sh = shi;
+		Loc *lo = loc;
 		for (int i = 0; i < q; ++i) {
 			int cnt = cnc[i];
 			int offset[cnt], shift[cnt];
@@ -224,18 +219,15 @@ public:
 			}
 			for (int j = 0; j < W; ++j) {
 				for (int c = 0; c < cnt; ++c) {
-					of[c] = offset[c] / D + shift[c] % W;
-					sh[c] = shift[c] / W;
+					lo[c].off = offset[c] / D + shift[c] % W;
+					lo[c].shi = shift[c] / W;
 					shift[c] = (shift[c] + 1) % M;
 				}
-				of += cnt;
-				sh += cnt;
+				lo += cnt;
 			}
 		}
-		//assert(of <= off + POS);
-		//std::cerr << POS - (sh - shi) << std::endl;
-		//assert(sh <= shi + POS);
-		//std::cerr << POS - (of - off) << std::endl;
+		//assert(lo <= loc + LOC);
+		//std::cerr << LOC - (lo - loc) << std::endl;
 	}
 	int operator()(int8_t *message, int8_t *parity, int trials = 25)
 	{

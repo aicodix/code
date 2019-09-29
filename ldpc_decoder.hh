@@ -42,6 +42,7 @@ class LDPCDecoder
 	static const int BNL = (TABLE::LINKS_TOTAL + D-1) / D;
 
 	typedef SIMD<int8_t, SIMD_SIZE> TYPE;
+	typedef struct { uint16_t off; uint16_t shi; } Loc;
 	Rotate<TYPE, D> rotate;
 
 	TYPE bnl[BNL];
@@ -109,10 +110,10 @@ class LDPCDecoder
 			}
 			auto res = vmask(vzero<TYPE>());
 			for (int j = 0; j < W; ++j) {
-				int of[cnt], sh[cnt];
+				Loc lo[cnt];
 				for (int c = 0; c < cnt; ++c) {
-					of[c] = offset[c] / D + shift[c] % W;
-					sh[c] = shift[c] / W;
+					lo[c].off = offset[c] / D + shift[c] % W;
+					lo[c].shi = shift[c] / W;
 					shift[c] = (shift[c] + 1) % M;
 				}
 				TYPE par[2];
@@ -127,7 +128,7 @@ class LDPCDecoder
 				par[1] = pty[W*i+j];
 				TYPE mes[cnt];
 				for (int c = 0; c < cnt; ++c)
-					mes[c] = rotate(msg[of[c]], -sh[c]);
+					mes[c] = rotate(msg[lo[c].off], -lo[c].shi);
 				TYPE cnv = vdup<TYPE>(1);
 				for (int c = 0; c < 2; ++c)
 					cnv = vsign(cnv, par[c]);
@@ -153,10 +154,10 @@ class LDPCDecoder
 			}
 			int deg = cnt + 2;
 			for (int j = 0; j < W; ++j) {
-				int of[cnt], sh[cnt];
+				Loc lo[cnt];
 				for (int c = 0; c < cnt; ++c) {
-					of[c] = offset[c] / D + shift[c] % W;
-					sh[c] = shift[c] / W;
+					lo[c].off = offset[c] / D + shift[c] % W;
+					lo[c].shi = shift[c] / W;
 					shift[c] = (shift[c] + 1) % M;
 				}
 				TYPE par[2];
@@ -171,7 +172,7 @@ class LDPCDecoder
 				par[1] = pty[W*i+j];
 				TYPE mes[cnt];
 				for (int c = 0; c < cnt; ++c)
-					mes[c] = rotate(msg[of[c]], -sh[c]);
+					mes[c] = rotate(msg[lo[c].off], -lo[c].shi);
 				TYPE inp[deg], out[deg];
 				for (int c = 0; c < cnt; ++c)
 					inp[c] = vqsub(mes[c], bl[c]);
@@ -198,7 +199,7 @@ class LDPCDecoder
 				}
 				pty[W*i+j] = par[1];
 				for (int c = 0; c < cnt; ++c)
-					msg[of[c]] = rotate(mes[c], sh[c]);
+					msg[lo[c].off] = rotate(mes[c], lo[c].shi);
 				bl += deg;
 			}
 		}
