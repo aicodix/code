@@ -160,6 +160,7 @@ class LDPCDecoder
 					lo[c].shi = shift[c] / W;
 					shift[c] = (shift[c] + 1) % M;
 				}
+				std::sort(lo, lo + cnt, [](const Loc &a, const Loc &b){ return a.off < b.off; });
 				TYPE par[2];
 				if (i) {
 					par[0] = pty[W*(i-1)+j];
