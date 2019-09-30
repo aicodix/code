@@ -44,6 +44,8 @@ class LDPCDecoder
 
 	typedef SIMD<int8_t, SIMD_SIZE> TYPE;
 	typedef struct { uint16_t off; uint16_t shi; } Loc;
+	typedef uint32_t wd_t;
+	static_assert(sizeof(wd_t) * 8 >= TABLE::LINKS_MAX_CN, "write disable mask needs at least as many bits as max check node links");
 	Rotate<TYPE, D> rotate;
 
 	TYPE bnl[BNL];
@@ -142,13 +144,11 @@ class LDPCDecoder
 			int cnt = cnc[i];
 			int deg = cnt + 2;
 			for (int j = 0; j < W; ++j) {
-				bool wd[deg], repeat = false;
-				for (int d = 0; d < deg; ++d)
-					wd[d] = false;
+				wd_t wd = 0;
 				for (int c = 1; c < cnt; ++c)
 					if (lo[c].off == lo[c-1].off)
-						wd[c] = repeat = true;
-				do {
+						wd |= 1 << c;
+				while (1) {
 					TYPE par[2];
 					if (i) {
 						par[0] = pty[W*(i-1)+j];
@@ -185,28 +185,24 @@ class LDPCDecoder
 						pty[PTY-1] = rotate(par[0], -1);
 					}
 					pty[W*i+j] = par[1];
-					if (repeat) {
+					if (wd) {
 						for (int c = 0; c < cnt; ++c)
-							if (!wd[c])
+							if (!((wd>>c)&1))
 								msg[lo[c].off] = rotate(mes[c], lo[c].shi);
 						for (int d = 0; d < deg; ++d)
-							if (!wd[d])
+							if (!((wd>>d)&1))
 								bl[d] = out[d];
-						repeat = false;
-						for (int c = 1; c < cnt; ++c) {
-							if (wd[c] && !wd[c-1]) {
-								wd[c] = false;
-								repeat = true;
-								++c;
-							}
-						}
+						for (int c = 1; c < cnt; ++c)
+							if (((wd>>c)&1) && !((wd>>(c-1))&1))
+								wd ^= 1 << c++;
 					} else {
 						for (int c = 0; c < cnt; ++c)
 							msg[lo[c].off] = rotate(mes[c], lo[c].shi);
 						for (int d = 0; d < deg; ++d)
 							bl[d] = out[d];
+						break;
 					}
-				} while (repeat);
+				}
 				lo += cnt;
 				bl += deg;
 			}
