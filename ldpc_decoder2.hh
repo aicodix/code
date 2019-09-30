@@ -52,6 +52,7 @@ class LDPCDecoder
 	TYPE msg[MSG];
 	TYPE pty[PTY];
 	Loc loc[LOC];
+	wd_t wd[PTY];
 	uint8_t cnc[q];
 
 	static TYPE eor(TYPE a, TYPE b)
@@ -144,64 +145,68 @@ class LDPCDecoder
 			int cnt = cnc[i];
 			int deg = cnt + 2;
 			for (int j = 0; j < W; ++j) {
-				wd_t wd = 0;
-				for (int c = 1; c < cnt; ++c)
-					if (lo[c].off == lo[c-1].off)
-						wd |= 1 << c;
-				while (1) {
-					TYPE par[2];
-					if (i) {
-						par[0] = pty[W*(i-1)+j];
-					} else if (j) {
-						par[0] = pty[W*(q-1)+j-1];
-					} else {
-						par[0] = rotate(pty[PTY-1], 1);
-						par[0].v[0] = 127;
-					}
-					par[1] = pty[W*i+j];
-					TYPE mes[cnt];
+				TYPE par[2];
+				if (i) {
+					par[0] = pty[W*(i-1)+j];
+				} else if (j) {
+					par[0] = pty[W*(q-1)+j-1];
+				} else {
+					par[0] = rotate(pty[PTY-1], 1);
+					par[0].v[0] = 127;
+				}
+				par[1] = pty[W*i+j];
+				TYPE mes[cnt];
+				for (int c = 0; c < cnt; ++c)
+					mes[c] = rotate(msg[lo[c].off], -lo[c].shi);
+				TYPE inp[deg], out[deg];
+				for (int c = 0; c < cnt; ++c)
+					inp[c] = vqsub(mes[c], bl[c]);
+				inp[cnt] = vqsub(par[0], bl[cnt]);
+				inp[cnt+1] = vqsub(par[1], bl[cnt+1]);
+				cnp(out, inp, deg);
+				for (int d = 0; d < deg; ++d)
+					out[d] = vclamp(out[d], -32, 31);
+				for (int d = 0; d < deg; ++d)
+					out[d] = selfcorr(bl[d], out[d]);
+				for (int c = 0; c < cnt; ++c)
+					mes[c] = vqadd(inp[c], out[c]);
+				par[0] = vqadd(inp[cnt], out[cnt]);
+				par[1] = vqadd(inp[cnt+1], out[cnt+1]);
+				if (i) {
+					pty[W*(i-1)+j] = par[0];
+				} else if (j) {
+					pty[W*(q-1)+j-1] = par[0];
+				} else {
+					par[0].v[0] = pty[PTY-1].v[D-1];
+					pty[PTY-1] = rotate(par[0], -1);
+				}
+				pty[W*i+j] = par[1];
+				if (wd[W*i+j]) {
 					for (int c = 0; c < cnt; ++c)
-						mes[c] = rotate(msg[lo[c].off], -lo[c].shi);
-					TYPE inp[deg], out[deg];
-					for (int c = 0; c < cnt; ++c)
-						inp[c] = vqsub(mes[c], bl[c]);
-					inp[cnt] = vqsub(par[0], bl[cnt]);
-					inp[cnt+1] = vqsub(par[1], bl[cnt+1]);
-					cnp(out, inp, deg);
-					for (int d = 0; d < deg; ++d)
-						out[d] = vclamp(out[d], -32, 31);
-					for (int d = 0; d < deg; ++d)
-						out[d] = selfcorr(bl[d], out[d]);
-					for (int c = 0; c < cnt; ++c)
-						mes[c] = vqadd(inp[c], out[c]);
-					par[0] = vqadd(inp[cnt], out[cnt]);
-					par[1] = vqadd(inp[cnt+1], out[cnt+1]);
-					if (i) {
-						pty[W*(i-1)+j] = par[0];
-					} else if (j) {
-						pty[W*(q-1)+j-1] = par[0];
-					} else {
-						par[0].v[0] = pty[PTY-1].v[D-1];
-						pty[PTY-1] = rotate(par[0], -1);
-					}
-					pty[W*i+j] = par[1];
-					if (wd) {
-						for (int c = 0; c < cnt; ++c)
-							if (!((wd>>c)&1))
-								msg[lo[c].off] = rotate(mes[c], lo[c].shi);
-						for (int d = 0; d < deg; ++d)
-							if (!((wd>>d)&1))
-								bl[d] = out[d];
-						for (int c = 1; c < cnt; ++c)
-							if (((wd>>c)&1) && !((wd>>(c-1))&1))
-								wd ^= 1 << c++;
-					} else {
-						for (int c = 0; c < cnt; ++c)
+						if (!((wd[W*i+j]>>c)&1))
 							msg[lo[c].off] = rotate(mes[c], lo[c].shi);
-						for (int d = 0; d < deg; ++d)
+					for (int d = 0; d < deg; ++d)
+						if (!((wd[W*i+j]>>d)&1))
 							bl[d] = out[d];
-						break;
+					for (int first = 0, c = 1; c < cnt; ++c) {
+						if (lo[first].off != lo[c].off) {
+							int last = c - 1;
+							if (last != first) {
+								int count = last - first + 1;
+								wd_t mask = ((1 << count) - 1) << first;
+								wd_t cur = wd[W*i+j];
+								wd_t tmp = cur & mask;
+								wd_t rol = (tmp << 1) | (tmp >> (count-1));
+								wd[W*i+j] = (cur & ~mask) | (rol & mask);
+							}
+							first = c;
+						}
 					}
+				} else {
+					for (int c = 0; c < cnt; ++c)
+						msg[lo[c].off] = rotate(mes[c], lo[c].shi);
+					for (int d = 0; d < deg; ++d)
+						bl[d] = out[d];
 				}
 				lo += cnt;
 				bl += deg;
@@ -245,6 +250,10 @@ public:
 					shift[c] = (shift[c] + 1) % M;
 				}
 				std::sort(lo, lo + cnt, [](const Loc &a, const Loc &b){ return a.off < b.off; });
+				wd[W*i+j] = 0;
+				for (int c = 1; c < cnt; ++c)
+					if (lo[c].off == lo[c-1].off)
+						wd[W*i+j] |= 1 << c;
 				lo += cnt;
 			}
 		}
