@@ -142,12 +142,12 @@ class LDPCDecoder
 			int cnt = cnc[i];
 			int deg = cnt + 2;
 			for (int j = 0; j < W; ++j) {
-				bool wd[deg], repeat;
+				bool wd[deg], repeat = false;
 				for (int d = 0; d < deg; ++d)
 					wd[d] = false;
 				for (int c = 1; c < cnt; ++c)
 					if (lo[c].off == lo[c-1].off)
-						wd[c] = true;
+						wd[c] = repeat = true;
 				do {
 					TYPE par[2];
 					if (i) {
@@ -172,9 +172,6 @@ class LDPCDecoder
 						out[d] = vclamp(out[d], -32, 31);
 					for (int d = 0; d < deg; ++d)
 						out[d] = selfcorr(bl[d], out[d]);
-					for (int d = 0; d < deg; ++d)
-						if (!wd[d])
-							bl[d] = out[d];
 					for (int c = 0; c < cnt; ++c)
 						mes[c] = vqadd(inp[c], out[c]);
 					par[0] = vqadd(inp[cnt], out[cnt]);
@@ -188,16 +185,27 @@ class LDPCDecoder
 						pty[PTY-1] = rotate(par[0], -1);
 					}
 					pty[W*i+j] = par[1];
-					for (int c = 0; c < cnt; ++c)
-						if (!wd[c])
-							msg[lo[c].off] = rotate(mes[c], lo[c].shi);
-					repeat = false;
-					for (int c = 1; c < cnt; ++c)
-						if (wd[c] && !wd[c-1]) {
-							wd[c] = false;
-							repeat = true;
-							++c;
+					if (repeat) {
+						for (int c = 0; c < cnt; ++c)
+							if (!wd[c])
+								msg[lo[c].off] = rotate(mes[c], lo[c].shi);
+						for (int d = 0; d < deg; ++d)
+							if (!wd[d])
+								bl[d] = out[d];
+						repeat = false;
+						for (int c = 1; c < cnt; ++c) {
+							if (wd[c] && !wd[c-1]) {
+								wd[c] = false;
+								repeat = true;
+								++c;
+							}
 						}
+					} else {
+						for (int c = 0; c < cnt; ++c)
+							msg[lo[c].off] = rotate(mes[c], lo[c].shi);
+						for (int d = 0; d < deg; ++d)
+							bl[d] = out[d];
+					}
 				} while (repeat);
 				lo += cnt;
 				bl += deg;
