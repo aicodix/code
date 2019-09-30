@@ -189,8 +189,10 @@ class LDPCDecoder
 						if (!((wd[W*i+j]>>d)&1))
 							bl[d] = out[d];
 					for (int first = 0, c = 1; c < cnt; ++c) {
-						if (lo[first].off != lo[c].off) {
+						if (lo[first].off != lo[c].off || c == cnt-1) {
 							int last = c - 1;
+							if (c == cnt-1)
+								++last;
 							if (last != first) {
 								int count = last - first + 1;
 								wd_t mask = ((1 << count) - 1) << first;
