@@ -15,11 +15,7 @@ Copyright 2018 Ahmet Inan <inan@aicodix.de>
 #include <algorithm>
 #include <functional>
 #include "ldpc_encoder.hh"
-#if 0
 #include "ldpc_decoder.hh"
-#else
-#include "ldpc_decoder2.hh"
-#endif
 
 struct DVB_T2_TABLE_A1
 {

@@ -1,8 +1,6 @@
 /*
 LDPC SISO layered decoder
 
-This version stores only the first q bit positions
-
 Copyright 2018 Ahmet Inan <inan@aicodix.de>
 */
 
@@ -40,15 +38,19 @@ class LDPCDecoder
 	static const int MSG = K/D;
 	static const int CNC = TABLE::LINKS_MAX_CN - 2;
 	static const int BNL = (TABLE::LINKS_TOTAL + D-1) / D;
+	static const int LOC = (TABLE::LINKS_TOTAL - (2*R-1) + D-1) / D;
 
 	typedef SIMD<int8_t, SIMD_SIZE> TYPE;
 	typedef struct { uint16_t off; uint16_t shi; } Loc;
+	typedef uint32_t wd_t;
+	static_assert(sizeof(wd_t) * 8 >= CNC, "write disable mask needs at least as many bits as max check node links");
 	Rotate<TYPE, D> rotate;
 
 	TYPE bnl[BNL];
 	TYPE msg[MSG];
 	TYPE pty[PTY];
-	uint16_t pos[q * CNC];
+	Loc loc[LOC];
+	wd_t wd[PTY];
 	uint8_t cnc[q];
 
 	static TYPE eor(TYPE a, TYPE b)
@@ -67,33 +69,6 @@ class LDPCDecoder
 	{
 		return orr(eor(a, b), vdup<TYPE>(127));
 	}
-	static void cnp(TYPE *out, const TYPE *inp, int cnt)
-	{
-		TYPE mags[cnt];
-		for (int i = 0; i < cnt; ++i)
-			mags[i] = vqabs(inp[i]);
-
-		if (BETA) {
-			auto beta = vunsigned(vdup<TYPE>(BETA));
-			for (int i = 0; i < cnt; ++i)
-				mags[i] = vsigned(vqsub(vunsigned(mags[i]), beta));
-		}
-
-		TYPE mins[2];
-		mins[0] = vmin(mags[0], mags[1]);
-		mins[1] = vmax(mags[0], mags[1]);
-		for (int i = 2; i < cnt; ++i) {
-			mins[1] = vmin(mins[1], vmax(mins[0], mags[i]));
-			mins[0] = vmin(mins[0], mags[i]);
-		}
-
-		TYPE signs = inp[0];
-		for (int i = 1; i < cnt; ++i)
-			signs = eor(signs, inp[i]);
-
-		for (int i = 0; i < cnt; ++i)
-			out[i] = vsign(other(mags[i], mins[0], mins[1]), mine(signs, inp[i]));
-	}
 	static TYPE selfcorr(TYPE a, TYPE b)
 	{
 		return vreinterpret<TYPE>(vand(vmask(b), vorr(vceqz(a), veor(vcgtz(a), vcltz(b)))));
@@ -101,40 +76,33 @@ class LDPCDecoder
 
 	bool bad()
 	{
+		Loc *lo = loc;
 		for (int i = 0; i < q; ++i) {
 			int cnt = cnc[i];
-			int offset[cnt], shift[cnt];
-			for (int c = 0; c < cnt; ++c) {
-				shift[c] = pos[CNC*i+c] % M;
-				offset[c] = pos[CNC*i+c] - shift[c];
-			}
+			int deg = cnt + 2;
 			auto res = vmask(vzero<TYPE>());
 			for (int j = 0; j < W; ++j) {
-				Loc lo[cnt];
-				for (int c = 0; c < cnt; ++c) {
-					lo[c].off = offset[c] / D + shift[c] % W;
-					lo[c].shi = shift[c] / W;
-					shift[c] = (shift[c] + 1) % M;
-				}
-				TYPE par[2];
-				if (i) {
-					par[0] = pty[W*(i-1)+j];
-				} else if (j) {
-					par[0] = pty[W*(q-1)+j-1];
-				} else {
-					par[0] = rotate(pty[PTY-1], 1);
-					par[0].v[0] = 127;
-				}
-				par[1] = pty[W*i+j];
-				TYPE mes[cnt];
-				for (int c = 0; c < cnt; ++c)
-					mes[c] = rotate(msg[lo[c].off], -lo[c].shi);
 				TYPE cnv = vdup<TYPE>(1);
-				for (int c = 0; c < 2; ++c)
-					cnv = vsign(cnv, par[c]);
-				for (int c = 0; c < cnt; ++c)
-					cnv = vsign(cnv, mes[c]);
+				for (int k = 0; k < deg; ++k) {
+					TYPE tmp;
+					if (k < cnt) {
+						tmp = rotate(msg[lo[k].off], -lo[k].shi);
+					} else if (k == cnt) {
+						tmp = pty[W*i+j];
+					} else {
+						if (i) {
+							tmp = pty[W*(i-1)+j];
+						} else if (j) {
+							tmp = pty[W*(q-1)+j-1];
+						} else {
+							tmp = rotate(pty[PTY-1], 1);
+							tmp.v[0] = 127;
+						}
+					}
+					cnv = vsign(cnv, tmp);
+				}
 				res = vorr(res, vclez(cnv));
+				lo += cnt;
 			}
 			for (int n = 0; n < D; ++n)
 				if (res.v[n])
@@ -145,87 +113,101 @@ class LDPCDecoder
 	void update()
 	{
 		TYPE *bl = bnl;
+		Loc *lo = loc;
 		for (int i = 0; i < q; ++i) {
 			int cnt = cnc[i];
-			int offset[cnt], shift[cnt];
-			for (int c = 0; c < cnt; ++c) {
-				shift[c] = pos[CNC*i+c] % M;
-				offset[c] = pos[CNC*i+c] - shift[c];
-			}
 			int deg = cnt + 2;
 			for (int j = 0; j < W; ++j) {
-				Loc lo[cnt];
-				for (int c = 0; c < cnt; ++c) {
-					lo[c].off = offset[c] / D + shift[c] % W;
-					lo[c].shi = shift[c] / W;
-					shift[c] = (shift[c] + 1) % M;
-				}
-				std::sort(lo, lo + cnt, [](const Loc &a, const Loc &b){ return a.off < b.off; });
-				bool wd[deg], repeat = false;
-				for (int d = 0; d < deg; ++d)
-					wd[d] = false;
-				for (int c = 1; c < cnt; ++c)
-					if (lo[c].off == lo[c-1].off)
-						wd[c] = repeat = true;
-				do {
-					TYPE par[2];
-					if (i) {
-						par[0] = pty[W*(i-1)+j];
-					} else if (j) {
-						par[0] = pty[W*(q-1)+j-1];
+				TYPE mags[deg], inps[deg];
+				TYPE min0 = vdup<TYPE>(127);
+				TYPE min1 = vdup<TYPE>(127);
+				TYPE signs = vdup<TYPE>(127);
+
+				for (int k = 0; k < deg; ++k) {
+					TYPE tmp;
+					if (k < cnt) {
+						tmp = rotate(msg[lo[k].off], -lo[k].shi);
+					} else if (k == cnt) {
+						tmp = pty[W*i+j];
 					} else {
-						par[0] = rotate(pty[PTY-1], 1);
-						par[0].v[0] = 127;
-					}
-					par[1] = pty[W*i+j];
-					TYPE mes[cnt];
-					for (int c = 0; c < cnt; ++c)
-						mes[c] = rotate(msg[lo[c].off], -lo[c].shi);
-					TYPE inp[deg], out[deg];
-					for (int c = 0; c < cnt; ++c)
-						inp[c] = vqsub(mes[c], bl[c]);
-					inp[cnt] = vqsub(par[0], bl[cnt]);
-					inp[cnt+1] = vqsub(par[1], bl[cnt+1]);
-					cnp(out, inp, deg);
-					for (int d = 0; d < deg; ++d)
-						out[d] = vclamp(out[d], -32, 31);
-					for (int d = 0; d < deg; ++d)
-						out[d] = selfcorr(bl[d], out[d]);
-					for (int c = 0; c < cnt; ++c)
-						mes[c] = vqadd(inp[c], out[c]);
-					par[0] = vqadd(inp[cnt], out[cnt]);
-					par[1] = vqadd(inp[cnt+1], out[cnt+1]);
-					if (i) {
-						pty[W*(i-1)+j] = par[0];
-					} else if (j) {
-						pty[W*(q-1)+j-1] = par[0];
-					} else {
-						par[0].v[0] = pty[PTY-1].v[D-1];
-						pty[PTY-1] = rotate(par[0], -1);
-					}
-					pty[W*i+j] = par[1];
-					if (repeat) {
-						for (int c = 0; c < cnt; ++c)
-							if (!wd[c])
-								msg[lo[c].off] = rotate(mes[c], lo[c].shi);
-						for (int d = 0; d < deg; ++d)
-							if (!wd[d])
-								bl[d] = out[d];
-						repeat = false;
-						for (int c = 1; c < cnt; ++c) {
-							if (wd[c] && !wd[c-1]) {
-								wd[c] = false;
-								repeat = true;
-								++c;
-							}
+						if (i) {
+							tmp = pty[W*(i-1)+j];
+						} else if (j) {
+							tmp = pty[W*(q-1)+j-1];
+						} else {
+							tmp = rotate(pty[PTY-1], 1);
+							tmp.v[0] = 127;
 						}
-					} else {
-						for (int c = 0; c < cnt; ++c)
-							msg[lo[c].off] = rotate(mes[c], lo[c].shi);
-						for (int d = 0; d < deg; ++d)
-							bl[d] = out[d];
 					}
-				} while (repeat);
+
+					TYPE inp = vqsub(tmp, bl[k]);
+
+					TYPE mag = vqabs(inp);
+
+					if (BETA) {
+						auto beta = vunsigned(vdup<TYPE>(BETA));
+						mag = vsigned(vqsub(vunsigned(mag), beta));
+					}
+
+					min1 = vmin(min1, vmax(min0, mag));
+					min0 = vmin(min0, mag);
+
+					signs = eor(signs, inp);
+
+					inps[k] = inp;
+					mags[k] = mag;
+				}
+				for (int k = 0; k < deg; ++k) {
+					TYPE mag = mags[k];
+					TYPE inp = inps[k];
+
+					TYPE out = vsign(other(mag, min0, min1), mine(signs, inp));
+
+					out = vclamp(out, -32, 31);
+
+					out = selfcorr(bl[k], out);
+
+					TYPE tmp = vqadd(inp, out);
+
+					if (k < cnt) {
+						if (!((wd[W*i+j]>>k)&1)) {
+							bl[k] = out;
+							msg[lo[k].off] = rotate(tmp, lo[k].shi);
+						}
+					} else if (k == cnt) {
+						bl[k] = out;
+						pty[W*i+j] = tmp;
+					} else {
+						bl[k] = out;
+						if (i) {
+							pty[W*(i-1)+j] = tmp;
+						} else if (j) {
+							pty[W*(q-1)+j-1] = tmp;
+						} else {
+							tmp.v[0] = pty[PTY-1].v[D-1];
+							pty[PTY-1] = rotate(tmp, -1);
+						}
+					}
+				}
+				if (wd[W*i+j]) {
+					for (int first = 0, c = 1; c < cnt; ++c) {
+						if (lo[first].off != lo[c].off || c == cnt-1) {
+							int last = c - 1;
+							if (c == cnt-1)
+								++last;
+							if (last != first) {
+								int count = last - first + 1;
+								wd_t mask = ((1 << count) - 1) << first;
+								wd_t cur = wd[W*i+j];
+								wd_t tmp = cur & mask;
+								wd_t rol = (tmp << 1) | (tmp >> (count-1));
+								wd[W*i+j] = (cur & ~mask) | (rol & mask);
+							}
+							first = c;
+						}
+					}
+				}
+				lo += cnt;
 				bl += deg;
 			}
 		}
@@ -235,6 +217,7 @@ class LDPCDecoder
 public:
 	LDPCDecoder()
 	{
+		uint16_t pos[q * CNC];
 		for (int i = 0; i < q; ++i)
 			cnc[i] = 0;
 		int bit_pos = 0;
@@ -251,6 +234,30 @@ public:
 				bit_pos += M;
 			}
 		}
+		Loc *lo = loc;
+		for (int i = 0; i < q; ++i) {
+			int cnt = cnc[i];
+			int offset[cnt], shift[cnt];
+			for (int c = 0; c < cnt; ++c) {
+				shift[c] = pos[CNC*i+c] % M;
+				offset[c] = pos[CNC*i+c] - shift[c];
+			}
+			for (int j = 0; j < W; ++j) {
+				for (int c = 0; c < cnt; ++c) {
+					lo[c].off = offset[c] / D + shift[c] % W;
+					lo[c].shi = shift[c] / W;
+					shift[c] = (shift[c] + 1) % M;
+				}
+				std::sort(lo, lo + cnt, [](const Loc &a, const Loc &b){ return a.off < b.off; });
+				wd[W*i+j] = 0;
+				for (int c = 1; c < cnt; ++c)
+					if (lo[c].off == lo[c-1].off)
+						wd[W*i+j] |= 1 << c;
+				lo += cnt;
+			}
+		}
+		//assert(lo <= loc + LOC);
+		//std::cerr << LOC - (lo - loc) << std::endl;
 	}
 	int operator()(int8_t *message, int8_t *parity, int trials = 25)
 	{
