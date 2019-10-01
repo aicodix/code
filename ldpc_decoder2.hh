@@ -45,7 +45,7 @@ class LDPCDecoder
 	typedef SIMD<int8_t, SIMD_SIZE> TYPE;
 	typedef struct { uint16_t off; uint16_t shi; } Loc;
 	typedef uint32_t wd_t;
-	static_assert(sizeof(wd_t) * 8 >= TABLE::LINKS_MAX_CN, "write disable mask needs at least as many bits as max check node links");
+	static_assert(sizeof(wd_t) * 8 >= CNC, "write disable mask needs at least as many bits as max check node links");
 	Rotate<TYPE, D> rotate;
 
 	TYPE bnl[BNL];
