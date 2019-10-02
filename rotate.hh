@@ -61,34 +61,6 @@ public:
 };
 #endif
 
-#ifdef __SSE4_1__
-template <int WIDTH>
-class Rotate<SIMD<int8_t, 16>, WIDTH>
-{
-	static const int SIZE = 16;
-	static_assert(WIDTH <= SIZE, "width must be smaller or equal to SIMD size");
-	typedef SIMD<int8_t, SIZE> TYPE;
-	TYPE rot[WIDTH];
-public:
-	Rotate()
-	{
-		for (int i = 0; i < WIDTH; ++i) {
-			rot[i] = vdup<TYPE>(0x80);
-			for (int j = 0; j < WIDTH; ++j)
-				rot[i].v[j] = (j - i + WIDTH) % WIDTH;
-		}
-	}
-	TYPE operator()(TYPE a, int s)
-	{
-		if (s < 0)
-			s += WIDTH;
-		TYPE ret;
-		ret.m = _mm_shuffle_epi8(a.m, rot[s].m);
-		return ret;
-	}
-};
-#endif
-
 #ifdef __AVX2__
 template <int WIDTH>
 class Rotate<SIMD<int8_t, 32>, WIDTH>
@@ -133,6 +105,34 @@ public:
 		return ret;
 	}
 };
+#else
+#ifdef __SSE4_1__
+template <int WIDTH>
+class Rotate<SIMD<int8_t, 16>, WIDTH>
+{
+	static const int SIZE = 16;
+	static_assert(WIDTH <= SIZE, "width must be smaller or equal to SIMD size");
+	typedef SIMD<int8_t, SIZE> TYPE;
+	TYPE rot[WIDTH];
+public:
+	Rotate()
+	{
+		for (int i = 0; i < WIDTH; ++i) {
+			rot[i] = vdup<TYPE>(0x80);
+			for (int j = 0; j < WIDTH; ++j)
+				rot[i].v[j] = (j - i + WIDTH) % WIDTH;
+		}
+	}
+	TYPE operator()(TYPE a, int s)
+	{
+		if (s < 0)
+			s += WIDTH;
+		TYPE ret;
+		ret.m = _mm_shuffle_epi8(a.m, rot[s].m);
+		return ret;
+	}
+};
+#endif
 #endif
 
 }
