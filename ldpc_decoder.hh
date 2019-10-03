@@ -200,8 +200,8 @@ class LDPCDecoder
 								wd_t mask = ((1 << count) - 1) << first;
 								wd_t cur = wd[W*i+j];
 								wd_t tmp = cur & mask;
-								wd_t rol = (tmp << 1) | (tmp >> (count-1));
-								wd[W*i+j] = (cur & ~mask) | (rol & mask);
+								wd_t ror = (tmp >> 1) | (tmp << (count-1));
+								wd[W*i+j] = (cur & ~mask) | (ror & mask);
 							}
 							first = c;
 						}
@@ -250,8 +250,8 @@ public:
 				}
 				std::sort(lo, lo + cnt, [](const Loc &a, const Loc &b){ return a.off < b.off; });
 				wd[W*i+j] = 0;
-				for (int c = 1; c < cnt; ++c)
-					if (lo[c].off == lo[c-1].off)
+				for (int c = 0; c < cnt-1; ++c)
+					if (lo[c].off == lo[c+1].off)
 						wd[W*i+j] |= 1 << c;
 				lo += cnt;
 			}
