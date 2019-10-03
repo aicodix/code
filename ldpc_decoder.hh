@@ -75,38 +75,12 @@ class LDPCDecoder
 		return vreinterpret<TYPE>(vand(vmask(b), vorr(vceqz(a), veor(vcgtz(a), vcltz(b)))));
 	}
 
-	bool bad()
-	{
-		Loc *lo = loc;
-		for (int i = 0; i < q; ++i) {
-			int deg = cnc[i] + 2;
-			auto res = vmask(vzero<TYPE>());
-			for (int j = 0; j < W; ++j) {
-				TYPE cnv = vdup<TYPE>(1);
-				for (int k = 0; k < deg; ++k) {
-					int offset = lo[k].off;
-					int shift = lo[k].shi;
-					shift -= csh[offset];
-					shift %= D;
-					TYPE tmp = rotate(var[offset], shift);
-					if (i == 0 && j == 0 && offset == VAR-1)
-						tmp.v[0] = 127;
-					cnv = vsign(cnv, tmp);
-				}
-				res = vorr(res, vclez(cnv));
-				lo += deg;
-			}
-			for (int n = 0; n < D; ++n)
-				if (res.v[n])
-					return true;
-		}
-		return false;
-	}
-	void update()
+	bool update()
 	{
 		TYPE *bl = bnl;
 		Loc *lo = loc;
 		wdm_t *wd = wdm;
+		auto bad = vmask(vzero<TYPE>());
 		for (int i = 0; i < q; ++i) {
 			int deg = cnc[i] + 2;
 			for (int j = 0; j < W; ++j) {
@@ -114,6 +88,7 @@ class LDPCDecoder
 				TYPE min0 = vdup<TYPE>(127);
 				TYPE min1 = vdup<TYPE>(127);
 				TYPE signs = vdup<TYPE>(127);
+				TYPE cnv = vdup<TYPE>(127);
 				bool write_conflict = false;
 				int last_offset = -1;
 				int8_t prev_val = 0;
@@ -162,6 +137,8 @@ class LDPCDecoder
 
 					TYPE tmp = vqadd(inp, out);
 
+					cnv = vsign(cnv, tmp);
+
 					int offset = lo[k].off;
 					int shift = lo[k].shi;
 
@@ -174,6 +151,8 @@ class LDPCDecoder
 						csh[offset] = shift;
 					}
 				}
+				bad = vorr(bad, vclez(cnv));
+
 				if (write_conflict) {
 					for (int first = 0, k = 1; k < deg; ++k) {
 						if (lo[first].off != lo[k].off || k == deg-1) {
@@ -199,6 +178,10 @@ class LDPCDecoder
 		}
 		//assert(bl <= bnl + BNL);
 		//std::cerr << BNL - (bl - bnl) << std::endl;
+		for (int n = 0; n < D; ++n)
+			if (bad.v[n])
+				return true;
+		return false;
 	}
 public:
 	LDPCDecoder()
@@ -276,10 +259,12 @@ public:
 			for (int j = 0; j < W; ++j)
 				for (int n = 0; n < D; ++n)
 					var[MSG+W*i+j].v[n] = parity[q*(W*n+j)+i];
-		while (bad() && --trials >= 0)
-			update();
+
+		while (--trials >= 0 && update());
+
 		for (int i = 0; i < VAR; ++i)
 			var[i] = rotate(var[i], -csh[i]);
+
 		for (int i = 0; i < K/M; ++i)
 			for (int j = 0; j < W; ++j)
 				for (int n = 0; n < D; ++n)
