@@ -95,10 +95,9 @@ class LDPCDecoder
 			for (int k = 0; k < deg; ++k) {
 				int offset = lo[k].off;
 				int shift = lo[k].shi;
-				shift -= csh[offset];
-				shift %= D;
-				TYPE tmp = rotate(var[offset], shift);
-				if (i == 0 && offset == VAR-1) {
+				int dshift = (shift - csh[offset]) % D;
+				TYPE tmp = rotate(var[offset], dshift);
+				if (offset == VAR-1 && shift == 1) {
 					prev_val = tmp.v[0];
 					tmp.v[0] = 127;
 				}
@@ -141,7 +140,7 @@ class LDPCDecoder
 				int offset = lo[k].off;
 				int shift = lo[k].shi;
 
-				if (i == 0 && offset == VAR-1)
+				if (offset == VAR-1 && shift == 1)
 					tmp.v[0] = prev_val;
 
 				if (!write_conflict || !((*wd>>k)&1)) {
