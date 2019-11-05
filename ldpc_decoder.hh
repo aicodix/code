@@ -52,7 +52,7 @@ class LDPCDecoder
 	Loc loc[LOC];
 	wdm_t wdm[PTY];
 	int16_t csh[VAR];
-	uint8_t cnc[q];
+	uint8_t cnt[PTY];
 
 	static TYPE eor(TYPE a, TYPE b)
 	{
@@ -81,100 +81,98 @@ class LDPCDecoder
 		Loc *lo = loc;
 		wdm_t *wd = wdm;
 		auto bad = vmask(vzero<TYPE>());
-		for (int i = 0; i < q; ++i) {
-			int deg = cnc[i] + 2;
-			for (int j = 0; j < W; ++j) {
-				TYPE mags[deg], inps[deg];
-				TYPE min0 = vdup<TYPE>(127);
-				TYPE min1 = vdup<TYPE>(127);
-				TYPE signs = vdup<TYPE>(127);
-				TYPE cnv = vdup<TYPE>(127);
-				bool write_conflict = false;
-				int last_offset = -1;
-				int8_t prev_val = 0;
+		for (int i = 0; i < PTY; ++i) {
+			int deg = cnt[i];
+			TYPE mags[deg], inps[deg];
+			TYPE min0 = vdup<TYPE>(127);
+			TYPE min1 = vdup<TYPE>(127);
+			TYPE signs = vdup<TYPE>(127);
+			TYPE cnv = vdup<TYPE>(127);
+			bool write_conflict = false;
+			int last_offset = -1;
+			int8_t prev_val = 0;
 
-				for (int k = 0; k < deg; ++k) {
-					int offset = lo[k].off;
-					int shift = lo[k].shi;
-					shift -= csh[offset];
-					shift %= D;
-					TYPE tmp = rotate(var[offset], shift);
-					if (i == 0 && j == 0 && offset == VAR-1) {
-						prev_val = tmp.v[0];
-						tmp.v[0] = 127;
-					}
-
-					if (last_offset == offset)
-						write_conflict = true;
-					last_offset = offset;
-
-					TYPE inp = vqsub(tmp, bl[k]);
-
-					TYPE mag = vqabs(inp);
-
-					if (BETA) {
-						auto beta = vunsigned(vdup<TYPE>(BETA));
-						mag = vsigned(vqsub(vunsigned(mag), beta));
-					}
-
-					min1 = vmin(min1, vmax(min0, mag));
-					min0 = vmin(min0, mag);
-
-					signs = eor(signs, inp);
-
-					inps[k] = inp;
-					mags[k] = mag;
+			for (int k = 0; k < deg; ++k) {
+				int offset = lo[k].off;
+				int shift = lo[k].shi;
+				shift -= csh[offset];
+				shift %= D;
+				TYPE tmp = rotate(var[offset], shift);
+				if (i == 0 && offset == VAR-1) {
+					prev_val = tmp.v[0];
+					tmp.v[0] = 127;
 				}
-				for (int k = 0; k < deg; ++k) {
-					TYPE mag = mags[k];
-					TYPE inp = inps[k];
 
-					TYPE out = vsign(other(mag, min0, min1), mine(signs, inp));
+				if (last_offset == offset)
+					write_conflict = true;
+				last_offset = offset;
 
-					out = vclamp(out, -32, 31);
+				TYPE inp = vqsub(tmp, bl[k]);
 
-					out = selfcorr(bl[k], out);
+				TYPE mag = vqabs(inp);
 
-					TYPE tmp = vqadd(inp, out);
-
-					cnv = vsign(cnv, tmp);
-
-					int offset = lo[k].off;
-					int shift = lo[k].shi;
-
-					if (i == 0 && j == 0 && offset == VAR-1)
-						tmp.v[0] = prev_val;
-
-					if (!write_conflict || !((*wd>>k)&1)) {
-						bl[k] = out;
-						var[offset] = tmp;
-						csh[offset] = shift;
-					}
+				if (BETA) {
+					auto beta = vunsigned(vdup<TYPE>(BETA));
+					mag = vsigned(vqsub(vunsigned(mag), beta));
 				}
-				bad = vorr(bad, vclez(cnv));
 
-				if (write_conflict) {
-					for (int first = 0, k = 1; k < deg; ++k) {
-						if (lo[first].off != lo[k].off || k == deg-1) {
-							int last = k - 1;
-							if (k == deg-1)
-								++last;
-							if (last != first) {
-								int count = last - first + 1;
-								wdm_t mask = ((1 << count) - 1) << first;
-								wdm_t cur = *wd;
-								wdm_t tmp = cur & mask;
-								wdm_t ror = (tmp >> 1) | (tmp << (count-1));
-								*wd = (cur & ~mask) | (ror & mask);
-							}
-							first = k;
-						}
-					}
-					++wd;
-				}
-				lo += deg;
-				bl += deg;
+				min1 = vmin(min1, vmax(min0, mag));
+				min0 = vmin(min0, mag);
+
+				signs = eor(signs, inp);
+
+				inps[k] = inp;
+				mags[k] = mag;
 			}
+			for (int k = 0; k < deg; ++k) {
+				TYPE mag = mags[k];
+				TYPE inp = inps[k];
+
+				TYPE out = vsign(other(mag, min0, min1), mine(signs, inp));
+
+				out = vclamp(out, -32, 31);
+
+				out = selfcorr(bl[k], out);
+
+				TYPE tmp = vqadd(inp, out);
+
+				cnv = vsign(cnv, tmp);
+
+				int offset = lo[k].off;
+				int shift = lo[k].shi;
+
+				if (i == 0 && offset == VAR-1)
+					tmp.v[0] = prev_val;
+
+				if (!write_conflict || !((*wd>>k)&1)) {
+					bl[k] = out;
+					var[offset] = tmp;
+					csh[offset] = shift;
+				}
+			}
+			bad = vorr(bad, vclez(cnv));
+
+			if (write_conflict) {
+				for (int first = 0, k = 1; k < deg; ++k) {
+					if (lo[first].off != lo[k].off || k == deg-1) {
+						int last = k - 1;
+						if (k == deg-1)
+							++last;
+						if (last != first) {
+							int count = last - first + 1;
+							wdm_t mask = ((1 << count) - 1) << first;
+							wdm_t cur = *wd;
+							wdm_t tmp = cur & mask;
+							wdm_t ror = (tmp >> 1) | (tmp << (count-1));
+							*wd = (cur & ~mask) | (ror & mask);
+						}
+						first = k;
+					}
+				}
+				++wd;
+			}
+			lo += deg;
+			bl += deg;
 		}
 		//assert(bl <= bnl + BNL);
 		//std::cerr << BNL - (bl - bnl) << std::endl;
@@ -187,6 +185,7 @@ public:
 	LDPCDecoder()
 	{
 		uint16_t pos[q * CNC];
+		uint8_t cnc[q];
 		for (int i = 0; i < q; ++i)
 			cnc[i] = 0;
 		int bit_pos = 0;
@@ -203,6 +202,9 @@ public:
 				bit_pos += M;
 			}
 		}
+		for (int i = 0; i < q; ++i)
+			for (int j = 0; j < W; ++j)
+				cnt[W*i+j] = cnc[i] + 2;
 		Loc *lo = loc;
 		wdm_t *wd = wdm;
 		for (int i = 0; i < q; ++i) {
