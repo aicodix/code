@@ -241,6 +241,14 @@ public:
 						tmp |= 1 << d;
 				if (tmp)
 					*wd++ = tmp;
+
+#if 0
+				std::cout << deg;
+				for (int d = 0; d < deg; ++d)
+					std::cout << '\t' << (int)lo[d].off << ':' << (int)lo[d].shi;
+				std::cout << std::endl;
+#endif
+
 				lo += deg;
 			}
 		}
