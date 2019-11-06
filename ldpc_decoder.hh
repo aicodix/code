@@ -79,7 +79,6 @@ class LDPCDecoder
 	{
 		TYPE *bl = bnl;
 		Loc *lo = loc;
-		wdm_t *wd = wdm;
 		auto bad = vmask(vzero<TYPE>());
 		for (int i = 0; i < PTY; ++i) {
 			int deg = cnt[i];
@@ -88,8 +87,9 @@ class LDPCDecoder
 			TYPE min1 = vdup<TYPE>(127);
 			TYPE signs = vdup<TYPE>(127);
 			TYPE cnv = vdup<TYPE>(127);
-			bool write_conflict = false;
-			int last_offset = -1;
+			wdm_t first_wdb = 0;
+			wdm_t next_wdm = 0;
+			int last_offset = 0;
 			int8_t prev_val = 0;
 
 			for (int k = 0; k < deg; ++k) {
@@ -102,8 +102,17 @@ class LDPCDecoder
 					tmp.v[0] = 127;
 				}
 
-				if (last_offset == offset)
-					write_conflict = true;
+				wdm_t this_wdb = (wdm[i]>>k)&1;
+				if (k) {
+					if (last_offset == offset) {
+						next_wdm |= this_wdb<<(k-1);
+					} else {
+						next_wdm |= first_wdb<<(k-1);
+						first_wdb = this_wdb;
+					}
+				} else {
+					first_wdb = this_wdb;
+				}
 				last_offset = offset;
 
 				TYPE inp = vqsub(tmp, bl[k]);
@@ -143,33 +152,14 @@ class LDPCDecoder
 				if (offset == VAR-1 && shift == 1)
 					tmp.v[0] = prev_val;
 
-				if (!write_conflict || !((*wd>>k)&1)) {
+				if (!((wdm[i]>>k)&1)) {
 					bl[k] = out;
 					var[offset] = tmp;
 					csh[offset] = shift;
 				}
 			}
 			bad = vorr(bad, vclez(cnv));
-
-			if (write_conflict) {
-				for (int first = 0, k = 1; k < deg; ++k) {
-					if (lo[first].off != lo[k].off || k == deg-1) {
-						int last = k - 1;
-						if (k == deg-1)
-							++last;
-						if (last != first) {
-							int count = last - first + 1;
-							wdm_t mask = ((1 << count) - 1) << first;
-							wdm_t cur = *wd;
-							wdm_t tmp = cur & mask;
-							wdm_t ror = (tmp >> 1) | (tmp << (count-1));
-							*wd = (cur & ~mask) | (ror & mask);
-						}
-						first = k;
-					}
-				}
-				++wd;
-			}
+			wdm[i] = next_wdm;
 			lo += deg;
 			bl += deg;
 		}
@@ -205,7 +195,6 @@ public:
 			for (int j = 0; j < W; ++j)
 				cnt[W*i+j] = cnc[i] + 2;
 		Loc *lo = loc;
-		wdm_t *wd = wdm;
 		for (int i = 0; i < q; ++i) {
 			int cnt = cnc[i];
 			int deg = cnt + 2;
@@ -238,16 +227,13 @@ public:
 				for (int d = 0; d < deg-1; ++d)
 					if (lo[d].off == lo[d+1].off)
 						tmp |= 1 << d;
-				if (tmp)
-					*wd++ = tmp;
-
+				wdm[W*i+j] = tmp;
 #if 0
 				std::cout << deg;
 				for (int d = 0; d < deg; ++d)
 					std::cout << '\t' << (int)lo[d].off << ':' << (int)lo[d].shi;
 				std::cout << std::endl;
 #endif
-
 				lo += deg;
 			}
 		}
