@@ -132,6 +132,7 @@ class LDPCDecoder
 				inps[k] = inp;
 				mags[k] = mag;
 			}
+			next_wdm |= first_wdb<<(deg-1);
 			for (int k = 0; k < deg; ++k) {
 				TYPE mag = mags[k];
 				TYPE inp = inps[k];
