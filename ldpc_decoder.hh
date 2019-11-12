@@ -8,6 +8,7 @@ Copyright 2018 Ahmet Inan <inan@aicodix.de>
 #define LDPC_DECODER_HH
 
 #include <algorithm>
+//#include <bitset>
 #include "simd.hh"
 #include "rotate.hh"
 
@@ -231,6 +232,7 @@ public:
 				wdm[W*i+j] = tmp;
 #if 0
 				std::cout << deg;
+				std::cout << '\t' << std::bitset<TABLE::LINKS_MAX_CN>(tmp);
 				for (int d = 0; d < deg; ++d)
 					std::cout << '\t' << (int)lo[d].off << ':' << (int)lo[d].shi;
 				std::cout << std::endl;
