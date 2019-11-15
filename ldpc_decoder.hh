@@ -8,7 +8,6 @@ Copyright 2018 Ahmet Inan <inan@aicodix.de>
 #define LDPC_DECODER_HH
 
 #include <algorithm>
-//#include <bitset>
 #include "simd.hh"
 #include "rotate.hh"
 
@@ -43,15 +42,12 @@ class LDPCDecoder
 	static const int LOC = (TABLE::LINKS_TOTAL + D-1) / D;
 
 	typedef SIMD<int8_t, SIMD_SIZE> TYPE;
-	typedef struct { uint16_t off; uint16_t shi; } Loc;
-	typedef uint32_t wdm_t;
-	static_assert(sizeof(wdm_t) * 8 >= TABLE::LINKS_MAX_CN, "write disable mask needs at least as many bits as max check node links");
+	typedef struct { uint16_t off; uint16_t shi; bool wd; } Loc;
 	Rotate<TYPE, D> rotate;
 
 	TYPE bnl[BNL];
 	TYPE var[VAR];
 	Loc loc[LOC];
-	wdm_t wdm[PTY];
 	int16_t csh[VAR];
 	uint8_t cnt[PTY];
 
@@ -88,8 +84,7 @@ class LDPCDecoder
 			TYPE min1 = vdup<TYPE>(127);
 			TYPE signs = vdup<TYPE>(127);
 			TYPE cnv = vdup<TYPE>(127);
-			wdm_t first_wdb = 0;
-			wdm_t next_wdm = 0;
+			bool first_wd;
 			int last_offset = 0;
 			int8_t prev_val = 0;
 
@@ -102,19 +97,6 @@ class LDPCDecoder
 					prev_val = tmp.v[0];
 					tmp.v[0] = 127;
 				}
-
-				wdm_t this_wdb = (wdm[i]>>k)&1;
-				if (k) {
-					if (last_offset == offset) {
-						next_wdm |= this_wdb<<(k-1);
-					} else {
-						next_wdm |= first_wdb<<(k-1);
-						first_wdb = this_wdb;
-					}
-				} else {
-					first_wdb = this_wdb;
-				}
-				last_offset = offset;
 
 				TYPE inp = vqsub(tmp, bl[k]);
 
@@ -133,7 +115,6 @@ class LDPCDecoder
 				inps[k] = inp;
 				mags[k] = mag;
 			}
-			next_wdm |= first_wdb<<(deg-1);
 			for (int k = 0; k < deg; ++k) {
 				TYPE mag = mags[k];
 				TYPE inp = inps[k];
@@ -154,14 +135,26 @@ class LDPCDecoder
 				if (offset == VAR-1 && shift == 1)
 					tmp.v[0] = prev_val;
 
-				if (!((wdm[i]>>k)&1)) {
+				bool this_wd = lo[k].wd;
+				if (!this_wd) {
 					bl[k] = out;
 					var[offset] = tmp;
 					csh[offset] = shift;
 				}
+				if (k) {
+					if (last_offset == offset) {
+						lo[k-1].wd = this_wd;
+					} else {
+						lo[k-1].wd = first_wd;
+						first_wd = this_wd;
+					}
+				} else {
+					first_wd = this_wd;
+				}
+				last_offset = offset;
 			}
+			lo[deg-1].wd = first_wd;
 			bad = vorr(bad, vclez(cnv));
-			wdm[i] = next_wdm;
 			lo += deg;
 			bl += deg;
 		}
@@ -225,16 +218,13 @@ public:
 				lo[cnt+1].shi = 0;
 
 				std::sort(lo, lo + deg, [](const Loc &a, const Loc &b){ return a.off < b.off; });
-				wdm_t tmp = 0;
 				for (int d = 0; d < deg-1; ++d)
-					if (lo[d].off == lo[d+1].off)
-						tmp |= 1 << d;
-				wdm[W*i+j] = tmp;
+					lo[d].wd = lo[d].off == lo[d+1].off;
+				lo[deg-1].wd = false;
 #if 0
 				std::cout << deg;
-				std::cout << '\t' << std::bitset<TABLE::LINKS_MAX_CN>(tmp);
 				for (int d = 0; d < deg; ++d)
-					std::cout << '\t' << (int)lo[d].off << ':' << (int)lo[d].shi;
+					std::cout << ' ' << (int)lo[d].off << ':' << (int)lo[d].shi << ':' << lo[d].wd;
 				std::cout << std::endl;
 #endif
 				lo += deg;
