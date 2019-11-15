@@ -38,16 +38,16 @@ class LDPCDecoder
 	static const int MSG = K/D;
 	static const int VAR = N/D;
 	static const int CNC = TABLE::LINKS_MAX_CN - 2;
-	static const int BNL = (TABLE::LINKS_TOTAL + D-1) / D;
-	static const int LOC = (TABLE::LINKS_TOTAL + D-1) / D;
+	static const int BNL = (TABLE::LINKS_TOTAL + 1) / D;
 
 	typedef SIMD<int8_t, SIMD_SIZE> TYPE;
-	typedef struct { uint16_t off; uint16_t shi; bool wd; } Loc;
+	typedef struct { uint16_t off; uint16_t shi; } Loc;
 	Rotate<TYPE, D> rotate;
 
 	TYPE bnl[BNL];
 	TYPE var[VAR];
-	Loc loc[LOC];
+	Loc loc[BNL];
+	bool wds[BNL];
 	int16_t csh[VAR];
 	uint8_t cnt[PTY];
 
@@ -76,6 +76,7 @@ class LDPCDecoder
 	{
 		TYPE *bl = bnl;
 		Loc *lo = loc;
+		bool *wd = wds;
 		auto bad = vmask(vzero<TYPE>());
 		for (int i = 0; i < PTY; ++i) {
 			int deg = cnt[i];
@@ -135,7 +136,7 @@ class LDPCDecoder
 				if (offset == VAR-1 && shift == 1)
 					tmp.v[0] = prev_val;
 
-				bool this_wd = lo[k].wd;
+				bool this_wd = wd[k];
 				if (!this_wd) {
 					bl[k] = out;
 					var[offset] = tmp;
@@ -143,9 +144,9 @@ class LDPCDecoder
 				}
 				if (k) {
 					if (last_offset == offset) {
-						lo[k-1].wd = this_wd;
+						wd[k-1] = this_wd;
 					} else {
-						lo[k-1].wd = first_wd;
+						wd[k-1] = first_wd;
 						first_wd = this_wd;
 					}
 				} else {
@@ -153,10 +154,11 @@ class LDPCDecoder
 				}
 				last_offset = offset;
 			}
-			lo[deg-1].wd = first_wd;
+			wd[deg-1] = first_wd;
 			bad = vorr(bad, vclez(cnv));
 			lo += deg;
 			bl += deg;
+			wd += deg;
 		}
 		//assert(bl <= bnl + BNL);
 		//std::cerr << BNL - (bl - bnl) << std::endl;
@@ -190,6 +192,7 @@ public:
 			for (int j = 0; j < W; ++j)
 				cnt[W*i+j] = cnc[i] + 2;
 		Loc *lo = loc;
+		bool *wd = wds;
 		for (int i = 0; i < q; ++i) {
 			int cnt = cnc[i];
 			int deg = cnt + 2;
@@ -219,19 +222,20 @@ public:
 
 				std::sort(lo, lo + deg, [](const Loc &a, const Loc &b){ return a.off < b.off; });
 				for (int d = 0; d < deg-1; ++d)
-					lo[d].wd = lo[d].off == lo[d+1].off;
-				lo[deg-1].wd = false;
+					wd[d] = lo[d].off == lo[d+1].off;
+				wd[deg-1] = false;
 #if 0
 				std::cout << deg;
 				for (int d = 0; d < deg; ++d)
-					std::cout << ' ' << (int)lo[d].off << ':' << (int)lo[d].shi << ':' << lo[d].wd;
+					std::cout << ' ' << (int)lo[d].off << ':' << (int)lo[d].shi << ':' << wd[d];
 				std::cout << std::endl;
 #endif
 				lo += deg;
+				wd += deg;
 			}
 		}
-		//assert(lo <= loc + LOC);
-		//std::cerr << LOC - (lo - loc) << std::endl;
+		//assert(lo <= loc + BNL);
+		//std::cerr << BNL - (lo - loc) << std::endl;
 	}
 	int operator()(int8_t *message, int8_t *parity, int trials = 25)
 	{
