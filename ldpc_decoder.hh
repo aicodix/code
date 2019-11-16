@@ -141,6 +141,12 @@ class LDPCDecoder
 					tmp.v[0] = prev_val;
 
 				bool this_wd = wd[k];
+				if (start) {
+					if (k)
+						this_wd = offset == last_offset;
+					else
+						this_wd = false;
+				}
 				if (!this_wd) {
 					bl[k] = out;
 					var[offset] = tmp;
@@ -149,12 +155,12 @@ class LDPCDecoder
 					bl[k] = vzero<TYPE>();
 				}
 				if (k) {
-					if (last_offset == offset) {
-						wd[k-1] = this_wd;
-					} else {
-						wd[k-1] = first_wd;
+					bool next_wd = this_wd;
+					if (last_offset != offset) {
+						next_wd = first_wd;
 						first_wd = this_wd;
 					}
+					wd[k-1] = next_wd;
 				} else {
 					first_wd = this_wd;
 				}
@@ -198,7 +204,6 @@ public:
 			for (int j = 0; j < W; ++j)
 				cnt[W*i+j] = cnc[i] + 2;
 		Loc *lo = loc;
-		bool *wd = wds;
 		for (int i = 0; i < q; ++i) {
 			int cnt = cnc[i];
 			int deg = cnt + 2;
@@ -227,17 +232,13 @@ public:
 				lo[cnt+1].shi = 0;
 
 				std::sort(lo, lo + deg, [](const Loc &a, const Loc &b){ return a.off < b.off; });
-				for (int d = 0; d < deg-1; ++d)
-					wd[d] = lo[d].off == lo[d+1].off;
-				wd[deg-1] = false;
 #if 0
 				std::cout << deg;
 				for (int d = 0; d < deg; ++d)
-					std::cout << ' ' << (int)lo[d].off << ':' << (int)lo[d].shi << ':' << wd[d];
+					std::cout << '\t' << (int)lo[d].off << ':' << (int)lo[d].shi;
 				std::cout << std::endl;
 #endif
 				lo += deg;
-				wd += deg;
 			}
 		}
 		//assert(lo <= loc + BNL);
