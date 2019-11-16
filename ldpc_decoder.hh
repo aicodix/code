@@ -50,6 +50,7 @@ class LDPCDecoder
 	bool wds[BNL];
 	int16_t csh[VAR];
 	uint8_t cnt[PTY];
+	bool start;
 
 	static TYPE eor(TYPE a, TYPE b)
 	{
@@ -100,6 +101,8 @@ class LDPCDecoder
 				}
 
 				TYPE inp = vqsub(tmp, bl[k]);
+				if (start)
+					inp = tmp;
 
 				TYPE mag = vqabs(inp);
 
@@ -124,7 +127,8 @@ class LDPCDecoder
 
 				out = vclamp(out, -32, 31);
 
-				out = selfcorr(bl[k], out);
+				if (!start)
+					out = selfcorr(bl[k], out);
 
 				TYPE tmp = vqadd(inp, out);
 
@@ -141,6 +145,8 @@ class LDPCDecoder
 					bl[k] = out;
 					var[offset] = tmp;
 					csh[offset] = shift;
+				} else if (start) {
+					bl[k] = vzero<TYPE>();
 				}
 				if (k) {
 					if (last_offset == offset) {
@@ -239,8 +245,6 @@ public:
 	}
 	int operator()(int8_t *message, int8_t *parity, int trials = 25)
 	{
-		for (int i = 0; i < BNL; ++i)
-			bnl[i] = vzero<TYPE>();
 		for (int i = 0; i < VAR; ++i)
 			csh[i] = 0;
 		for (int i = 0; i < K/M; ++i)
@@ -252,7 +256,9 @@ public:
 				for (int n = 0; n < D; ++n)
 					var[MSG+W*i+j].v[n] = parity[q*(W*n+j)+i];
 
-		while (--trials >= 0 && update());
+		start = true;
+		while (--trials >= 0 && update())
+			start = false;
 
 		for (int i = 0; i < VAR; ++i)
 			var[i] = rotate(var[i], -csh[i]);
