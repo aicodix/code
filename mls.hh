@@ -22,6 +22,10 @@ class MLS
 	int poly, test, reg;
 public:
 	MLS(int poly = 0b100000000000000001001, int reg = 1) : poly(poly), test(hibit(poly)>>1), reg(reg) {}
+	void reset(int r = 1)
+	{
+		reg = r;
+	}
 	bool operator()()
 	{
 		bool fb = reg & test;
