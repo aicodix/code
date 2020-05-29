@@ -26,6 +26,18 @@ public:
 	{
 		reg = r;
 	}
+	bool bad(int r = 1)
+	{
+		reg = r;
+		int len = hibit(poly) - 1;
+		for (int i = 1; i < len; ++i) {
+			(*this)();
+			if (reg == r)
+				return true;
+		}
+		(*this)();
+		return reg != r;
+	}
 	bool operator()()
 	{
 		bool fb = reg & test;
