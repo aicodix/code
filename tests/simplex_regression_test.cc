@@ -25,6 +25,11 @@ int popcnt(TYPE x)
 }
 
 #if 0
+	const int LOOPS = 80000;
+	const float QEF_SNR = 7.0;
+	const int DATA_LEN = 2;
+#endif
+#if 0
 	const int LOOPS = 40000;
 	const float QEF_SNR = 4.5;
 	const int DATA_LEN = 3;
