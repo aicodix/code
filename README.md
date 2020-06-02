@@ -52,6 +52,13 @@ Implemented are the following Encoders and Decoders:
 * [bose_chaudhuri_hocquenghem_encoder.hh](bose_chaudhuri_hocquenghem_encoder.hh)
 * [bose_chaudhuri_hocquenghem_decoder.hh](bose_chaudhuri_hocquenghem_decoder.hh)
 
+### [simplex_encoder.hh](simplex_encoder.hh)
+
+Encoder for [Simplex codes](https://en.wikipedia.org/wiki/Linear_code).
+
+### [simplex_decoder.hh](simplex_decoder.hh)
+
+[Soft-decision decoder](https://en.wikipedia.org/wiki/Soft-decision_decoder) for [Simplex codes](https://en.wikipedia.org/wiki/Linear_code).
 
 ### [ldpc_encoder.hh](ldpc_encoder.hh)
 
