@@ -52,6 +52,14 @@ Implemented are the following Encoders and Decoders:
 * [bose_chaudhuri_hocquenghem_encoder.hh](bose_chaudhuri_hocquenghem_encoder.hh)
 * [bose_chaudhuri_hocquenghem_decoder.hh](bose_chaudhuri_hocquenghem_decoder.hh)
 
+### [short_bch_code_encoder.hh](short_bch_code_encoder.hh)
+
+Encoder for short [BCH codes](https://en.wikipedia.org/wiki/BCH_code)
+
+### [short_bch_code_decoder.hh](short_bch_code_decoder.hh)
+
+[Syndrome decoder](https://en.wikipedia.org/wiki/Decoding_methods#Syndrome_decoding) for short [BCH codes](https://en.wikipedia.org/wiki/BCH_code)
+
 ### [simplex_encoder.hh](simplex_encoder.hh)
 
 Encoder for [Simplex codes](https://en.wikipedia.org/wiki/Linear_code).
