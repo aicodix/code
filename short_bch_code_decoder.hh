@@ -50,6 +50,84 @@ public:
 	{
 		return inp ^ err[(par[inp>>P] ^ inp) & (R-1)];
 	}
+	int operator()(const int8_t *code)
+	{
+		// maximum likelihood
+		if (0) {
+			int word = 0, best = 0;
+			for (int msg = 0; msg < W; ++msg) {
+				int sum = 0;
+				int enc = (msg << P) | par[msg];
+				int lol = 8 * sizeof(enc) - 1;
+				for (int i = 0; i < N; ++i)
+					sum += ((enc << (lol-i)) >> lol) * code[i];
+				if (sum > best) {
+					best = sum;
+					word = enc;
+				}
+			}
+			return word;
+		}
+		int cw = 0;
+		for (int i = 0; i < N; ++i)
+			cw |= (code[i] < 0) << i;
+		// hard decision
+		if (0)
+			return (*this)(cw);
+		int word = 0, best = 0;
+		// flip each bit and see ..
+		if (0) {
+			for (int j = 0; j < N; ++j) {
+				int tmp = 1 << j;
+				int dec = (*this)(cw ^ tmp);
+				int lol = 8 * sizeof(dec) - 1;
+				int sum = 0;
+				for (int i = 0; i < N; ++i)
+					sum += ((dec << (lol-i)) >> lol) * code[i];
+				if (sum > best) {
+					best = sum;
+					word = dec;
+				}
+			}
+		}
+		// Chase algorithm
+		if (1) {
+			const int num = 4;
+			int worst[num] = { 0 };
+			for (int i = 0; i < N; ++i) {
+				if (std::abs(code[i]) < std::abs(code[worst[0]])) {
+					worst[3] = worst[2];
+					worst[2] = worst[1];
+					worst[1] = worst[0];
+					worst[0] = i;
+				} else if (std::abs(code[i]) < std::abs(code[worst[1]])) {
+					worst[3] = worst[2];
+					worst[2] = worst[1];
+					worst[1] = i;
+				} else if (std::abs(code[i]) < std::abs(code[worst[2]])) {
+					worst[3] = worst[2];
+					worst[2] = i;
+				} else if (std::abs(code[i]) < std::abs(code[worst[3]])) {
+					worst[3] = i;
+				}
+			}
+			for (int j = 0; j < (1 << num); ++j) {
+				int tmp = 0;
+				for (int i = 0; i < num; ++i)
+					tmp |= ((j>>i)&1) << worst[i];
+				int dec = (*this)(cw ^ tmp);
+				int lol = 8 * sizeof(dec) - 1;
+				int sum = 0;
+				for (int i = 0; i < N; ++i)
+					sum += ((dec << (lol-i)) >> lol) * code[i];
+				if (sum > best) {
+					best = sum;
+					word = dec;
+				}
+			}
+		}
+		return word;
+	}
 };
 
 }
