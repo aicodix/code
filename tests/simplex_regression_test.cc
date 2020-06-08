@@ -62,11 +62,6 @@ int main()
 	typedef std::uniform_int_distribution<int> uniform;
 	typedef std::normal_distribution<float> normal;
 
-	int8_t *code = new int8_t[CODE_LEN];
-	int8_t *orig = new int8_t[CODE_LEN];
-	int8_t *noisy = new int8_t[CODE_LEN];
-	float *symb = new float[CODE_LEN];
-
 	float min_SNR = 20;
 
 	for (float SNR = -10; SNR <= 10; SNR += 0.1) {
@@ -83,6 +78,9 @@ int main()
 		int uncorrected_errors = 0;
 		int decoder_errors = 0;
 		for (int loop = 0; loop < LOOPS; ++loop) {
+			int8_t code[CODE_LEN], orig[CODE_LEN], noisy[CODE_LEN];
+			float symb[CODE_LEN];
+
 			int dat = data();
 			encode(code, dat);
 
@@ -130,11 +128,6 @@ int main()
 			std::cout << SNR << " " << bit_error_rate << std::endl;
 		}
 	}
-
-	delete[] code;
-	delete[] orig;
-	delete[] noisy;
-	delete[] symb;
 
 	std::cerr << "QEF at: " << min_SNR << " SNR" << std::endl;
 	assert(min_SNR < QEF_SNR);
