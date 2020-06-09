@@ -1,5 +1,5 @@
 /*
-Decoder for short BCH codes
+Soft decoder for short BCH codes
 
 Copyright 2020 Ahmet Inan <inan@aicodix.de>
 */

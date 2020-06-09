@@ -58,7 +58,7 @@ Encoder for short [BCH codes](https://en.wikipedia.org/wiki/BCH_code)
 
 ### [short_bch_code_decoder.hh](short_bch_code_decoder.hh)
 
-[Syndrome decoder](https://en.wikipedia.org/wiki/Decoding_methods#Syndrome_decoding) for short [BCH codes](https://en.wikipedia.org/wiki/BCH_code)
+[Syndrome decoding](https://en.wikipedia.org/wiki/Decoding_methods#Syndrome_decoding) based [Soft-decision decoder](https://en.wikipedia.org/wiki/Soft-decision_decoder) for short [BCH codes](https://en.wikipedia.org/wiki/BCH_code)
 
 ### [simplex_encoder.hh](simplex_encoder.hh)
 
