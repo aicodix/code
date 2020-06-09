@@ -62,15 +62,20 @@ public:
 	{
 		// maximum likelihood
 		if (0) {
-			int word = 0, best = 0;
+			int word = 0, best = -1, next = -1;
 			for (int msg = 0; msg < W; ++msg) {
 				int enc = (msg << P) | par[msg];
 				int met = metric(code, enc);
 				if (met > best) {
+					next = best;
 					best = met;
 					word = enc;
+				} else if (met > next) {
+					next = met;
 				}
 			}
+			if (best == next)
+				return -1;
 			return word;
 		}
 		int cw = 0;
@@ -82,6 +87,7 @@ public:
 			return word;
 		// metric of hard decision
 		int best = metric(code, word);
+		int next = -1;
 		// flip each bit and see ..
 		if (0) {
 			for (int j = 0; j < N; ++j) {
@@ -89,8 +95,11 @@ public:
 				int dec = (*this)(cw ^ tmp);
 				int met = metric(code, dec);
 				if (met > best) {
+					next = best;
 					best = met;
 					word = dec;
+				} else if (word != dec && met > next) {
+					next = met;
 				}
 			}
 		}
@@ -122,11 +131,16 @@ public:
 				int dec = (*this)(cw ^ tmp);
 				int met = metric(code, dec);
 				if (met > best) {
+					next = best;
 					best = met;
 					word = dec;
+				} else if (word != dec && met > next) {
+					next = met;
 				}
 			}
 		}
+		if (best == next)
+			return -1;
 		return word;
 	}
 };

@@ -91,8 +91,8 @@ int main()
 				awgn_errors += noisy[i] * orig[i] < 0;
 			for (int i = 0; i < CODE_LEN; ++i)
 				quantization_erasures += !noisy[i];
-			uncorrected_errors += popcnt(enc^dec);
-			for (int i = 0; i < CODE_LEN; ++i)
+			uncorrected_errors += dec < 0 ? CODE_LEN : popcnt(enc^dec);
+			for (int i = 0; dec >= 0 && i < CODE_LEN; ++i)
 				decoder_errors += ((enc^dec)&(1<<i)) && orig[i] * noisy[i] > 0;
 		}
 		float bit_error_rate = (float)uncorrected_errors / (float)(CODE_LEN * LOOPS);
