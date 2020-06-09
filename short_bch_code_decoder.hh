@@ -26,6 +26,14 @@ class ShortBCHCodeDecoder
 		}
 		return inp;
 	}
+	static int metric(const int8_t *soft, int hard)
+	{
+		int lol = 8 * sizeof(hard) - 1;
+		int sum = 0;
+		for (int i = 0; i < N; ++i)
+			sum += ((hard << (lol-i)) >> lol) * soft[i];
+		return sum;
+	}
 public:
 	ShortBCHCodeDecoder(int generator, int T)
 	{
@@ -56,13 +64,10 @@ public:
 		if (0) {
 			int word = 0, best = 0;
 			for (int msg = 0; msg < W; ++msg) {
-				int sum = 0;
 				int enc = (msg << P) | par[msg];
-				int lol = 8 * sizeof(enc) - 1;
-				for (int i = 0; i < N; ++i)
-					sum += ((enc << (lol-i)) >> lol) * code[i];
-				if (sum > best) {
-					best = sum;
+				int met = metric(code, enc);
+				if (met > best) {
+					best = met;
 					word = enc;
 				}
 			}
@@ -75,26 +80,16 @@ public:
 		// hard decision
 		if (0)
 			return word;
-		int best = 0;
 		// metric of hard decision
-		if (1) {
-			int lol = 8 * sizeof(word) - 1;
-			int sum = 0;
-			for (int i = 0; i < N; ++i)
-				sum += ((word << (lol-i)) >> lol) * code[i];
-			best = sum;
-		}
+		int best = metric(code, word);
 		// flip each bit and see ..
 		if (0) {
 			for (int j = 0; j < N; ++j) {
 				int tmp = 1 << j;
 				int dec = (*this)(cw ^ tmp);
-				int lol = 8 * sizeof(dec) - 1;
-				int sum = 0;
-				for (int i = 0; i < N; ++i)
-					sum += ((dec << (lol-i)) >> lol) * code[i];
-				if (sum > best) {
-					best = sum;
+				int met = metric(code, dec);
+				if (met > best) {
+					best = met;
 					word = dec;
 				}
 			}
@@ -125,12 +120,9 @@ public:
 				for (int i = 0; i < num; ++i)
 					tmp |= ((j>>i)&1) << worst[i];
 				int dec = (*this)(cw ^ tmp);
-				int lol = 8 * sizeof(dec) - 1;
-				int sum = 0;
-				for (int i = 0; i < N; ++i)
-					sum += ((dec << (lol-i)) >> lol) * code[i];
-				if (sum > best) {
-					best = sum;
+				int met = metric(code, dec);
+				if (met > best) {
+					best = met;
 					word = dec;
 				}
 			}
