@@ -71,10 +71,19 @@ public:
 		int cw = 0;
 		for (int i = 0; i < N; ++i)
 			cw |= (code[i] < 0) << i;
+		int word = (*this)(cw);
 		// hard decision
 		if (0)
-			return (*this)(cw);
-		int word = 0, best = 0;
+			return word;
+		int best = 0;
+		// metric of hard decision
+		if (1) {
+			int lol = 8 * sizeof(word) - 1;
+			int sum = 0;
+			for (int i = 0; i < N; ++i)
+				sum += ((word << (lol-i)) >> lol) * code[i];
+			best = sum;
+		}
 		// flip each bit and see ..
 		if (0) {
 			for (int j = 0; j < N; ++j) {
@@ -111,7 +120,7 @@ public:
 					worst[3] = i;
 				}
 			}
-			for (int j = 0; j < (1 << num); ++j) {
+			for (int j = 1; j < (1 << num); ++j) {
 				int tmp = 0;
 				for (int i = 0; i < num; ++i)
 					tmp |= ((j>>i)&1) << worst[i];
