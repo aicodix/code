@@ -110,8 +110,8 @@ int main()
 			for (int i = 0; i < CODE_LEN; ++i)
 				quantization_erasures += !noisy[i];
 			uncorrected_errors += dec < 0 ? DATA_LEN : popcnt(dat^dec);
-			for (int i = 0; i < DATA_LEN; ++i)
-				decoder_errors += (dec < 0 || ((dec^dat)&(1<<i))) && orig[i] * noisy[i] > 0;
+			for (int i = 0; dec >= 0 && i < DATA_LEN; ++i)
+				decoder_errors += ((dec^dat)&(1<<i)) && orig[i] * noisy[i] > 0;
 		}
 		float bit_error_rate = (float)uncorrected_errors / (float)(DATA_LEN * LOOPS);
 		if (bit_error_rate < 0.0001)
