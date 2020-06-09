@@ -75,12 +75,14 @@ public:
 			for (int j = 0; j < N; ++j) {
 				int tmp = 1 << j;
 				int dec = (*this)(cw ^ tmp);
+				if (dec == word)
+					continue;
 				int met = metric(code, dec);
 				if (met > best) {
 					next = best;
 					best = met;
 					word = dec;
-				} else if (word != dec && met > next) {
+				} else if (met > next) {
 					next = met;
 				}
 			}
@@ -111,12 +113,14 @@ public:
 				for (int i = 0; i < num; ++i)
 					tmp |= ((j>>i)&1) << worst[i];
 				int dec = (*this)(cw ^ tmp);
+				if (dec == word)
+					continue;
 				int met = metric(code, dec);
 				if (met > best) {
 					next = best;
 					best = met;
 					word = dec;
-				} else if (word != dec && met > next) {
+				} else if (met > next) {
 					next = met;
 				}
 			}
@@ -125,12 +129,14 @@ public:
 		if (0) {
 			for (int msg = 0; msg < W; ++msg) {
 				int enc = (msg << P) | par[msg];
+				if (enc == word)
+					continue;
 				int met = metric(code, enc);
 				if (met > best) {
 					next = best;
 					best = met;
 					word = enc;
-				} else if (word != enc && met > next) {
+				} else if (met > next) {
 					next = met;
 				}
 			}
