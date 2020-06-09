@@ -34,11 +34,12 @@ public:
 	{
 		return (msg << P) | par[msg];
 	}
-	void operator()(int8_t *code, int msg)
+	int operator()(int8_t *code, int msg)
 	{
 		int cw = (*this)(msg);
 		for (int i = 0; i < N; ++i)
 			code[i] = 1 - 2 * ((cw >> i) & 1);
+		return cw;
 	}
 };
 

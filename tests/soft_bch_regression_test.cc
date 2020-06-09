@@ -64,7 +64,7 @@ int main()
 			float symb[CODE_LEN];
 
 			int dat = data();
-			encode(code, dat);
+			int enc = encode(code, dat);
 
 			for (int i = 0; i < CODE_LEN; ++i)
 				orig[i] = code[i];
@@ -85,17 +85,17 @@ int main()
 			for (int i = 0; i < CODE_LEN; ++i)
 				noisy[i] = code[i];
 
-			int dec = decode(code) >> (CODE_LEN - DATA_LEN);
+			int dec = decode(code);
 
 			for (int i = 0; i < CODE_LEN; ++i)
 				awgn_errors += noisy[i] * orig[i] < 0;
 			for (int i = 0; i < CODE_LEN; ++i)
 				quantization_erasures += !noisy[i];
-			uncorrected_errors += popcnt(dat^dec);
-			for (int i = 0; i < DATA_LEN; ++i)
-				decoder_errors += ((dec^dat)&(1<<i)) && orig[i] * noisy[i] > 0;
+			uncorrected_errors += popcnt(enc^dec);
+			for (int i = 0; i < CODE_LEN; ++i)
+				decoder_errors += ((enc^dec)&(1<<i)) && orig[i] * noisy[i] > 0;
 		}
-		float bit_error_rate = (float)uncorrected_errors / (float)(DATA_LEN * LOOPS);
+		float bit_error_rate = (float)uncorrected_errors / (float)(CODE_LEN * LOOPS);
 		if (bit_error_rate < 0.0001)
 			min_SNR = std::min(min_SNR, SNR);
 
