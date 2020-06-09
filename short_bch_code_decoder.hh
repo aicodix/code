@@ -60,24 +60,6 @@ public:
 	}
 	int operator()(const int8_t *code)
 	{
-		// maximum likelihood
-		if (0) {
-			int word = 0, best = -1, next = -1;
-			for (int msg = 0; msg < W; ++msg) {
-				int enc = (msg << P) | par[msg];
-				int met = metric(code, enc);
-				if (met > best) {
-					next = best;
-					best = met;
-					word = enc;
-				} else if (met > next) {
-					next = met;
-				}
-			}
-			if (best == next)
-				return -1;
-			return word;
-		}
 		int cw = 0;
 		for (int i = 0; i < N; ++i)
 			cw |= (code[i] < 0) << i;
@@ -135,6 +117,20 @@ public:
 					best = met;
 					word = dec;
 				} else if (word != dec && met > next) {
+					next = met;
+				}
+			}
+		}
+		// maximum likelihood
+		if (0) {
+			for (int msg = 0; msg < W; ++msg) {
+				int enc = (msg << P) | par[msg];
+				int met = metric(code, enc);
+				if (met > best) {
+					next = best;
+					best = met;
+					word = enc;
+				} else if (word != enc && met > next) {
 					next = met;
 				}
 			}
