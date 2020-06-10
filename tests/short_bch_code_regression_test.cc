@@ -15,7 +15,7 @@ template <int N, int K, int T, int POLY>
 void bch_test(int trials)
 {
 	CODE::ShortBCHCodeEncoder<N, K> encode(POLY);
-	CODE::ShortBCHCodeDecoder<N, K> decode(POLY, T);
+	CODE::ShortBCHCodeDecoder<N, K, T> decode(POLY);
 	std::random_device rd;
 	typedef std::default_random_engine generator;
 	typedef std::uniform_int_distribution<int> distribution;

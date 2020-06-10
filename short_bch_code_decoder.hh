@@ -8,7 +8,7 @@ Copyright 2020 Ahmet Inan <inan@aicodix.de>
 
 namespace CODE {
 
-template <int N, int K>
+template <int N, int K, int T>
 class ShortBCHCodeDecoder
 {
 	static const int P = N - K;
@@ -35,7 +35,7 @@ class ShortBCHCodeDecoder
 		return sum;
 	}
 public:
-	ShortBCHCodeDecoder(int generator, int T)
+	ShortBCHCodeDecoder(int generator)
 	{
 		for (int i = 0; i < W; ++i)
 			par[i] = modgen(i << P, generator);
