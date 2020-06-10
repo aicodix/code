@@ -33,6 +33,24 @@ int popcnt(TYPE x)
 	const int RADIUS_T = 3;
 	const int GEN_POLY = 0b101011100011;
 #endif
+#if 0
+	// Perfect binary Golay code using x^11+x^10+x^6+x^5+x^4+x^2+1
+	const int LOOPS = 100000;
+	const float QEF_SNR = 3.0;
+	const int CODE_LEN = 23;
+	const int DATA_LEN = 12;
+	const int RADIUS_T = 3;
+	const int GEN_POLY = 0b110001110101;
+#endif
+#if 0
+	// NASA INTRO BCH(15, 5) T=3
+	const int LOOPS = 100000;
+	const float QEF_SNR = 3.0;
+	const int CODE_LEN = 15;
+	const int DATA_LEN = 5;
+	const int RADIUS_T = 3;
+	const int GEN_POLY = 0b10100110111;
+#endif
 
 int main()
 {
