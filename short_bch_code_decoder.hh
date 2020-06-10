@@ -89,28 +89,19 @@ public:
 		}
 		// Chase algorithm
 		if (K > 6) {
-			const int num = 4;
-			int worst[num] = { 0 };
-			for (int i = 0; i < N; ++i) {
-				if (std::abs(code[i]) < std::abs(code[worst[0]])) {
-					worst[3] = worst[2];
-					worst[2] = worst[1];
-					worst[1] = worst[0];
-					worst[0] = i;
-				} else if (std::abs(code[i]) < std::abs(code[worst[1]])) {
-					worst[3] = worst[2];
-					worst[2] = worst[1];
-					worst[1] = i;
-				} else if (std::abs(code[i]) < std::abs(code[worst[2]])) {
-					worst[3] = worst[2];
-					worst[2] = i;
-				} else if (std::abs(code[i]) < std::abs(code[worst[3]])) {
-					worst[3] = i;
-				}
+			int worst[T] = { 0 };
+			for (int k = 0; k < N; ++k) {
+				int j = 0;
+				while (j < T && std::abs(code[worst[j]]) < std::abs(code[k]))
+					++j;
+				for (int i = T-1; i > j; --i)
+					worst[i] = worst[i-1];
+				if (j < T)
+					worst[j] = k;
 			}
-			for (int j = 1; j < (1 << num); ++j) {
+			for (int j = 1; j < (1 << T); ++j) {
 				int tmp = 0;
-				for (int i = 0; i < num; ++i)
+				for (int i = 0; i < T; ++i)
 					tmp |= ((j>>i)&1) << worst[i];
 				int dec = (*this)(cw ^ tmp);
 				if (dec == word)
