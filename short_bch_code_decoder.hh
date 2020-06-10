@@ -88,7 +88,7 @@ public:
 			}
 		}
 		// Chase algorithm
-		if (1) {
+		if (K > 6) {
 			const int num = 4;
 			int worst[num] = { 0 };
 			for (int i = 0; i < N; ++i) {
@@ -126,7 +126,7 @@ public:
 			}
 		}
 		// maximum likelihood
-		if (0) {
+		if (K <= 6) {
 			for (int msg = 0; msg < W; ++msg) {
 				int enc = (msg << P) | par[msg];
 				if (enc == word)
