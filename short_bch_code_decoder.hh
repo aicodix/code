@@ -18,6 +18,7 @@ class ShortBCHCodeDecoder
 	short par[W];
 	static_assert(N < 8 * sizeof(err[0]), "codeword type not wide enough");
 	static_assert(P < 8 * sizeof(par[0]), "parity type not wide enough");
+	static_assert(T > 0 && T <= 4, "unsupported radius T");
 	static int modgen(int inp, int gen)
 	{
 		for (int i = K-1; i >= 0; --i) {
@@ -40,7 +41,6 @@ public:
 		for (int i = 0; i < W; ++i)
 			par[i] = modgen(i << P, generator);
 		err[0] = 0;
-		assert(T > 0 && T <= 4);
 		for (int a = 1<<(N-1); T >= 1 && a; a >>= 1) {
 			err[modgen(a, generator)] = a;
 			for (int b = a >> 1; T >= 2 && b; b >>= 1) {
