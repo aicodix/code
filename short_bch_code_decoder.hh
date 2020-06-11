@@ -70,21 +70,24 @@ public:
 		// metric of hard decision
 		int best = metric(code, word);
 		int next = -1;
+		auto update = [code, &word, &best, &next](int hard) {
+			if (hard == word)
+				return;
+			int met = metric(code, hard);
+			if (met > best) {
+				next = best;
+				best = met;
+				word = hard;
+			} else if (met > next) {
+				next = met;
+			}
+		};
 		// flip each bit and see ..
 		if (0) {
 			for (int j = 0; j < N; ++j) {
 				int tmp = 1 << j;
 				int dec = (*this)(cw ^ tmp);
-				if (dec == word)
-					continue;
-				int met = metric(code, dec);
-				if (met > best) {
-					next = best;
-					best = met;
-					word = dec;
-				} else if (met > next) {
-					next = met;
-				}
+				update(dec);
 			}
 		}
 		// Chase algorithm
@@ -104,32 +107,14 @@ public:
 				for (int i = 0; i < T; ++i)
 					tmp |= ((j>>i)&1) << worst[i];
 				int dec = (*this)(cw ^ tmp);
-				if (dec == word)
-					continue;
-				int met = metric(code, dec);
-				if (met > best) {
-					next = best;
-					best = met;
-					word = dec;
-				} else if (met > next) {
-					next = met;
-				}
+				update(dec);
 			}
 		}
 		// maximum likelihood
 		if (K <= 6) {
 			for (int msg = 0; msg < W; ++msg) {
 				int enc = (msg << P) | par[msg];
-				if (enc == word)
-					continue;
-				int met = metric(code, enc);
-				if (met > best) {
-					next = best;
-					best = met;
-					word = enc;
-				} else if (met > next) {
-					next = met;
-				}
+				update(enc);
 			}
 		}
 		if (best == next)
