@@ -68,6 +68,14 @@ Encoder for [Simplex codes](https://en.wikipedia.org/wiki/Linear_code).
 
 [Soft-decision decoder](https://en.wikipedia.org/wiki/Soft-decision_decoder) for [Simplex codes](https://en.wikipedia.org/wiki/Linear_code).
 
+### [hadamard_encoder.hh](hadamard_encoder.hh)
+
+Encoder for [augmented Hadamard codes](https://en.wikipedia.org/wiki/Hadamard_code).
+
+### [hadamard_decoder.hh](hadamard_decoder.hh)
+
+[Soft-decision decoder](https://en.wikipedia.org/wiki/Soft-decision_decoder) for [augmented Hadamard codes](https://en.wikipedia.org/wiki/Hadamard_code).
+
 ### [ldpc_encoder.hh](ldpc_encoder.hh)
 
 [Low-density parity-check](https://en.wikipedia.org/wiki/Low-density_parity-check_code) encoder
