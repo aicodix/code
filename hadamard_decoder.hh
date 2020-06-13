@@ -13,12 +13,12 @@ class HadamardDecoder
 {
 	static const int N = 1 << (K - 1);
 public:
-	int operator()(const int8_t *c)
+	int operator()(const int8_t *code)
 	{
 		int sum[N];
 		for (int i = 0; i < N; i += 2) {
-			sum[i] = c[i] + c[i+1];
-			sum[i+1] = c[i] - c[i+1];
+			sum[i] = code[i] + code[i+1];
+			sum[i+1] = code[i] - code[i+1];
 		}
 		for (int h = 2; h < N; h *= 2) {
 			for (int i = 0; i < N; i += 2 * h) {
@@ -71,17 +71,19 @@ class HadamardDecoder<3>
 	static const int K = 3;
 	static const int N = 1 << (K - 1);
 public:
-	int operator()(const int8_t *c)
+	int operator()(const int8_t *code)
 	{
-		int d[4] = {
-			c[0] + c[1], c[0] - c[1],
-			c[2] + c[3], c[2] - c[3],
+		int tmp[4] = {
+			code[0] + code[1],
+			code[0] - code[1],
+			code[2] + code[3],
+			code[2] - code[3],
 		};
 		int sum[4] = {
-			d[0] + d[2],
-			d[1] + d[3],
-			d[0] - d[2],
-			d[1] - d[3],
+			tmp[0] + tmp[2],
+			tmp[1] + tmp[3],
+			tmp[0] - tmp[2],
+			tmp[1] - tmp[3],
 		};
 		int word = 0, best = 0, next = 0;
 		for (int i = 0; i < N; ++i) {
@@ -110,10 +112,14 @@ public:
 	int operator()(const int8_t *c)
 	{
 		int d[8] = {
-			c[0] + c[1], c[0] - c[1],
-			c[2] + c[3], c[2] - c[3],
-			c[4] + c[5], c[4] - c[5],
-			c[6] + c[7], c[6] - c[7],
+			c[0] + c[1],
+			c[0] - c[1],
+			c[2] + c[3],
+			c[2] - c[3],
+			c[4] + c[5],
+			c[4] - c[5],
+			c[6] + c[7],
+			c[6] - c[7],
 		};
 		int e[8] = {
 			d[0] + d[2],
