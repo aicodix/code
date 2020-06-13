@@ -13,37 +13,34 @@ class HadamardDecoder
 {
 	static const int W = 1 << K;
 	static const int N = 1 << (K - 1);
-	int8_t mod[W*N];
-
-	static bool parity(unsigned x)
-	{
-		x ^= x >> 16;
-		x ^= x >> 8;
-		x ^= x >> 4;
-		x ^= x >> 2;
-		x ^= x >> 1;
-		return x & 1;
-	}
 public:
-	HadamardDecoder()
+	int operator()(const int8_t *c)
 	{
-		for (int msg = 0; msg < W; ++msg)
-			for (int i = 0; i < N; ++i)
-				mod[msg*N+i] = 1 - 2 * parity(msg&(i|N));
-	}
-	int operator()(const int8_t *code)
-	{
+		int sum[N];
+		for (int i = 0; i < N; i += 2) {
+			sum[i] = c[i] + c[i+1];
+			sum[i+1] = c[i] - c[i+1];
+		}
+		for (int h = 2; h < N; h *= 2) {
+			for (int i = 0; i < N; i += 2 * h) {
+				for (int j = i; j < i + h; ++j) {
+					int x = sum[j] + sum[j+h];
+					int y = sum[j] - sum[j+h];
+					sum[j] = x;
+					sum[j+h] = y;
+				}
+			}
+		}
 		int word = 0, best = 0, next = 0;
-		for (int msg = 0; msg < W; ++msg) {
-			int sum = 0;
-			for (int i = 0; i < N; ++i)
-				sum += mod[msg*N+i] * code[i];
-			if (sum > best) {
+		for (int i = 0; i < N; ++i) {
+			int mag = std::abs(sum[i]);
+			int msg = i + N * (sum[i] < 0);
+			if (mag > best) {
 				next = best;
-				best = sum;
+				best = mag;
 				word = msg;
-			} else if (sum > next) {
-				next = sum;
+			} else if (mag > next) {
+				next = mag;
 			}
 		}
 		if (best == next)
