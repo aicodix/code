@@ -89,19 +89,20 @@ public:
 		}
 		// Chase algorithm
 		if (K > 6) {
-			int worst[T] = { 0 };
+			const int L = T;
+			int worst[L] = { 0 };
 			for (int k = 0; k < N; ++k) {
 				int j = 0;
-				while (j < T && std::abs(code[worst[j]]) < std::abs(code[k]))
+				while (j < L && std::abs(code[worst[j]]) < std::abs(code[k]))
 					++j;
-				for (int i = T-1; i > j; --i)
+				for (int i = L-1; i > j; --i)
 					worst[i] = worst[i-1];
-				if (j < T)
+				if (j < L)
 					worst[j] = k;
 			}
-			for (int j = 1; j < (1 << T); ++j) {
+			for (int j = 1; j < (1 << L); ++j) {
 				int tmp = 0;
-				for (int i = 0; i < T; ++i)
+				for (int i = 0; i < L; ++i)
 					tmp |= ((j>>i)&1) << worst[i];
 				int dec = (*this)(cw ^ tmp);
 				update(dec);
