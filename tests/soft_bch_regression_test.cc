@@ -54,8 +54,8 @@ int popcnt(TYPE x)
 
 int main()
 {
-	CODE::ShortBCHCodeEncoder<CODE_LEN, DATA_LEN> encode(GEN_POLY);
-	CODE::ShortBCHCodeDecoder<CODE_LEN, DATA_LEN, RADIUS_T> decode(GEN_POLY);
+	CODE::ShortBCHCodeEncoder<CODE_LEN, DATA_LEN, GEN_POLY> encode;
+	CODE::ShortBCHCodeDecoder<CODE_LEN, DATA_LEN, GEN_POLY, RADIUS_T> decode;
 
 	std::random_device rd;
 	std::default_random_engine generator(rd());

@@ -8,7 +8,7 @@ Copyright 2020 Ahmet Inan <inan@aicodix.de>
 
 namespace CODE {
 
-template <int N, int K>
+template <int N, int K, int G>
 class ShortBCHCodeEncoder
 {
 	static const int P = N - K;
@@ -16,19 +16,19 @@ class ShortBCHCodeEncoder
 	short par[W];
 	static_assert(N < 8 * sizeof(int), "codeword type not wide enough");
 	static_assert(P < 8 * sizeof(par[0]), "parity type not wide enough");
-	static int modgen(int inp, int gen)
+	static int modgen(int inp)
 	{
 		for (int i = K-1; i >= 0; --i) {
 			int tmp = inp >> (i+P);
-			inp ^= (tmp & 1) * (gen << i);
+			inp ^= (tmp & 1) * (G << i);
 		}
 		return inp;
 	}
 public:
-	ShortBCHCodeEncoder(int generator)
+	ShortBCHCodeEncoder()
 	{
 		for (int i = 0; i < W; ++i)
-			par[i] = modgen(i << P, generator);
+			par[i] = modgen(i << P);
 	}
 	int operator()(int msg)
 	{

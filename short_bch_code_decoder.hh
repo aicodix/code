@@ -8,7 +8,7 @@ Copyright 2020 Ahmet Inan <inan@aicodix.de>
 
 namespace CODE {
 
-template <int N, int K, int T>
+template <int N, int K, int G, int T>
 class ShortBCHCodeDecoder
 {
 	static const int P = N - K;
@@ -19,11 +19,11 @@ class ShortBCHCodeDecoder
 	static_assert(N < 8 * sizeof(err[0]), "codeword type not wide enough");
 	static_assert(P < 8 * sizeof(par[0]), "parity type not wide enough");
 	static_assert(T > 0 && T <= 4, "unsupported radius T");
-	static int modgen(int inp, int gen)
+	static int modgen(int inp)
 	{
 		for (int i = K-1; i >= 0; --i) {
 			int tmp = inp >> (i+P);
-			inp ^= (tmp & 1) * (gen << i);
+			inp ^= (tmp & 1) * (G << i);
 		}
 		return inp;
 	}
@@ -36,19 +36,19 @@ class ShortBCHCodeDecoder
 		return sum;
 	}
 public:
-	ShortBCHCodeDecoder(int generator)
+	ShortBCHCodeDecoder()
 	{
 		for (int i = 0; i < W; ++i)
-			par[i] = modgen(i << P, generator);
+			par[i] = modgen(i << P);
 		err[0] = 0;
 		for (int a = 1<<(N-1); T >= 1 && a; a >>= 1) {
-			err[modgen(a, generator)] = a;
+			err[modgen(a)] = a;
 			for (int b = a >> 1; T >= 2 && b; b >>= 1) {
-				err[modgen(a|b, generator)] = a|b;
+				err[modgen(a|b)] = a|b;
 				for (int c = b >> 1; T >= 3 && c; c >>= 1) {
-					err[modgen(a|b|c, generator)] = a|b|c;
+					err[modgen(a|b|c)] = a|b|c;
 					for (int d = c >> 1; T >= 4 && d; d >>= 1) {
-						err[modgen(a|b|c|d, generator)] = a|b|c|d;
+						err[modgen(a|b|c|d)] = a|b|c|d;
 					}
 				}
 			}

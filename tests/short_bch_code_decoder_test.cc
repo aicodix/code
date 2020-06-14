@@ -17,7 +17,7 @@ int main()
 	if (1) {
 		// Perfect binary Golay code using x^11+x^9+x^7+x^6+x^5+x+1
 		const int N = 23, K = 12, T = 3, POLY = 0b101011100011;
-		CODE::ShortBCHCodeDecoder<N, K, T> decode(POLY);
+		CODE::ShortBCHCodeDecoder<N, K, POLY, T> decode;
 		int target = 0b10101101101111011111001;
 		int damaged = target;
 		typedef std::uniform_int_distribution<int> distribution;
@@ -30,7 +30,7 @@ int main()
 	if (1) {
 		// Perfect binary Golay code using x^11+x^10+x^6+x^5+x^4+x^2+1
 		const int N = 23, K = 12, T = 3, POLY = 0b110001110101;
-		CODE::ShortBCHCodeDecoder<N, K, T> decode(POLY);
+		CODE::ShortBCHCodeDecoder<N, K, POLY, T> decode;
 		int target = 0b10101101101100100010101;
 		int damaged = target;
 		typedef std::uniform_int_distribution<int> distribution;
@@ -43,7 +43,7 @@ int main()
 	if (1) {
 		// NASA INTRO BCH(15, 5) T=3
 		const int N = 15, K = 5, T = 3, POLY = 0b10100110111;
-		CODE::ShortBCHCodeDecoder<N, K, T> decode(POLY);
+		CODE::ShortBCHCodeDecoder<N, K, POLY, T> decode;
 		int target = 0b110010001111010;
 		int damaged = target;
 		typedef std::uniform_int_distribution<int> distribution;

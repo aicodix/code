@@ -22,7 +22,7 @@ int popcnt(TYPE x)
 template <int N, int K, int T, int POLY>
 void bch_test(int message, int target)
 {
-	CODE::ShortBCHCodeEncoder<N, K> encode(POLY);
+	CODE::ShortBCHCodeEncoder<N, K, POLY> encode;
 	int hist[N+1] = { 0 };
 	for (int j = 0; j < (1 << K); ++j)
 		for (int i = j + 1; i < (1 << K); ++i)
