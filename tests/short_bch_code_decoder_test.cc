@@ -53,6 +53,19 @@ int main()
 		int recovered = decode(damaged);
 		assert(recovered == target);
 	}
+	if (1) {
+		// BCH(31, 16) T=3
+		const int N = 31, K = 16, T = 3, POLY = 0b1000111110101111;
+		CODE::ShortBCHCodeDecoder<N, K, POLY, T> decode;
+		int target = 970576025;
+		int damaged = target;
+		typedef std::uniform_int_distribution<int> distribution;
+		auto epos = std::bind(distribution(0, N-1), generator);
+		for (int i = 0; i < T; ++i)
+			damaged ^= 1 << epos();
+		int recovered = decode(damaged);
+		assert(recovered == target);
+	}
 	std::cerr << "Short BCH code decoder test passed!" << std::endl;
 	return 0;
 }

@@ -49,6 +49,10 @@ int main()
 		// NASA INTRO BCH(15, 5) T=3
 		bch_test<15, 5, 3, 0b10100110111>(1000000);
 	}
+	if (1) {
+		// BCH(31, 16) T=3
+		bch_test<31, 16, 3, 0b1000111110101111>(1000000);
+	}
 	std::cerr << "Short BCH code regression test passed!" << std::endl;
 	return 0;
 }

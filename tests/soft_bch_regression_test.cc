@@ -51,6 +51,15 @@ int popcnt(TYPE x)
 	const int RADIUS_T = 3;
 	const int GEN_POLY = 0b10100110111;
 #endif
+#if 0
+	// BCH(31, 16) T=3
+	const int LOOPS = 50000;
+	const float QEF_SNR = 6.5;
+	const int CODE_LEN = 31;
+	const int DATA_LEN = 16;
+	const int RADIUS_T = 3;
+	const int GEN_POLY = 0b1000111110101111;
+#endif
 
 int main()
 {

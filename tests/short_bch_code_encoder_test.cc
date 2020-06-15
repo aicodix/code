@@ -54,6 +54,10 @@ int main()
 		// NASA INTRO BCH(15, 5) T=3
 		bch_test<15, 5, 3, 0b10100110111>(0b11001, 0b110010001111010);
 	}
+	if (1) {
+		// BCH(31, 16) T=3
+		bch_test<31, 16, 3, 0b1000111110101111>(29619, 970576025);
+	}
 	std::cerr << "Short BCH code encoder test passed!" << std::endl;
 	return 0;
 }
