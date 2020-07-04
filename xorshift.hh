@@ -14,6 +14,15 @@ class Xorshift32
 	static const uint32_t Y = 2463534242;
 	uint32_t y_;
 public:
+	typedef uint32_t result_type;
+	static constexpr result_type min()
+	{
+		return 0;
+	}
+	static constexpr result_type max()
+	{
+		return UINT32_MAX;
+	}
 	Xorshift32(uint32_t y = Y) : y_(y) {}
 	void reset(uint32_t y = Y)
 	{
@@ -33,6 +42,15 @@ class Xorshift64
 	static const uint64_t X = 88172645463325252;
 	uint64_t x_;
 public:
+	typedef uint64_t result_type;
+	static constexpr result_type min()
+	{
+		return 0;
+	}
+	static constexpr result_type max()
+	{
+		return UINT64_MAX;
+	}
 	Xorshift64(uint64_t x = X) : x_(x) {}
 	void reset(uint64_t x = X)
 	{
@@ -57,6 +75,15 @@ class Xorwow
 	static const uint32_t D = 6615241;
 	uint32_t x_, y_, z_, w_, v_, d_;
 public:
+	typedef uint32_t result_type;
+	static constexpr result_type min()
+	{
+		return 0;
+	}
+	static constexpr result_type max()
+	{
+		return UINT32_MAX;
+	}
 	Xorwow(uint32_t x = X, uint32_t y = Y,
 		uint32_t z = Z, uint32_t w = W,
 		uint32_t v = V, uint32_t d = D) :
@@ -90,6 +117,15 @@ class Xorshift128
 	static const uint32_t W = 88675123;
 	uint32_t x_, y_, z_, w_;
 public:
+	typedef uint32_t result_type;
+	static constexpr result_type min()
+	{
+		return 0;
+	}
+	static constexpr result_type max()
+	{
+		return UINT32_MAX;
+	}
 	Xorshift128(uint32_t x = X, uint32_t y = Y,
 		uint32_t z = Z, uint32_t w = W) :
 		x_(x), y_(y), z_(z), w_(w) {}
