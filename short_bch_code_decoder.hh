@@ -29,6 +29,8 @@ class ShortBCHCodeDecoder
 	}
 	static int metric(const int8_t *soft, int hard)
 	{
+		if (hard < 0)
+			return -1;
 		int lol = 8 * sizeof(hard) - 1;
 		int sum = 0;
 		for (int i = 0; i < N; ++i)
@@ -40,6 +42,8 @@ public:
 	{
 		for (int i = 0; i < W; ++i)
 			par[i] = modgen(i << P);
+		for (int i = 0; i < R; ++i)
+			err[i] = -1;
 		err[0] = 0;
 		for (int a = 1<<(N-1); T >= 1 && a; a >>= 1) {
 			err[modgen(a)] = a;
@@ -53,7 +57,8 @@ public:
 	}
 	int operator()(int inp)
 	{
-		return inp ^ err[(par[inp>>P] ^ inp) & (R-1)];
+		int tmp = err[(par[inp>>P] ^ inp) & (R-1)];
+		return tmp >= 0 ? inp ^ tmp : -1;
 	}
 	int operator()(const int8_t *code)
 	{
@@ -66,7 +71,7 @@ public:
 			return word;
 		// metric of hard decision
 		int best = metric(code, word);
-		int next = -1;
+		int next = -2;
 		auto update = [code, &word, &best, &next](int hard) {
 			if (hard == word)
 				return;
