@@ -93,7 +93,7 @@ public:
 			}
 		}
 		// Chase algorithm
-		if (K > 6) {
+		if (K > 4) {
 			const int L = T;
 			int worst[L] = { 0 };
 			for (int k = 0; k < N; ++k) {
@@ -114,7 +114,7 @@ public:
 			}
 		}
 		// maximum likelihood
-		if (K <= 6) {
+		if (K <= 4) {
 			for (int msg = 0; msg < W; ++msg) {
 				int enc = (msg << P) | par[msg];
 				update(enc);
