@@ -43,8 +43,7 @@ public:
 		for (int i = 0; i < W; ++i)
 			par[i] = modgen(i << P);
 		for (int i = 0; i < R; ++i)
-			err[i] = -1;
-		err[0] = 0;
+			err[i] = 0;
 		for (int a = 1<<(N-1); T >= 1 && a; a >>= 1) {
 			err[modgen(a)] = a;
 			for (int b = a >> 1; T >= 2 && b; b >>= 1) {
@@ -57,8 +56,9 @@ public:
 	}
 	int operator()(int inp)
 	{
-		int tmp = err[(par[inp>>P] ^ inp) & (R-1)];
-		return tmp >= 0 ? inp ^ tmp : -1;
+		int syn = (par[inp>>P] ^ inp) & (R-1);
+		int pat = err[syn];
+		return pat || !syn ? inp ^ pat : -1;
 	}
 	int operator()(const int8_t *code)
 	{
