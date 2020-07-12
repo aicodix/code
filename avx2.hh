@@ -456,6 +456,22 @@ inline SIMD<uint16_t, 16> vqsub(SIMD<uint16_t, 16> a, SIMD<uint16_t, 16> b)
 }
 
 template <>
+inline SIMD<float, 8> vmul(SIMD<float, 8> a, SIMD<float, 8> b)
+{
+	SIMD<float, 8> tmp;
+	tmp.m = _mm256_mul_ps(a.m, b.m);
+	return tmp;
+}
+
+template <>
+inline SIMD<double, 4> vmul(SIMD<double, 4> a, SIMD<double, 4> b)
+{
+	SIMD<double, 4> tmp;
+	tmp.m = _mm256_mul_pd(a.m, b.m);
+	return tmp;
+}
+
+template <>
 inline SIMD<float, 8> vabs(SIMD<float, 8> a)
 {
 	SIMD<float, 8> tmp;
@@ -492,6 +508,50 @@ inline SIMD<int32_t, 8> vqabs(SIMD<int32_t, 8> a)
 {
 	SIMD<int32_t, 8> tmp;
 	tmp.m = _mm256_abs_epi32(_mm256_max_epi32(a.m, _mm256_set1_epi32(-INT32_MAX)));
+	return tmp;
+}
+
+template <>
+inline SIMD<float, 8> vsignum(SIMD<float, 8> a)
+{
+	SIMD<float, 8> tmp;
+	tmp.m = _mm256_andnot_ps(
+		_mm256_cmp_ps(a.m, _mm256_setzero_ps(), _CMP_EQ_OQ),
+		_mm256_or_ps(_mm256_set1_ps(1.f), _mm256_and_ps(_mm256_set1_ps(-0.f), a.m)));
+	return tmp;
+}
+
+template <>
+inline SIMD<double, 4> vsignum(SIMD<double, 4> a)
+{
+	SIMD<double, 4> tmp;
+	tmp.m = _mm256_andnot_pd(
+		_mm256_cmp_pd(a.m, _mm256_setzero_pd(), _CMP_EQ_OQ),
+		_mm256_or_pd(_mm256_set1_pd(1.), _mm256_and_pd(_mm256_set1_pd(-0.), a.m)));
+	return tmp;
+}
+
+template <>
+inline SIMD<int8_t, 32> vsignum(SIMD<int8_t, 32> a)
+{
+	SIMD<int8_t, 32> tmp;
+	tmp.m = _mm256_sign_epi8(_mm256_set1_epi8(1), a.m);
+	return tmp;
+}
+
+template <>
+inline SIMD<int16_t, 16> vsignum(SIMD<int16_t, 16> a)
+{
+	SIMD<int16_t, 16> tmp;
+	tmp.m = _mm256_sign_epi16(_mm256_set1_epi16(1), a.m);
+	return tmp;
+}
+
+template <>
+inline SIMD<int32_t, 8> vsignum(SIMD<int32_t, 8> a)
+{
+	SIMD<int32_t, 8> tmp;
+	tmp.m = _mm256_sign_epi32(_mm256_set1_epi32(1), a.m);
 	return tmp;
 }
 

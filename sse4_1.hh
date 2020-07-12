@@ -456,6 +456,22 @@ inline SIMD<uint16_t, 8> vqsub(SIMD<uint16_t, 8> a, SIMD<uint16_t, 8> b)
 }
 
 template <>
+inline SIMD<float, 4> vmul(SIMD<float, 4> a, SIMD<float, 4> b)
+{
+	SIMD<float, 4> tmp;
+	tmp.m = _mm_mul_ps(a.m, b.m);
+	return tmp;
+}
+
+template <>
+inline SIMD<double, 2> vmul(SIMD<double, 2> a, SIMD<double, 2> b)
+{
+	SIMD<double, 2> tmp;
+	tmp.m = _mm_mul_pd(a.m, b.m);
+	return tmp;
+}
+
+template <>
 inline SIMD<float, 4> vabs(SIMD<float, 4> a)
 {
 	SIMD<float, 4> tmp;
@@ -492,6 +508,50 @@ inline SIMD<int32_t, 4> vqabs(SIMD<int32_t, 4> a)
 {
 	SIMD<int32_t, 4> tmp;
 	tmp.m = _mm_abs_epi32(_mm_max_epi32(a.m, _mm_set1_epi32(-INT32_MAX)));
+	return tmp;
+}
+
+template <>
+inline SIMD<float, 4> vsignum(SIMD<float, 4> a)
+{
+	SIMD<float, 4> tmp;
+	tmp.m = _mm_andnot_ps(
+		_mm_cmpeq_ps(a.m, _mm_setzero_ps()),
+		_mm_or_ps(_mm_set1_ps(1.f), _mm_and_ps(_mm_set1_ps(-0.f), a.m)));
+	return tmp;
+}
+
+template <>
+inline SIMD<double, 2> vsignum(SIMD<double, 2> a)
+{
+	SIMD<double, 2> tmp;
+	tmp.m = _mm_andnot_pd(
+		_mm_cmpeq_pd(a.m, _mm_setzero_pd()),
+		_mm_or_pd(_mm_set1_pd(1.), _mm_and_pd(_mm_set1_pd(-0.), a.m)));
+	return tmp;
+}
+
+template <>
+inline SIMD<int8_t, 16> vsignum(SIMD<int8_t, 16> a)
+{
+	SIMD<int8_t, 16> tmp;
+	tmp.m = _mm_sign_epi8(_mm_set1_epi8(1), a.m);
+	return tmp;
+}
+
+template <>
+inline SIMD<int16_t, 8> vsignum(SIMD<int16_t, 8> a)
+{
+	SIMD<int16_t, 8> tmp;
+	tmp.m = _mm_sign_epi16(_mm_set1_epi16(1), a.m);
+	return tmp;
+}
+
+template <>
+inline SIMD<int32_t, 4> vsignum(SIMD<int32_t, 4> a)
+{
+	SIMD<int32_t, 4> tmp;
+	tmp.m = _mm_sign_epi32(_mm_set1_epi32(1), a.m);
 	return tmp;
 }
 
