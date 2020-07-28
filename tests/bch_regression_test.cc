@@ -153,6 +153,18 @@ int main()
 		bch_test(&encoder, &decoder, 1000000);
 	}
 	if (1) {
+		// BCH(255, 131) T=18
+		typedef CODE::GaloisField<8, 0b100011101, uint8_t> GF;
+		GF instance;
+		CODE::BoseChaudhuriHocquenghemEncoder<255, 131> encoder({
+			0b100011101, 0b101110111, 0b111110011, 0b101101001,
+			0b110111101, 0b111100111, 0b100101011, 0b111010111,
+			0b000010011, 0b101100101, 0b110001011, 0b101100011,
+			0b100011011, 0b100111111, 0b110001101, 0b100101101});
+		CODE::BoseChaudhuriHocquenghemDecoder<36, 1, 131, GF> decoder;
+		bch_test(&encoder, &decoder, 10000);
+	}
+	if (1) {
 		// DVB-S2 FULL BCH(16383, 16215) T=12
 		typedef CODE::GaloisField<14, 0b100000000101011, uint16_t> GF;
 		GF instance;
@@ -195,6 +207,18 @@ int main()
 		CODE::BoseChaudhuriHocquenghemEncoderReference<6, 1, 5, GF> encoder({0b10011, 0b11111, 0b00111});
 		CODE::BoseChaudhuriHocquenghemDecoderReference<6, 1, 5, GF> decoder;
 		bch_reference_test(&encoder, &decoder, 1000000);
+	}
+	if (1) {
+		// BCH(255, 131) T=18
+		typedef CODE::GaloisField<8, 0b100011101, uint8_t> GF;
+		GF instance;
+		CODE::BoseChaudhuriHocquenghemEncoderReference<36, 1, 131, GF> encoder({
+			0b100011101, 0b101110111, 0b111110011, 0b101101001,
+			0b110111101, 0b111100111, 0b100101011, 0b111010111,
+			0b000010011, 0b101100101, 0b110001011, 0b101100011,
+			0b100011011, 0b100111111, 0b110001101, 0b100101101});
+		CODE::BoseChaudhuriHocquenghemDecoderReference<36, 1, 131, GF> decoder;
+		bch_reference_test(&encoder, &decoder, 10000);
 	}
 	if (1) {
 		// DVB-S2 FULL BCH(16383, 16215) T=12
