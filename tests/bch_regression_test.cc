@@ -153,6 +153,17 @@ int main()
 		bch_test(&encoder, &decoder, 1000000);
 	}
 	if (1) {
+		// BCH(127, 64) T=10
+		typedef CODE::GaloisField<7, 0b10001001, uint8_t> GF;
+		GF instance;
+		CODE::BoseChaudhuriHocquenghemEncoder<127, 64> encoder({
+			0b10001001, 0b10001111, 0b10011101,
+			0b11110111, 0b10111111, 0b11010101,
+			0b10000011, 0b11101111, 0b11001011});
+		CODE::BoseChaudhuriHocquenghemDecoder<20, 1, 64, GF> decoder;
+		bch_test(&encoder, &decoder, 10000);
+	}
+	if (1) {
 		// BCH(255, 131) T=18
 		typedef CODE::GaloisField<8, 0b100011101, uint8_t> GF;
 		GF instance;
@@ -207,6 +218,17 @@ int main()
 		CODE::BoseChaudhuriHocquenghemEncoderReference<6, 1, 5, GF> encoder({0b10011, 0b11111, 0b00111});
 		CODE::BoseChaudhuriHocquenghemDecoderReference<6, 1, 5, GF> decoder;
 		bch_reference_test(&encoder, &decoder, 1000000);
+	}
+	if (1) {
+		// BCH(127, 64) T=10
+		typedef CODE::GaloisField<7, 0b10001001, uint8_t> GF;
+		GF instance;
+		CODE::BoseChaudhuriHocquenghemEncoderReference<20, 1, 64, GF> encoder({
+			0b10001001, 0b10001111, 0b10011101,
+			0b11110111, 0b10111111, 0b11010101,
+			0b10000011, 0b11101111, 0b11001011});
+		CODE::BoseChaudhuriHocquenghemDecoderReference<20, 1, 64, GF> decoder;
+		bch_reference_test(&encoder, &decoder, 10000);
 	}
 	if (1) {
 		// BCH(255, 131) T=18
