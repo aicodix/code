@@ -84,6 +84,12 @@ Encoder for [augmented Hadamard codes](https://en.wikipedia.org/wiki/Hadamard_co
 
 [SIMD](https://en.wikipedia.org/wiki/SIMD) intra-frame accelerated [Low-density parity-check](https://en.wikipedia.org/wiki/Low-density_parity-check_code) layered decoder.
 
+### [osd.hh](osd.hh)
+
+Ordered statistics decoding allows the practical [soft-decision decoding](https://en.wikipedia.org/wiki/Soft-decision_decoder) of short to medium sized [linear codes](https://en.wikipedia.org/wiki/Linear_code).
+Below are the BER plots of the BCH(127, 64) T=10 code, using the OSD [Soft-decision decoder](https://en.wikipedia.org/wiki/Soft-decision_decoder) and the [Reed–Solomon error correction](https://en.wikipedia.org/wiki/Reed%E2%80%93Solomon_error_correction) BCH decoder with erasures.
+![OSD and BCH decoder comparison](osd_bch.png)
+
 ### [exclusive_reduce.hh](exclusive_reduce.hh)
 
 Reduce N times while excluding ith input element
