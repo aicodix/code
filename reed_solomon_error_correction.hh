@@ -4,8 +4,7 @@ Reed Solomon Error Correction
 Copyright 2018 Ahmet Inan <inan@aicodix.de>
 */
 
-#ifndef REED_SOLOMON_ERROR_CORRECTION_HH
-#define REED_SOLOMON_ERROR_CORRECTION_HH
+#pragma once
 
 namespace CODE {
 namespace RS {
@@ -267,4 +266,3 @@ struct ReedSolomonErrorCorrection
 
 }
 
-#endif

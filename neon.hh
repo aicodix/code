@@ -4,8 +4,7 @@ ARM NEON acceleration
 Copyright 2018 Ahmet Inan <inan@aicodix.de>
 */
 
-#ifndef NEON_HH
-#define NEON_HH
+#pragma once
 
 #include <arm_neon.h>
 
@@ -939,4 +938,3 @@ inline SIMD<int32_t, 4> vclamp(SIMD<int32_t, 4> x, int32_t a, int32_t b)
 	return tmp;
 }
 
-#endif

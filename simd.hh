@@ -4,8 +4,7 @@ Single instruction, multiple data
 Copyright 2018 Ahmet Inan <inan@aicodix.de>
 */
 
-#ifndef SIMD_HH
-#define SIMD_HH
+#pragma once
 
 #include <cstdint>
 #include <cstdlib>
@@ -1402,4 +1401,3 @@ static inline SIMD<int64_t, WIDTH> vsign(SIMD<int64_t, WIDTH> a, SIMD<int64_t, W
 #endif
 #endif
 
-#endif

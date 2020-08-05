@@ -4,8 +4,7 @@ Class of pseudorandom number generators, discovered by George Marsaglia
 Copyright 2018 Ahmet Inan <inan@aicodix.de>
 */
 
-#ifndef XORSHIFT_HH
-#define XORSHIFT_HH
+#pragma once
 
 namespace CODE {
 
@@ -147,6 +146,4 @@ public:
 };
 
 }
-
-#endif
 

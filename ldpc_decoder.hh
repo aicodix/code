@@ -4,8 +4,7 @@ LDPC SISO layered decoder
 Copyright 2018 Ahmet Inan <inan@aicodix.de>
 */
 
-#ifndef LDPC_DECODER_HH
-#define LDPC_DECODER_HH
+#pragma once
 
 #include <algorithm>
 #include "simd.hh"
@@ -287,4 +286,3 @@ public:
 
 }
 
-#endif

@@ -4,8 +4,7 @@ Bitwise stream container
 Copyright 2018 Ahmet Inan <inan@aicodix.de>
 */
 
-#ifndef BITSTREAM_HH
-#define BITSTREAM_HH
+#pragma once
 
 namespace CODE {
 
@@ -151,4 +150,3 @@ public:
 
 }
 
-#endif

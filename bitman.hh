@@ -4,8 +4,7 @@ Bit manipulation of byte arrays
 Copyright 2018 Ahmet Inan <inan@aicodix.de>
 */
 
-#ifndef BITMAN_HH
-#define BITMAN_HH
+#pragma once
 
 namespace CODE {
 
@@ -40,6 +39,4 @@ bool get_le_bit(const uint8_t *buf, int pos)
 }
 
 }
-
-#endif
 

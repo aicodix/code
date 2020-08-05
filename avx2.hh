@@ -4,8 +4,7 @@ Intel AVX2 acceleration
 Copyright 2018 Ahmet Inan <inan@aicodix.de>
 */
 
-#ifndef AVX2_HH
-#define AVX2_HH
+#pragma once
 
 #include <immintrin.h>
 
@@ -1135,4 +1134,3 @@ inline SIMD<int64_t, 4> vclamp(SIMD<int64_t, 4> x, int64_t a, int64_t b)
 	return tmp;
 }
 
-#endif

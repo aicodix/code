@@ -4,8 +4,7 @@ Bose Chaudhuri Hocquenghem Encoder
 Copyright 2018 Ahmet Inan <inan@aicodix.de>
 */
 
-#ifndef BOSE_CHAUDHURI_HOCQUENGHEM_ENCODER_HH
-#define BOSE_CHAUDHURI_HOCQUENGHEM_ENCODER_HH
+#pragma once
 
 #include <initializer_list>
 #include "bitman.hh"
@@ -151,4 +150,3 @@ public:
 
 }
 
-#endif

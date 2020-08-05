@@ -4,8 +4,7 @@ Reed Solomon Decoder
 Copyright 2018 Ahmet Inan <inan@aicodix.de>
 */
 
-#ifndef REED_SOLOMON_DECODER_HH
-#define REED_SOLOMON_DECODER_HH
+#pragma once
 
 #include "reed_solomon_error_correction.hh"
 
@@ -100,4 +99,3 @@ public:
 
 }
 
-#endif

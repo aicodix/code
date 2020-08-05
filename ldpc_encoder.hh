@@ -4,8 +4,7 @@ LDPC SISO encoder
 Copyright 2018 Ahmet Inan <inan@aicodix.de>
 */
 
-#ifndef LDPC_ENCODER_HH
-#define LDPC_ENCODER_HH
+#pragma once
 
 namespace CODE {
 
@@ -71,4 +70,3 @@ public:
 
 }
 
-#endif

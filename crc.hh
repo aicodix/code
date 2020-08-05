@@ -4,8 +4,7 @@ Cyclic redundancy check
 Copyright 2018 Ahmet Inan <inan@aicodix.de>
 */
 
-#ifndef CRC_HH
-#define CRC_HH
+#pragma once
 
 namespace CODE {
 
@@ -83,6 +82,4 @@ uint8_t CRC<uint8_t>::operator()(uint8_t data)
 }
 
 }
-
-#endif
 

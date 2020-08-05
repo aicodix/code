@@ -4,8 +4,7 @@ Galois field arithmetic
 Copyright 2018 Ahmet Inan <inan@aicodix.de>
 */
 
-#ifndef GALOIS_FIELD_HH
-#define GALOIS_FIELD_HH
+#pragma once
 
 #include <cassert>
 
@@ -301,4 +300,3 @@ private:
 };
 
 }
-#endif

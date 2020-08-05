@@ -4,8 +4,7 @@ Reduce N times while excluding ith input element
 Copyright 2018 Ahmet Inan <inan@aicodix.de>
 */
 
-#ifndef EXCLUSIVE_REDUCE_HH
-#define EXCLUSIVE_REDUCE_HH
+#pragma once
 
 namespace CODE {
 
@@ -27,6 +26,4 @@ void exclusive_reduce(const TYPE *in, TYPE *out, int N, OPERATOR op)
 }
 
 }
-
-#endif
 

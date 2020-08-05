@@ -4,8 +4,7 @@ Reed Solomon Encoder
 Copyright 2018 Ahmet Inan <inan@aicodix.de>
 */
 
-#ifndef REED_SOLOMON_ENCODER_HH
-#define REED_SOLOMON_ENCODER_HH
+#pragma once
 
 namespace CODE {
 
@@ -79,4 +78,3 @@ public:
 
 }
 
-#endif
