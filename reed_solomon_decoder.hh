@@ -22,7 +22,7 @@ public:
 	static const int N = GF::N, K = N - NR, NP = NR;
 private:
 	ReedSolomonErrorCorrection<NR, FCR, GF> algorithm;
-	void update_syndromes(ValueType *poly, ValueType *syndromes, int begin, int end)
+	void update_syndromes(const ValueType *poly, ValueType *syndromes, int begin, int end)
 	{
 		for (int j = begin; j < end; ++j) {
 			ValueType coeff(poly[j]);
@@ -34,7 +34,7 @@ private:
 		}
 	}
 public:
-	int compute_syndromes(ValueType *data, ValueType *parity, ValueType *syndromes, int data_len = K)
+	int compute_syndromes(const ValueType *data, const ValueType *parity, ValueType *syndromes, int data_len = K)
 	{
 		assert(0 < data_len && data_len <= K);
 		// $syndromes_i = code(pe^{FCR+i})$
@@ -92,9 +92,9 @@ public:
 	{
 		return (*this)(reinterpret_cast<ValueType *>(data), reinterpret_cast<ValueType *>(parity), reinterpret_cast<IndexType *>(erasures), erasures_count, data_len);
 	}
-	int compute_syndromes(value_type *data, value_type *parity, value_type *syndromes, int data_len = K)
+	int compute_syndromes(const value_type *data, const value_type *parity, value_type *syndromes, int data_len = K)
 	{
-		return compute_syndromes(reinterpret_cast<ValueType *>(data), reinterpret_cast<ValueType *>(parity), reinterpret_cast<ValueType *>(syndromes), data_len);
+		return compute_syndromes(reinterpret_cast<const ValueType *>(data), reinterpret_cast<const ValueType *>(parity), reinterpret_cast<ValueType *>(syndromes), data_len);
 	}
 };
 

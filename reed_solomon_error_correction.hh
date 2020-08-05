@@ -15,7 +15,7 @@ struct Chien
 {
 	typedef typename GF::ValueType ValueType;
 	typedef typename GF::IndexType IndexType;
-	static int search(ValueType *locator, int locator_degree, IndexType *locations)
+	static int search(const ValueType *locator, int locator_degree, IndexType *locations)
 	{
 		ValueType tmp[locator_degree+1];
 		for (int i = 0; i <= locator_degree; ++i)
@@ -65,7 +65,7 @@ struct LocationFinder
 	typedef typename GF::ValueType ValueType;
 	typedef typename GF::IndexType IndexType;
 	ArtinSchreier<GF> imap;
-	int operator()(ValueType *locator, int locator_degree, IndexType *locations)
+	int operator()(const ValueType *locator, int locator_degree, IndexType *locations)
 	{
 		if (locator_degree == 1) {
 			locations[0] = (index(locator[0]) / index(locator[1])) / IndexType(1);
@@ -91,7 +91,7 @@ struct Forney
 {
 	typedef typename GF::ValueType ValueType;
 	typedef typename GF::IndexType IndexType;
-	static int compute_evaluator(ValueType *syndromes, ValueType *locator, int locator_degree, ValueType *evaluator)
+	static int compute_evaluator(const ValueType *syndromes, const ValueType *locator, int locator_degree, ValueType *evaluator)
 	{
 		// $evaluator = (syndromes * locator) \bmod{x^{NR}}$
 		int tmp = std::min(locator_degree, NR-1);
@@ -105,7 +105,7 @@ struct Forney
 		}
 		return degree;
 	}
-	static void compute_magnitudes(ValueType *locator, IndexType *locations, int count, ValueType *evaluator, int evaluator_degree, ValueType *magnitudes)
+	static void compute_magnitudes(const ValueType *locator, const IndexType *locations, int count, const ValueType *evaluator, int evaluator_degree, ValueType *magnitudes)
 	{
 		// $magnitude = root^{FCR-1} * \frac{evaluator(root)}{locator'(root)}$
 		for (int i = 0; i < count; ++i) {
@@ -134,7 +134,7 @@ struct Forney
 			magnitudes[i] = value(magnitude);
 		}
 	}
-	static int algorithm(ValueType *syndromes, ValueType *locator, IndexType *locations, int count, ValueType *evaluator, ValueType *magnitudes)
+	static int algorithm(const ValueType *syndromes, const ValueType *locator, const IndexType *locations, int count, ValueType *evaluator, ValueType *magnitudes)
 	{
 		int evaluator_degree = compute_evaluator(syndromes, locator, count, evaluator);
 		compute_magnitudes(locator, locations, count, evaluator, evaluator_degree, magnitudes);
@@ -147,7 +147,7 @@ struct BerlekampMassey
 {
 	typedef typename GF::ValueType ValueType;
 	typedef typename GF::IndexType IndexType;
-	static int algorithm(ValueType *s, ValueType *C, int count = 0)
+	static int algorithm(const ValueType *s, ValueType *C, int count = 0)
 	{
 		ValueType B[NR+1];
 		for (int i = 0; i <= NR; ++i)
@@ -189,7 +189,7 @@ struct ReedSolomonErrorCorrection
 	typedef typename GF::ValueType ValueType;
 	typedef typename GF::IndexType IndexType;
 	RS::LocationFinder<NR, GF> search;
-	int operator()(ValueType *syndromes, IndexType *locations, ValueType *magnitudes, IndexType *erasures = 0, int erasures_count = 0)
+	int operator()(const ValueType *syndromes, IndexType *locations, ValueType *magnitudes, const IndexType *erasures = 0, int erasures_count = 0)
 	{
 		assert(0 <= erasures_count && erasures_count <= NR);
 		ValueType locator[NR+1];

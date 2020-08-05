@@ -55,7 +55,7 @@ public:
 			}
 		}
 	}
-	void operator()(int8_t *data, int8_t *parity)
+	void operator()(const int8_t *data, int8_t *parity)
 	{
 		int8_t tmp = 1;
 		for (int j = 0; j < M; ++j) {

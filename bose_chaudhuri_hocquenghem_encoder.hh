@@ -59,7 +59,7 @@ public:
 			set_be_bit(generator, i, get_be_bit(generator, i+1));
 		set_be_bit(generator, NP, 0);
 	}
-	void operator()(uint8_t *data, uint8_t *parity, int data_len = K)
+	void operator()(const uint8_t *data, uint8_t *parity, int data_len = K)
 	{
 		assert(0 < data_len && data_len <= K);
 		// $code = data * x^{NP} + (data * x^{NP}) \mod{generator}$
@@ -129,7 +129,7 @@ public:
 			std::cerr << std::endl;
 		}
 	}
-	void operator()(ValueType *data, ValueType *parity, int data_len = K)
+	void operator()(const ValueType *data, ValueType *parity, int data_len = K)
 	{
 		assert(0 < data_len && data_len <= K);
 		// $code = data * x^{NP} + (data * x^{NP}) \mod{generator}$

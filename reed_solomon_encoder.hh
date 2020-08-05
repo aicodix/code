@@ -51,7 +51,7 @@ public:
 		for (int i = 0; i <= NR; ++i)
 			generator[i] = index(tmp[i]);
 	}
-	void operator()(ValueType *data, ValueType *parity, int data_len = K)
+	void operator()(const ValueType *data, ValueType *parity, int data_len = K)
 	{
 		assert(0 < data_len && data_len <= K);
 		// $code = data * x^{NR} + (data * x^{NR}) \mod{generator}$
@@ -71,9 +71,9 @@ public:
 			}
 		}
 	}
-	void operator()(value_type *data, value_type *parity, int data_len = K)
+	void operator()(const value_type *data, value_type *parity, int data_len = K)
 	{
-		(*this)(reinterpret_cast<ValueType *>(data), reinterpret_cast<ValueType *>(parity), data_len);
+		(*this)(reinterpret_cast<const ValueType *>(data), reinterpret_cast<ValueType *>(parity), data_len);
 	}
 };
 
