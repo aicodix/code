@@ -98,51 +98,53 @@ public:
 template <int N, int K, int O>
 class OrderedStatisticsDecoder
 {
-	int8_t G[N*K];
-	int8_t codeword[N], candidate[N];
-	int8_t softperm[N];
-	int16_t perm[N];
+	static const int S = sizeof(size_t);
+	static const int W = (N+S-1) & ~(S-1);
+	int8_t G[W*K];
+	int8_t codeword[W], candidate[W];
+	int8_t softperm[W];
+	int16_t perm[W];
 	void row_echelon()
 	{
 		for (int k = 0; k < K; ++k) {
 			// find pivot in this column
 			for (int j = k; j < K; ++j) {
-				if (G[N*j+k]) {
+				if (G[W*j+k]) {
 					for (int i = k; j != k && i < N; ++i)
-						std::swap(G[N*j+i], G[N*k+i]);
+						std::swap(G[W*j+i], G[W*k+i]);
 					break;
 				}
 			}
 			// keep searching for suitable column for pivot
 			// beware: this will use columns >= K if necessary.
-			for (int j = k + 1; !G[N*k+k] && j < N; ++j) {
+			for (int j = k + 1; !G[W*k+k] && j < N; ++j) {
 				for (int h = k; h < K; ++h) {
-					if (G[N*h+j]) {
+					if (G[W*h+j]) {
 						// account column swap
 						std::swap(perm[k], perm[j]);
 						for (int i = 0; i < K; ++i)
-							std::swap(G[N*i+k], G[N*i+j]);
+							std::swap(G[W*i+k], G[W*i+j]);
 						for (int i = k; h != k && i < N; ++i)
-							std::swap(G[N*h+i], G[N*k+i]);
+							std::swap(G[W*h+i], G[W*k+i]);
 						break;
 					}
 				}
 			}
-			assert(G[N*k+k]);
+			assert(G[W*k+k]);
 			// zero out column entries below pivot
 			for (int j = k + 1; j < K; ++j)
-				if (G[N*j+k])
+				if (G[W*j+k])
 					for (int i = k; i < N; ++i)
-						G[N*j+i] ^= G[N*k+i];
+						G[W*j+i] ^= G[W*k+i];
 		}
 	}
 	void systematic()
 	{
 		for (int k = K-1; k; --k)
 			for (int j = 0; j < k; ++j)
-				if (G[N*j+k])
+				if (G[W*j+k])
 					for (int i = k; i < N; ++i)
-						G[N*j+i] ^= G[N*k+i];
+						G[W*j+i] ^= G[W*k+i];
 	}
 	void encode()
 	{
@@ -150,18 +152,18 @@ class OrderedStatisticsDecoder
 			codeword[i] = codeword[0] & G[i];
 		for (int j = 1; j < K; ++j)
 			for (int i = K; i < N; ++i)
-				codeword[i] ^= codeword[j] & G[N*j+i];
+				codeword[i] ^= codeword[j] & G[W*j+i];
 	}
 	void flip(int j)
 	{
 		codeword[j] ^= 1;
-		for (int i = K; i < N; ++i)
-			codeword[i] ^= G[N*j+i];
+		for (int i = K; i < W; ++i)
+			codeword[i] ^= G[W*j+i];
 	}
 	static int metric(const int8_t *hard, const int8_t *soft)
 	{
 		int sum = 0;
-		for (int i = 0; i < N; ++i)
+		for (int i = 0; i < W; ++i)
 			sum += (1 - 2 * hard[i]) * soft[i];
 		return sum;
 	}
@@ -173,11 +175,13 @@ public:
 		std::sort(perm, perm+N, [soft](int a, int b){ return std::abs(soft[a]) > std::abs(soft[b]); });
 		for (int j = 0; j < K; ++j)
 			for (int i = 0; i < N; ++i)
-				G[N*j+i] = genmat[N*j+perm[i]];
+				G[W*j+i] = genmat[N*j+perm[i]];
 		row_echelon();
 		systematic();
 		for (int i = 0; i < N; ++i)
 			softperm[i] = soft[perm[i]];
+		for (int i = N; i < W; ++i)
+			softperm[i] = 0;
 		for (int i = 0; i < K; ++i)
 			codeword[i] = softperm[i] < 0;
 		encode();
