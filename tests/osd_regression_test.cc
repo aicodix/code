@@ -16,6 +16,8 @@ Copyright 2020 Ahmet Inan <inan@aicodix.de>
 
 int main()
 {
+#if 1
+	// BCH(127, 64) T=10
 	const int O = 2;
 	const int N = 127;
 	const int K = 64;
@@ -30,7 +32,22 @@ int main()
 		0b11110111, 0b10111111, 0b11010101,
 		0b10000011, 0b11101111, 0b11001011,
 	};
-
+#endif
+#if 0
+	// NASA INTRO BCH(15, 5) T=3
+	const int O = 1;
+	const int N = 15;
+	const int K = 5;
+	const int NR = 6;
+	const int loops = 100000;
+	const double low_SNR = -7;
+	const double high_SNR = 7;
+	const double QEF_SNR = 3.5;
+	typedef CODE::GaloisField<4, 0b10011, uint8_t> GF;
+	std::initializer_list<int> minpols {
+		0b10011, 0b11111, 0b00111
+	};
+#endif
 	GF instance;
 	const int NW = (N+7)/8;
 	const int KW = (K+7)/8;
