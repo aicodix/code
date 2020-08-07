@@ -172,14 +172,16 @@ public:
 	{
 		for (int i = 0; i < N; ++i)
 			perm[i] = i;
-		std::sort(perm, perm+N, [soft](int a, int b){ return std::abs(soft[a]) > std::abs(soft[b]); });
+		for (int i = 0; i < N; ++i)
+			softperm[i] = std::abs(std::max<int8_t>(soft[i], -127));
+		std::sort(perm, perm+N, [this](int a, int b){ return softperm[a] > softperm[b]; });
 		for (int j = 0; j < K; ++j)
 			for (int i = 0; i < N; ++i)
 				G[W*j+i] = genmat[N*j+perm[i]];
 		row_echelon();
 		systematic();
 		for (int i = 0; i < N; ++i)
-			softperm[i] = soft[perm[i]];
+			softperm[i] = std::max<int8_t>(soft[perm[i]], -127);
 		for (int i = N; i < W; ++i)
 			softperm[i] = 0;
 		for (int i = 0; i < K; ++i)
