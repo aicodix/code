@@ -156,8 +156,7 @@ class OrderedStatisticsDecoder
 	}
 	void flip(int j)
 	{
-		codeword[j] ^= 1;
-		for (int i = K; i < W; ++i)
+		for (int i = 0; i < W; ++i)
 			codeword[i] ^= G[W*j+i];
 	}
 	static int metric(const int8_t *hard, const int8_t *soft)
