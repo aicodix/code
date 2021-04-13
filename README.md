@@ -16,7 +16,7 @@ For example, if we need to integrate CRC32 checking for a few bytes, like in the
 ```
 We can add it to our project as simple as that:
 ```
-DSP::CRC<uint32_t> crc(0xEDB88320, 0xFFFFFFFF);
+CODE::CRC<uint32_t> crc(0xEDB88320, 0xFFFFFFFF);
 for (uint8_t c: std::string("Hello World!")) crc(c);
 assert(~crc() == 0x1C291CA3);
 ```
