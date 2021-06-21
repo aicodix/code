@@ -1387,6 +1387,96 @@ static inline SIMD<int64_t, WIDTH> vsign(SIMD<int64_t, WIDTH> a, SIMD<int64_t, W
 	return tmp;
 }
 
+template <int WIDTH>
+static inline SIMD<uint8_t, WIDTH> vshuf(SIMD<uint8_t, WIDTH> a, SIMD<uint8_t, WIDTH> b)
+{
+	SIMD<uint8_t, WIDTH> tmp;
+	for (int i = 0; i < WIDTH; ++i)
+		tmp.v[i] = b.v[i] < WIDTH ? a.v[b.v[i]] : 0;
+	return tmp;
+}
+
+template <int WIDTH>
+static inline SIMD<uint16_t, WIDTH> vshuf(SIMD<uint16_t, WIDTH> a, SIMD<uint16_t, WIDTH> b)
+{
+	SIMD<uint16_t, WIDTH> tmp;
+	for (int i = 0; i < WIDTH; ++i)
+		tmp.v[i] = b.v[i] < WIDTH ? a.v[b.v[i]] : 0;
+	return tmp;
+}
+
+template <int WIDTH>
+static inline SIMD<uint32_t, WIDTH> vshuf(SIMD<uint32_t, WIDTH> a, SIMD<uint32_t, WIDTH> b)
+{
+	SIMD<uint32_t, WIDTH> tmp;
+	for (int i = 0; i < WIDTH; ++i)
+		tmp.v[i] = b.v[i] < WIDTH ? a.v[b.v[i]] : 0;
+	return tmp;
+}
+
+template <int WIDTH>
+static inline SIMD<uint64_t, WIDTH> vshuf(SIMD<uint64_t, WIDTH> a, SIMD<uint64_t, WIDTH> b)
+{
+	SIMD<uint64_t, WIDTH> tmp;
+	for (int i = 0; i < WIDTH; ++i)
+		tmp.v[i] = b.v[i] < WIDTH ? a.v[b.v[i]] : 0;
+	return tmp;
+}
+
+template <int WIDTH>
+static inline SIMD<int8_t, WIDTH> vshuf(SIMD<int8_t, WIDTH> a, SIMD<uint8_t, WIDTH> b)
+{
+	SIMD<int8_t, WIDTH> tmp;
+	for (int i = 0; i < WIDTH; ++i)
+		tmp.v[i] = b.v[i] < WIDTH ? a.v[b.v[i]] : 0;
+	return tmp;
+}
+
+template <int WIDTH>
+static inline SIMD<int16_t, WIDTH> vshuf(SIMD<int16_t, WIDTH> a, SIMD<uint16_t, WIDTH> b)
+{
+	SIMD<int16_t, WIDTH> tmp;
+	for (int i = 0; i < WIDTH; ++i)
+		tmp.v[i] = b.v[i] < WIDTH ? a.v[b.v[i]] : 0;
+	return tmp;
+}
+
+template <int WIDTH>
+static inline SIMD<int32_t, WIDTH> vshuf(SIMD<int32_t, WIDTH> a, SIMD<uint32_t, WIDTH> b)
+{
+	SIMD<int32_t, WIDTH> tmp;
+	for (int i = 0; i < WIDTH; ++i)
+		tmp.v[i] = b.v[i] < WIDTH ? a.v[b.v[i]] : 0;
+	return tmp;
+}
+
+template <int WIDTH>
+static inline SIMD<int64_t, WIDTH> vshuf(SIMD<int64_t, WIDTH> a, SIMD<uint64_t, WIDTH> b)
+{
+	SIMD<int64_t, WIDTH> tmp;
+	for (int i = 0; i < WIDTH; ++i)
+		tmp.v[i] = b.v[i] < WIDTH ? a.v[b.v[i]] : 0;
+	return tmp;
+}
+
+template <int WIDTH>
+static inline SIMD<float, WIDTH> vshuf(SIMD<float, WIDTH> a, SIMD<uint32_t, WIDTH> b)
+{
+	SIMD<float, WIDTH> tmp;
+	for (int i = 0; i < WIDTH; ++i)
+		tmp.v[i] = b.v[i] < WIDTH ? a.v[b.v[i]] : 0.f;
+	return tmp;
+}
+
+template <int WIDTH>
+static inline SIMD<double, WIDTH> vshuf(SIMD<double, WIDTH> a, SIMD<uint64_t, WIDTH> b)
+{
+	SIMD<double, WIDTH> tmp;
+	for (int i = 0; i < WIDTH; ++i)
+		tmp.v[i] = b.v[i] < WIDTH ? a.v[b.v[i]] : 0.;
+	return tmp;
+}
+
 #if 1
 #ifdef __AVX2__
 #include "avx2.hh"

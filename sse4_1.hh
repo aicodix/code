@@ -1127,3 +1127,19 @@ inline SIMD<int32_t, 4> vclamp(SIMD<int32_t, 4> x, int32_t a, int32_t b)
 	return tmp;
 }
 
+template <>
+inline SIMD<uint8_t, 16> vshuf(SIMD<uint8_t, 16> a, SIMD<uint8_t, 16> b)
+{
+	SIMD<uint8_t, 16> tmp;
+	tmp.m = _mm_shuffle_epi8(a.m, b.m);
+	return tmp;
+}
+
+template <>
+inline SIMD<int8_t, 16> vshuf(SIMD<int8_t, 16> a, SIMD<uint8_t, 16> b)
+{
+	SIMD<int8_t, 16> tmp;
+	tmp.m = _mm_shuffle_epi8(a.m, b.m);
+	return tmp;
+}
+
