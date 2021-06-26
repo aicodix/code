@@ -1388,6 +1388,24 @@ static inline SIMD<int64_t, WIDTH> vsign(SIMD<int64_t, WIDTH> a, SIMD<int64_t, W
 }
 
 template <int WIDTH>
+static inline SIMD<float, WIDTH> vcopysign(SIMD<float, WIDTH> a, SIMD<float, WIDTH> b)
+{
+	SIMD<float, WIDTH> tmp, negz = vdup<SIMD<float, WIDTH>>(-0.f);
+	for (int i = 0; i < WIDTH; ++i)
+		tmp.u[i] = (a.u[i] & ~negz.u[i]) | (negz.u[i] & b.u[i]);
+	return tmp;
+}
+
+template <int WIDTH>
+static inline SIMD<double, WIDTH> vcopysign(SIMD<double, WIDTH> a, SIMD<double, WIDTH> b)
+{
+	SIMD<double, WIDTH> tmp, negz = vdup<SIMD<double, WIDTH>>(-0.);
+	for (int i = 0; i < WIDTH; ++i)
+		tmp.u[i] = (a.u[i] & ~negz.u[i]) | (negz.u[i] & b.u[i]);
+	return tmp;
+}
+
+template <int WIDTH>
 static inline SIMD<uint8_t, WIDTH> vshuf(SIMD<uint8_t, WIDTH> a, SIMD<uint8_t, WIDTH> b)
 {
 	SIMD<uint8_t, WIDTH> tmp;

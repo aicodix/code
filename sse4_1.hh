@@ -599,6 +599,28 @@ inline SIMD<int32_t, 4> vsign(SIMD<int32_t, 4> a, SIMD<int32_t, 4> b)
 }
 
 template <>
+inline SIMD<float, 4> vcopysign(SIMD<float, 4> a, SIMD<float, 4> b)
+{
+	SIMD<float, 4> tmp;
+	__m128 negz = _mm_set1_ps(-0.f);
+	tmp.m = _mm_or_ps(
+		_mm_andnot_ps(negz, a.m),
+		_mm_and_ps(negz, b.m));
+	return tmp;
+}
+
+template <>
+inline SIMD<double, 2> vcopysign(SIMD<double, 2> a, SIMD<double, 2> b)
+{
+	SIMD<double, 2> tmp;
+	__m128 negz = _mm_set1_pd(-0.);
+	tmp.m = _mm_or_pd(
+		_mm_andnot_pd(negz, a.m),
+		_mm_and_pd(negz, b.m));
+	return tmp;
+}
+
+template <>
 inline SIMD<uint8_t, 16> vorr(SIMD<uint8_t, 16> a, SIMD<uint8_t, 16> b)
 {
 	SIMD<uint8_t, 16> tmp;
