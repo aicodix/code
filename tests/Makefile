@@ -1,5 +1,5 @@
 
-CXXFLAGS = -I.. -std=c++11 -W -Wall -Ofast -fno-exceptions -fno-rtti
+CXXFLAGS = -I.. -std=c++17 -W -Wall -Ofast -fno-exceptions -fno-rtti
 
 CXX = clang++ -stdlib=libc++ -march=native
 
