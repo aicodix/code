@@ -84,6 +84,27 @@ Encoder for [augmented Hadamard codes](https://en.wikipedia.org/wiki/Hadamard_co
 
 [SIMD](https://en.wikipedia.org/wiki/SIMD) intra-frame accelerated [Low-density parity-check](https://en.wikipedia.org/wiki/Low-density_parity-check_code) layered decoder.
 
+### [polar_freezer.hh](polar_freezer.hh)
+
+Bit freezers for the construction of [polar codes](https://en.wikipedia.org/wiki/Polar_code_(coding_theory)).
+
+* PolarFreezer: Constructs code for a given erasure probability without the need for storing nor sorting of erasure probabilities for the virtual channels.
+* PolarCodeConst0: Constructs code by choosing the K best virtual channels computed from a given erasure probability.
+
+### [polar_encoder.hh](polar_encoder.hh)
+
+Encoders for [non-systematic and systematic](https://en.wikipedia.org/wiki/Systematic_code) [polar codes](https://en.wikipedia.org/wiki/Polar_code_(coding_theory)).
+
+### [polar_decoder.hh](polar_decoder.hh)
+
+Successive cancellation decoding of [polar codes](https://en.wikipedia.org/wiki/Polar_code_(coding_theory)).
+
+### [polar_list_decoder.hh](polar_list_decoder.hh)
+
+Successive cancellation [list decoding](https://en.wikipedia.org/wiki/List_decoding) of [polar codes](https://en.wikipedia.org/wiki/Polar_code_(coding_theory)).
+
+List size depends on used SIMD type. Decoding performance of the fixed-point implementation is better with shorter codes, as the list size is larger but a deterioration can be observed with larger codes.
+
 ### [osd.hh](osd.hh)
 
 Ordered statistics decoding allows the practical [soft-decision decoding](https://en.wikipedia.org/wiki/Soft-decision_decoder) of short to medium sized [linear codes](https://en.wikipedia.org/wiki/Linear_code).
