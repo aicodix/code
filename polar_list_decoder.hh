@@ -33,6 +33,54 @@ struct PolarListNode
 	}
 };
 
+template <typename TYPE>
+struct PolarListNode<TYPE, 0>
+{
+	typedef PolarHelper<TYPE> PH;
+	typedef typename PH::PATH PATH;
+	typedef typename PH::MAP MAP;
+	static MAP rate0(PATH *metric, TYPE *hard, TYPE *soft)
+	{
+		*hard = PH::one();
+		for (int k = 0; k < TYPE::SIZE; ++k)
+			if (soft[1].v[k] < 0)
+				metric[k] -= soft[1].v[k];
+		MAP map;
+		for (int k = 0; k < TYPE::SIZE; ++k)
+			map.v[k] = k;
+		return map;
+	}
+	static MAP rate1(PATH *metric, TYPE *message, MAP *maps, int *count, TYPE *hard, TYPE *soft)
+	{
+		TYPE sft = soft[1];
+		PATH fork[2*TYPE::SIZE];
+		for (int k = 0; k < TYPE::SIZE; ++k)
+			fork[k] = fork[k+TYPE::SIZE] = metric[k];
+		for (int k = 0; k < TYPE::SIZE; ++k)
+			if (sft.v[k] < 0)
+				fork[k] -= sft.v[k];
+			else
+				fork[k+TYPE::SIZE] += sft.v[k];
+		int perm[2*TYPE::SIZE];
+		for (int k = 0; k < 2*TYPE::SIZE; ++k)
+			perm[k] = k;
+		std::nth_element(perm, perm+TYPE::SIZE, perm+2*TYPE::SIZE, [fork](int a, int b){ return fork[a] < fork[b]; });
+		for (int k = 0; k < TYPE::SIZE; ++k)
+			metric[k] = fork[perm[k]];
+		MAP map;
+		for (int k = 0; k < TYPE::SIZE; ++k)
+			map.v[k] = perm[k] % TYPE::SIZE;
+		TYPE hrd;
+		for (int k = 0; k < TYPE::SIZE; ++k)
+			hrd.v[k] = perm[k] < TYPE::SIZE ? 1 : -1;
+		message[*count] = hrd;
+		maps[*count] = map;
+		++*count;
+		*hard = hrd;
+		return map;
+	}
+};
+
 template <typename TYPE, int M>
 struct PolarListTree
 {
@@ -212,59 +260,14 @@ struct PolarListTree<TYPE, 1>
 		if (frozen & 1)
 			lmap = PolarListNode<TYPE, 0>::rate0(metric, hard, soft);
 		else
-			lmap = PolarListTree<TYPE, 0>::decode(metric, message, maps, count, hard, soft, 0);
+			lmap = PolarListNode<TYPE, 0>::rate1(metric, message, maps, count, hard, soft);
 		soft[1] = PH::madd(hard[0], vshuf(soft[2], lmap), vshuf(soft[3], lmap));
 		if (frozen >> 1)
 			rmap = PolarListNode<TYPE, 0>::rate0(metric, hard+1, soft);
 		else
-			rmap = PolarListTree<TYPE, 0>::decode(metric, message, maps, count, hard+1, soft, 0);
+			rmap = PolarListNode<TYPE, 0>::rate1(metric, message, maps, count, hard+1, soft);
 		hard[0] = PH::qmul(vshuf(hard[0], rmap), hard[1]);
 		return vshuf(lmap, rmap);
-	}
-};
-
-template <typename TYPE>
-struct PolarListTree<TYPE, 0>
-{
-	typedef PolarHelper<TYPE> PH;
-	typedef typename PH::PATH PATH;
-	typedef typename PH::MAP MAP;
-	static MAP decode(PATH *metric, TYPE *message, MAP *maps, int *count, TYPE *hard, TYPE *soft, uint32_t frozen)
-	{
-		MAP map;
-		TYPE hrd, sft = soft[1];
-		if (frozen) {
-			for (int k = 0; k < TYPE::SIZE; ++k)
-				if (sft.v[k] < 0)
-					metric[k] -= sft.v[k];
-			hrd = PH::one();
-			for (int k = 0; k < TYPE::SIZE; ++k)
-				map.v[k] = k;
-		} else {
-			PATH fork[2*TYPE::SIZE];
-			for (int k = 0; k < TYPE::SIZE; ++k)
-				fork[k] = fork[k+TYPE::SIZE] = metric[k];
-			for (int k = 0; k < TYPE::SIZE; ++k)
-				if (sft.v[k] < 0)
-					fork[k] -= sft.v[k];
-				else
-					fork[k+TYPE::SIZE] += sft.v[k];
-			int perm[2*TYPE::SIZE];
-			for (int k = 0; k < 2*TYPE::SIZE; ++k)
-				perm[k] = k;
-			std::nth_element(perm, perm+TYPE::SIZE, perm+2*TYPE::SIZE, [fork](int a, int b){ return fork[a] < fork[b]; });
-			for (int k = 0; k < TYPE::SIZE; ++k)
-				metric[k] = fork[perm[k]];
-			for (int k = 0; k < TYPE::SIZE; ++k)
-				map.v[k] = perm[k] % TYPE::SIZE;
-			for (int k = 0; k < TYPE::SIZE; ++k)
-				hrd.v[k] = perm[k] < TYPE::SIZE ? 1 : -1;
-			message[*count] = hrd;
-			maps[*count] = map;
-			++*count;
-		}
-		*hard = hrd;
-		return map;
 	}
 };
 
