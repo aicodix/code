@@ -17,6 +17,11 @@ Copyright 2020 Ahmet Inan <inan@aicodix.de>
 #include "polar_encoder.hh"
 #include "polar_freezer.hh"
 
+bool get_bit(const uint32_t *bits, int idx)
+{
+	return (bits[idx/32] >> (idx%32)) & 1;
+}
+
 int main()
 {
 	const int M = 16;
@@ -42,7 +47,7 @@ int main()
 	typedef std::default_random_engine generator;
 	typedef std::uniform_int_distribution<int> distribution;
 	auto data = std::bind(distribution(0, 1), generator(rd()));
-	auto frozen = new uint8_t[N];
+	auto frozen = new uint32_t[(N+31)/32];
 	auto codeword = new code_type[N];
 	auto temp = new simd_type[N];
 
@@ -101,7 +106,7 @@ int main()
 				CODE::PolarSysEnc<code_type> sysenc;
 				sysenc(codeword, message, frozen, M);
 				for (int i = 0, j = 0; i < N; ++i)
-					if (!frozen[i])
+					if (!get_bit(frozen, i))
 						assert(codeword[i] == message[j++]);
 			} else {
 				CODE::PolarEncoder<code_type> encode;
@@ -138,7 +143,7 @@ int main()
 				CODE::PolarEncoder<simd_type> encode;
 				encode(temp, decoded, frozen, M);
 				for (int i = 0, j = 0; i < N; ++i)
-					if (!frozen[i])
+					if (!get_bit(frozen, i))
 						decoded[j++] = temp[i];
 			}
 

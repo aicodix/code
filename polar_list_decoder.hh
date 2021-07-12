@@ -18,14 +18,146 @@ struct PolarListTree
 	typedef typename PH::PATH PATH;
 	typedef typename PH::MAP MAP;
 	static const int N = 1 << M;
-	static MAP decode(PATH *metric, TYPE *message, MAP *maps, int *count, TYPE *hard, TYPE *soft, const uint8_t *frozen)
+	static MAP decode(PATH *metric, TYPE *message, MAP *maps, int *count, TYPE *hard, TYPE *soft, const uint32_t *frozen)
 	{
 		for (int i = 0; i < N/2; ++i)
 			soft[i+N/2] = PH::prod(soft[i+N], soft[i+N/2+N]);
 		MAP lmap = PolarListTree<TYPE, M-1>::decode(metric, message, maps, count, hard, soft, frozen);
 		for (int i = 0; i < N/2; ++i)
 			soft[i+N/2] = PH::madd(hard[i], vshuf(soft[i+N], lmap), vshuf(soft[i+N/2+N], lmap));
-		MAP rmap = PolarListTree<TYPE, M-1>::decode(metric, message, maps, count, hard+N/2, soft, frozen+N/2);
+		MAP rmap = PolarListTree<TYPE, M-1>::decode(metric, message, maps, count, hard+N/2, soft, frozen+N/2/32);
+		for (int i = 0; i < N/2; ++i)
+			hard[i] = PH::qmul(vshuf(hard[i], rmap), hard[i+N/2]);
+		return vshuf(lmap, rmap);
+	}
+};
+
+template <typename TYPE>
+struct PolarListTree<TYPE, 6>
+{
+	typedef PolarHelper<TYPE> PH;
+	typedef typename PH::PATH PATH;
+	typedef typename PH::MAP MAP;
+	static const int M = 6;
+	static const int N = 1 << M;
+	static MAP decode(PATH *metric, TYPE *message, MAP *maps, int *count, TYPE *hard, TYPE *soft, const uint32_t *frozen)
+	{
+		for (int i = 0; i < N/2; ++i)
+			soft[i+N/2] = PH::prod(soft[i+N], soft[i+N/2+N]);
+		MAP lmap = PolarListTree<TYPE, M-1>::decode(metric, message, maps, count, hard, soft, frozen[0]);
+		for (int i = 0; i < N/2; ++i)
+			soft[i+N/2] = PH::madd(hard[i], vshuf(soft[i+N], lmap), vshuf(soft[i+N/2+N], lmap));
+		MAP rmap = PolarListTree<TYPE, M-1>::decode(metric, message, maps, count, hard+N/2, soft, frozen[1]);
+		for (int i = 0; i < N/2; ++i)
+			hard[i] = PH::qmul(vshuf(hard[i], rmap), hard[i+N/2]);
+		return vshuf(lmap, rmap);
+	}
+};
+
+template <typename TYPE>
+struct PolarListTree<TYPE, 5>
+{
+	typedef PolarHelper<TYPE> PH;
+	typedef typename PH::PATH PATH;
+	typedef typename PH::MAP MAP;
+	static const int M = 5;
+	static const int N = 1 << M;
+	static MAP decode(PATH *metric, TYPE *message, MAP *maps, int *count, TYPE *hard, TYPE *soft, uint32_t frozen)
+	{
+		for (int i = 0; i < N/2; ++i)
+			soft[i+N/2] = PH::prod(soft[i+N], soft[i+N/2+N]);
+		MAP lmap = PolarListTree<TYPE, M-1>::decode(metric, message, maps, count, hard, soft, frozen & ((1<<(1<<(M-1)))-1));
+		for (int i = 0; i < N/2; ++i)
+			soft[i+N/2] = PH::madd(hard[i], vshuf(soft[i+N], lmap), vshuf(soft[i+N/2+N], lmap));
+		MAP rmap = PolarListTree<TYPE, M-1>::decode(metric, message, maps, count, hard+N/2, soft, frozen >> (N/2));
+		for (int i = 0; i < N/2; ++i)
+			hard[i] = PH::qmul(vshuf(hard[i], rmap), hard[i+N/2]);
+		return vshuf(lmap, rmap);
+	}
+};
+
+template <typename TYPE>
+struct PolarListTree<TYPE, 4>
+{
+	typedef PolarHelper<TYPE> PH;
+	typedef typename PH::PATH PATH;
+	typedef typename PH::MAP MAP;
+	static const int M = 4;
+	static const int N = 1 << M;
+	static MAP decode(PATH *metric, TYPE *message, MAP *maps, int *count, TYPE *hard, TYPE *soft, uint32_t frozen)
+	{
+		for (int i = 0; i < N/2; ++i)
+			soft[i+N/2] = PH::prod(soft[i+N], soft[i+N/2+N]);
+		MAP lmap = PolarListTree<TYPE, M-1>::decode(metric, message, maps, count, hard, soft, frozen & ((1<<(1<<(M-1)))-1));
+		for (int i = 0; i < N/2; ++i)
+			soft[i+N/2] = PH::madd(hard[i], vshuf(soft[i+N], lmap), vshuf(soft[i+N/2+N], lmap));
+		MAP rmap = PolarListTree<TYPE, M-1>::decode(metric, message, maps, count, hard+N/2, soft, frozen >> (N/2));
+		for (int i = 0; i < N/2; ++i)
+			hard[i] = PH::qmul(vshuf(hard[i], rmap), hard[i+N/2]);
+		return vshuf(lmap, rmap);
+	}
+};
+
+template <typename TYPE>
+struct PolarListTree<TYPE, 3>
+{
+	typedef PolarHelper<TYPE> PH;
+	typedef typename PH::PATH PATH;
+	typedef typename PH::MAP MAP;
+	static const int M = 3;
+	static const int N = 1 << M;
+	static MAP decode(PATH *metric, TYPE *message, MAP *maps, int *count, TYPE *hard, TYPE *soft, uint32_t frozen)
+	{
+		for (int i = 0; i < N/2; ++i)
+			soft[i+N/2] = PH::prod(soft[i+N], soft[i+N/2+N]);
+		MAP lmap = PolarListTree<TYPE, M-1>::decode(metric, message, maps, count, hard, soft, frozen & ((1<<(1<<(M-1)))-1));
+		for (int i = 0; i < N/2; ++i)
+			soft[i+N/2] = PH::madd(hard[i], vshuf(soft[i+N], lmap), vshuf(soft[i+N/2+N], lmap));
+		MAP rmap = PolarListTree<TYPE, M-1>::decode(metric, message, maps, count, hard+N/2, soft, frozen >> (N/2));
+		for (int i = 0; i < N/2; ++i)
+			hard[i] = PH::qmul(vshuf(hard[i], rmap), hard[i+N/2]);
+		return vshuf(lmap, rmap);
+	}
+};
+
+template <typename TYPE>
+struct PolarListTree<TYPE, 2>
+{
+	typedef PolarHelper<TYPE> PH;
+	typedef typename PH::PATH PATH;
+	typedef typename PH::MAP MAP;
+	static const int M = 2;
+	static const int N = 1 << M;
+	static MAP decode(PATH *metric, TYPE *message, MAP *maps, int *count, TYPE *hard, TYPE *soft, uint32_t frozen)
+	{
+		for (int i = 0; i < N/2; ++i)
+			soft[i+N/2] = PH::prod(soft[i+N], soft[i+N/2+N]);
+		MAP lmap = PolarListTree<TYPE, M-1>::decode(metric, message, maps, count, hard, soft, frozen & ((1<<(1<<(M-1)))-1));
+		for (int i = 0; i < N/2; ++i)
+			soft[i+N/2] = PH::madd(hard[i], vshuf(soft[i+N], lmap), vshuf(soft[i+N/2+N], lmap));
+		MAP rmap = PolarListTree<TYPE, M-1>::decode(metric, message, maps, count, hard+N/2, soft, frozen >> (N/2));
+		for (int i = 0; i < N/2; ++i)
+			hard[i] = PH::qmul(vshuf(hard[i], rmap), hard[i+N/2]);
+		return vshuf(lmap, rmap);
+	}
+};
+
+template <typename TYPE>
+struct PolarListTree<TYPE, 1>
+{
+	typedef PolarHelper<TYPE> PH;
+	typedef typename PH::PATH PATH;
+	typedef typename PH::MAP MAP;
+	static const int M = 1;
+	static const int N = 1 << M;
+	static MAP decode(PATH *metric, TYPE *message, MAP *maps, int *count, TYPE *hard, TYPE *soft, uint32_t frozen)
+	{
+		for (int i = 0; i < N/2; ++i)
+			soft[i+N/2] = PH::prod(soft[i+N], soft[i+N/2+N]);
+		MAP lmap = PolarListTree<TYPE, M-1>::decode(metric, message, maps, count, hard, soft, frozen & ((1<<(1<<(M-1)))-1));
+		for (int i = 0; i < N/2; ++i)
+			soft[i+N/2] = PH::madd(hard[i], vshuf(soft[i+N], lmap), vshuf(soft[i+N/2+N], lmap));
+		MAP rmap = PolarListTree<TYPE, M-1>::decode(metric, message, maps, count, hard+N/2, soft, frozen >> (N/2));
 		for (int i = 0; i < N/2; ++i)
 			hard[i] = PH::qmul(vshuf(hard[i], rmap), hard[i+N/2]);
 		return vshuf(lmap, rmap);
@@ -38,11 +170,11 @@ struct PolarListTree<TYPE, 0>
 	typedef PolarHelper<TYPE> PH;
 	typedef typename PH::PATH PATH;
 	typedef typename PH::MAP MAP;
-	static MAP decode(PATH *metric, TYPE *message, MAP *maps, int *count, TYPE *hard, TYPE *soft, const uint8_t *frozen)
+	static MAP decode(PATH *metric, TYPE *message, MAP *maps, int *count, TYPE *hard, TYPE *soft, uint32_t frozen)
 	{
 		MAP map;
 		TYPE hrd, sft = soft[1];
-		if (*frozen) {
+		if (frozen) {
 			for (int k = 0; k < TYPE::SIZE; ++k)
 				if (sft.v[k] < 0)
 					metric[k] -= sft.v[k];
@@ -80,6 +212,7 @@ struct PolarListTree<TYPE, 0>
 template <typename TYPE, int MAX_M>
 class PolarListDecoder
 {
+	static_assert(MAX_M >= 5 && MAX_M <= 29);
 	typedef PolarHelper<TYPE> PH;
 	typedef typename TYPE::value_type VALUE;
 	typedef typename PH::PATH PATH;
@@ -89,7 +222,7 @@ class PolarListDecoder
 	TYPE hard[MAX_N];
 	MAP maps[MAX_N];
 public:
-	void operator()(PATH *metric, TYPE *message, const VALUE *codeword, const uint8_t *frozen, int level)
+	void operator()(PATH *metric, TYPE *message, const VALUE *codeword, const uint32_t *frozen, int level)
 	{
 		assert(level <= MAX_M);
 		int count = 0;
@@ -101,12 +234,7 @@ public:
 			soft[length+i] = vdup<TYPE>(codeword[i]);
 
 		switch (level) {
-		case 0: PolarListTree<TYPE, 0>::decode(metric, message, maps, &count, hard, soft, frozen); break;
-		case 1: PolarListTree<TYPE, 1>::decode(metric, message, maps, &count, hard, soft, frozen); break;
-		case 2: PolarListTree<TYPE, 2>::decode(metric, message, maps, &count, hard, soft, frozen); break;
-		case 3: PolarListTree<TYPE, 3>::decode(metric, message, maps, &count, hard, soft, frozen); break;
-		case 4: PolarListTree<TYPE, 4>::decode(metric, message, maps, &count, hard, soft, frozen); break;
-		case 5: PolarListTree<TYPE, 5>::decode(metric, message, maps, &count, hard, soft, frozen); break;
+		case 5: PolarListTree<TYPE, 5>::decode(metric, message, maps, &count, hard, soft, *frozen); break;
 		case 6: PolarListTree<TYPE, 6>::decode(metric, message, maps, &count, hard, soft, frozen); break;
 		case 7: PolarListTree<TYPE, 7>::decode(metric, message, maps, &count, hard, soft, frozen); break;
 		case 8: PolarListTree<TYPE, 8>::decode(metric, message, maps, &count, hard, soft, frozen); break;
