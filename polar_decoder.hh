@@ -12,6 +12,18 @@ Copyright 2020 Ahmet Inan <inan@aicodix.de>
 namespace CODE {
 
 template <typename TYPE, int M>
+struct PolarNode
+{
+	typedef PolarHelper<TYPE> PH;
+	static const int N = 1 << M;
+	static void rate0(TYPE *hard)
+	{
+		for (int i = 0; i < N; ++i)
+			hard[i] = PH::one();
+	}
+};
+
+template <typename TYPE, int M>
 struct PolarTree
 {
 	typedef PolarHelper<TYPE> PH;
@@ -39,10 +51,16 @@ struct PolarTree<TYPE, 6>
 	{
 		for (int i = 0; i < N/2; ++i)
 			soft[i+N/2] = PH::prod(soft[i+N], soft[i+N/2+N]);
-		PolarTree<TYPE, M-1>::decode(message, hard, soft, frozen[0]);
+		if (frozen[0] == 0xffffffff)
+			PolarNode<TYPE, M-1>::rate0(hard);
+		else
+			PolarTree<TYPE, M-1>::decode(message, hard, soft, frozen[0]);
 		for (int i = 0; i < N/2; ++i)
 			soft[i+N/2] = PH::madd(hard[i], soft[i+N], soft[i+N/2+N]);
-		PolarTree<TYPE, M-1>::decode(message, hard+N/2, soft, frozen[1]);
+		if (frozen[1] == 0xffffffff)
+			PolarNode<TYPE, M-1>::rate0(hard+N/2);
+		else
+			PolarTree<TYPE, M-1>::decode(message, hard+N/2, soft, frozen[1]);
 		for (int i = 0; i < N/2; ++i)
 			hard[i] = PH::qmul(hard[i], hard[i+N/2]);
 	}
@@ -58,10 +76,16 @@ struct PolarTree<TYPE, 5>
 	{
 		for (int i = 0; i < N/2; ++i)
 			soft[i+N/2] = PH::prod(soft[i+N], soft[i+N/2+N]);
-		PolarTree<TYPE, M-1>::decode(message, hard, soft, frozen & ((1<<(1<<(M-1)))-1));
+		if ((frozen & ((1<<(1<<(M-1)))-1)) == ((1<<(1<<(M-1)))-1))
+			PolarNode<TYPE, M-1>::rate0(hard);
+		else
+			PolarTree<TYPE, M-1>::decode(message, hard, soft, frozen & ((1<<(1<<(M-1)))-1));
 		for (int i = 0; i < N/2; ++i)
 			soft[i+N/2] = PH::madd(hard[i], soft[i+N], soft[i+N/2+N]);
-		PolarTree<TYPE, M-1>::decode(message, hard+N/2, soft, frozen >> (N/2));
+		if (frozen >> (N/2) == ((1<<(1<<(M-1)))-1))
+			PolarNode<TYPE, M-1>::rate0(hard+N/2);
+		else
+			PolarTree<TYPE, M-1>::decode(message, hard+N/2, soft, frozen >> (N/2));
 		for (int i = 0; i < N/2; ++i)
 			hard[i] = PH::qmul(hard[i], hard[i+N/2]);
 	}
@@ -77,10 +101,16 @@ struct PolarTree<TYPE, 4>
 	{
 		for (int i = 0; i < N/2; ++i)
 			soft[i+N/2] = PH::prod(soft[i+N], soft[i+N/2+N]);
-		PolarTree<TYPE, M-1>::decode(message, hard, soft, frozen & ((1<<(1<<(M-1)))-1));
+		if ((frozen & ((1<<(1<<(M-1)))-1)) == ((1<<(1<<(M-1)))-1))
+			PolarNode<TYPE, M-1>::rate0(hard);
+		else
+			PolarTree<TYPE, M-1>::decode(message, hard, soft, frozen & ((1<<(1<<(M-1)))-1));
 		for (int i = 0; i < N/2; ++i)
 			soft[i+N/2] = PH::madd(hard[i], soft[i+N], soft[i+N/2+N]);
-		PolarTree<TYPE, M-1>::decode(message, hard+N/2, soft, frozen >> (N/2));
+		if (frozen >> (N/2) == ((1<<(1<<(M-1)))-1))
+			PolarNode<TYPE, M-1>::rate0(hard+N/2);
+		else
+			PolarTree<TYPE, M-1>::decode(message, hard+N/2, soft, frozen >> (N/2));
 		for (int i = 0; i < N/2; ++i)
 			hard[i] = PH::qmul(hard[i], hard[i+N/2]);
 	}
@@ -96,10 +126,16 @@ struct PolarTree<TYPE, 3>
 	{
 		for (int i = 0; i < N/2; ++i)
 			soft[i+N/2] = PH::prod(soft[i+N], soft[i+N/2+N]);
-		PolarTree<TYPE, M-1>::decode(message, hard, soft, frozen & ((1<<(1<<(M-1)))-1));
+		if ((frozen & ((1<<(1<<(M-1)))-1)) == ((1<<(1<<(M-1)))-1))
+			PolarNode<TYPE, M-1>::rate0(hard);
+		else
+			PolarTree<TYPE, M-1>::decode(message, hard, soft, frozen & ((1<<(1<<(M-1)))-1));
 		for (int i = 0; i < N/2; ++i)
 			soft[i+N/2] = PH::madd(hard[i], soft[i+N], soft[i+N/2+N]);
-		PolarTree<TYPE, M-1>::decode(message, hard+N/2, soft, frozen >> (N/2));
+		if (frozen >> (N/2) == ((1<<(1<<(M-1)))-1))
+			PolarNode<TYPE, M-1>::rate0(hard+N/2);
+		else
+			PolarTree<TYPE, M-1>::decode(message, hard+N/2, soft, frozen >> (N/2));
 		for (int i = 0; i < N/2; ++i)
 			hard[i] = PH::qmul(hard[i], hard[i+N/2]);
 	}
@@ -115,10 +151,16 @@ struct PolarTree<TYPE, 2>
 	{
 		for (int i = 0; i < N/2; ++i)
 			soft[i+N/2] = PH::prod(soft[i+N], soft[i+N/2+N]);
-		PolarTree<TYPE, M-1>::decode(message, hard, soft, frozen & ((1<<(1<<(M-1)))-1));
+		if ((frozen & ((1<<(1<<(M-1)))-1)) == ((1<<(1<<(M-1)))-1))
+			PolarNode<TYPE, M-1>::rate0(hard);
+		else
+			PolarTree<TYPE, M-1>::decode(message, hard, soft, frozen & ((1<<(1<<(M-1)))-1));
 		for (int i = 0; i < N/2; ++i)
 			soft[i+N/2] = PH::madd(hard[i], soft[i+N], soft[i+N/2+N]);
-		PolarTree<TYPE, M-1>::decode(message, hard+N/2, soft, frozen >> (N/2));
+		if (frozen >> (N/2) == ((1<<(1<<(M-1)))-1))
+			PolarNode<TYPE, M-1>::rate0(hard+N/2);
+		else
+			PolarTree<TYPE, M-1>::decode(message, hard+N/2, soft, frozen >> (N/2));
 		for (int i = 0; i < N/2; ++i)
 			hard[i] = PH::qmul(hard[i], hard[i+N/2]);
 	}
@@ -131,9 +173,15 @@ struct PolarTree<TYPE, 1>
 	static void decode(TYPE **message, TYPE *hard, TYPE *soft, uint32_t frozen)
 	{
 		soft[1] = PH::prod(soft[2], soft[3]);
-		PolarTree<TYPE, 0>::decode(message, hard, soft, frozen & 1);
+		if (frozen & 1)
+			PolarNode<TYPE, 0>::rate0(hard);
+		else
+			PolarTree<TYPE, 0>::decode(message, hard, soft, 0);
 		soft[1] = PH::madd(hard[0], soft[2], soft[3]);
-		PolarTree<TYPE, 0>::decode(message, hard+1, soft, frozen >> 1);
+		if (frozen >> 1)
+			PolarNode<TYPE, 0>::rate0(hard+1);
+		else
+			PolarTree<TYPE, 0>::decode(message, hard+1, soft, 0);
 		hard[0] = PH::qmul(hard[0], hard[1]);
 	}
 };
