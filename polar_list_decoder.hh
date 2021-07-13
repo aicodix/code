@@ -31,6 +31,36 @@ struct PolarListNode
 			map.v[k] = k;
 		return map;
 	}
+	static MAP rep(PATH *metric, TYPE *message, MAP *maps, int *count, TYPE *hard, TYPE *soft)
+	{
+		PATH fork[2*TYPE::SIZE];
+		for (int k = 0; k < TYPE::SIZE; ++k)
+			fork[k] = fork[k+TYPE::SIZE] = metric[k];
+		for (int i = 0; i < N; ++i)
+			for (int k = 0; k < TYPE::SIZE; ++k)
+				if (soft[i+N].v[k] < 0)
+					fork[k] -= soft[i+N].v[k];
+				else
+					fork[k+TYPE::SIZE] += soft[i+N].v[k];
+		int perm[2*TYPE::SIZE];
+		for (int k = 0; k < 2*TYPE::SIZE; ++k)
+			perm[k] = k;
+		std::nth_element(perm, perm+TYPE::SIZE, perm+2*TYPE::SIZE, [fork](int a, int b){ return fork[a] < fork[b]; });
+		for (int k = 0; k < TYPE::SIZE; ++k)
+			metric[k] = fork[perm[k]];
+		MAP map;
+		for (int k = 0; k < TYPE::SIZE; ++k)
+			map.v[k] = perm[k] % TYPE::SIZE;
+		TYPE hrd;
+		for (int k = 0; k < TYPE::SIZE; ++k)
+			hrd.v[k] = perm[k] < TYPE::SIZE ? 1 : -1;
+		for (int i = 0; i < N; ++i)
+			hard[i] = hrd;
+		message[*count] = hrd;
+		maps[*count] = map;
+		++*count;
+		return map;
+	}
 };
 
 template <typename TYPE>
@@ -117,12 +147,16 @@ struct PolarListTree<TYPE, 6>
 		MAP lmap, rmap;
 		if (frozen[0] == 0xffffffff)
 			lmap = PolarListNode<TYPE, M-1>::rate0(metric, hard, soft);
+		else if (frozen[0] == 0x7fffffff)
+			lmap = PolarListNode<TYPE, M-1>::rep(metric, message, maps, count, hard, soft);
 		else
 			lmap = PolarListTree<TYPE, M-1>::decode(metric, message, maps, count, hard, soft, frozen[0]);
 		for (int i = 0; i < N/2; ++i)
 			soft[i+N/2] = PH::madd(hard[i], vshuf(soft[i+N], lmap), vshuf(soft[i+N/2+N], lmap));
 		if (frozen[1] == 0xffffffff)
 			rmap = PolarListNode<TYPE, M-1>::rate0(metric, hard+N/2, soft);
+		else if (frozen[1] == 0x7fffffff)
+			rmap = PolarListNode<TYPE, M-1>::rep(metric, message, maps, count, hard+N/2, soft);
 		else
 			rmap = PolarListTree<TYPE, M-1>::decode(metric, message, maps, count, hard+N/2, soft, frozen[1]);
 		for (int i = 0; i < N/2; ++i)
@@ -146,12 +180,16 @@ struct PolarListTree<TYPE, 5>
 		MAP lmap, rmap;
 		if ((frozen & ((1<<(1<<(M-1)))-1)) == ((1<<(1<<(M-1)))-1))
 			lmap = PolarListNode<TYPE, M-1>::rate0(metric, hard, soft);
+		else if ((frozen & ((1<<(1<<(M-1)))-1)) == ((1<<((1<<(M-1))-1))-1))
+			lmap = PolarListNode<TYPE, M-1>::rep(metric, message, maps, count, hard, soft);
 		else
 			lmap = PolarListTree<TYPE, M-1>::decode(metric, message, maps, count, hard, soft, frozen & ((1<<(1<<(M-1)))-1));
 		for (int i = 0; i < N/2; ++i)
 			soft[i+N/2] = PH::madd(hard[i], vshuf(soft[i+N], lmap), vshuf(soft[i+N/2+N], lmap));
 		if (frozen >> (N/2) == ((1<<(1<<(M-1)))-1))
 			rmap = PolarListNode<TYPE, M-1>::rate0(metric, hard+N/2, soft);
+		else if (frozen >> (N/2) == ((1<<((1<<(M-1))-1))-1))
+			rmap = PolarListNode<TYPE, M-1>::rep(metric, message, maps, count, hard+N/2, soft);
 		else
 			rmap = PolarListTree<TYPE, M-1>::decode(metric, message, maps, count, hard+N/2, soft, frozen >> (N/2));
 		for (int i = 0; i < N/2; ++i)
@@ -175,12 +213,16 @@ struct PolarListTree<TYPE, 4>
 		MAP lmap, rmap;
 		if ((frozen & ((1<<(1<<(M-1)))-1)) == ((1<<(1<<(M-1)))-1))
 			lmap = PolarListNode<TYPE, M-1>::rate0(metric, hard, soft);
+		else if ((frozen & ((1<<(1<<(M-1)))-1)) == ((1<<((1<<(M-1))-1))-1))
+			lmap = PolarListNode<TYPE, M-1>::rep(metric, message, maps, count, hard, soft);
 		else
 			lmap = PolarListTree<TYPE, M-1>::decode(metric, message, maps, count, hard, soft, frozen & ((1<<(1<<(M-1)))-1));
 		for (int i = 0; i < N/2; ++i)
 			soft[i+N/2] = PH::madd(hard[i], vshuf(soft[i+N], lmap), vshuf(soft[i+N/2+N], lmap));
 		if (frozen >> (N/2) == ((1<<(1<<(M-1)))-1))
 			rmap = PolarListNode<TYPE, M-1>::rate0(metric, hard+N/2, soft);
+		else if (frozen >> (N/2) == ((1<<((1<<(M-1))-1))-1))
+			rmap = PolarListNode<TYPE, M-1>::rep(metric, message, maps, count, hard+N/2, soft);
 		else
 			rmap = PolarListTree<TYPE, M-1>::decode(metric, message, maps, count, hard+N/2, soft, frozen >> (N/2));
 		for (int i = 0; i < N/2; ++i)
@@ -204,12 +246,16 @@ struct PolarListTree<TYPE, 3>
 		MAP lmap, rmap;
 		if ((frozen & ((1<<(1<<(M-1)))-1)) == ((1<<(1<<(M-1)))-1))
 			lmap = PolarListNode<TYPE, M-1>::rate0(metric, hard, soft);
+		else if ((frozen & ((1<<(1<<(M-1)))-1)) == ((1<<((1<<(M-1))-1))-1))
+			lmap = PolarListNode<TYPE, M-1>::rep(metric, message, maps, count, hard, soft);
 		else
 			lmap = PolarListTree<TYPE, M-1>::decode(metric, message, maps, count, hard, soft, frozen & ((1<<(1<<(M-1)))-1));
 		for (int i = 0; i < N/2; ++i)
 			soft[i+N/2] = PH::madd(hard[i], vshuf(soft[i+N], lmap), vshuf(soft[i+N/2+N], lmap));
 		if (frozen >> (N/2) == ((1<<(1<<(M-1)))-1))
 			rmap = PolarListNode<TYPE, M-1>::rate0(metric, hard+N/2, soft);
+		else if (frozen >> (N/2) == ((1<<((1<<(M-1))-1))-1))
+			rmap = PolarListNode<TYPE, M-1>::rep(metric, message, maps, count, hard+N/2, soft);
 		else
 			rmap = PolarListTree<TYPE, M-1>::decode(metric, message, maps, count, hard+N/2, soft, frozen >> (N/2));
 		for (int i = 0; i < N/2; ++i)
@@ -233,12 +279,16 @@ struct PolarListTree<TYPE, 2>
 		MAP lmap, rmap;
 		if ((frozen & ((1<<(1<<(M-1)))-1)) == ((1<<(1<<(M-1)))-1))
 			lmap = PolarListNode<TYPE, M-1>::rate0(metric, hard, soft);
+		else if ((frozen & ((1<<(1<<(M-1)))-1)) == ((1<<((1<<(M-1))-1))-1))
+			lmap = PolarListNode<TYPE, M-1>::rep(metric, message, maps, count, hard, soft);
 		else
 			lmap = PolarListTree<TYPE, M-1>::decode(metric, message, maps, count, hard, soft, frozen & ((1<<(1<<(M-1)))-1));
 		for (int i = 0; i < N/2; ++i)
 			soft[i+N/2] = PH::madd(hard[i], vshuf(soft[i+N], lmap), vshuf(soft[i+N/2+N], lmap));
 		if (frozen >> (N/2) == ((1<<(1<<(M-1)))-1))
 			rmap = PolarListNode<TYPE, M-1>::rate0(metric, hard+N/2, soft);
+		else if (frozen >> (N/2) == ((1<<((1<<(M-1))-1))-1))
+			rmap = PolarListNode<TYPE, M-1>::rep(metric, message, maps, count, hard+N/2, soft);
 		else
 			rmap = PolarListTree<TYPE, M-1>::decode(metric, message, maps, count, hard+N/2, soft, frozen >> (N/2));
 		for (int i = 0; i < N/2; ++i)
