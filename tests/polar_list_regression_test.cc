@@ -25,13 +25,13 @@ bool get_bit(const uint32_t *bits, int idx)
 
 int main()
 {
-	const int M = 16;
+	const int M = 11;
 	const int N = 1 << M;
 	const bool systematic = true;
 	const bool crc_aided = true;
 	CODE::CRC<uint32_t> crc(0xD419CC15);
 	const int C = 32;
-#if 0
+#if 1
 	typedef int8_t code_type;
 	double SCALE = 2;
 #else
@@ -55,7 +55,7 @@ int main()
 	auto codeword = new code_type[N];
 	auto temp = new simd_type[N];
 
-	long double erasure_probability = 1. / 3.;
+	long double erasure_probability = 0.5;
 	int K = (1 - erasure_probability) * N;
 	double design_SNR = 10 * std::log10(-std::log(erasure_probability));
 	std::cerr << "design SNR: " << design_SNR << std::endl;
@@ -102,7 +102,7 @@ int main()
 		int64_t ambiguity_erasures = 0;
 		double avg_mbs = 0;
 		int64_t loops = 0;
-		while (uncorrected_errors < 1000 && ++loops < 100) {
+		while (uncorrected_errors < 1000 && ++loops < 1000) {
 			if (crc_aided) {
 				crc.reset();
 				for (int i = 0; i < K-C; ++i) {
@@ -220,7 +220,7 @@ int main()
 		}
 	}
 	std::cerr << "QEF at: " << min_SNR << " SNR, speed: " << max_mbs << " Mb/s." << std::endl;
-	double QEF_SNR = design_SNR + 0.2;
+	double QEF_SNR = design_SNR + 0.5;
 	assert(min_SNR < QEF_SNR);
 	std::cerr << "Polar list regression test passed!" << std::endl;
 	return 0;
