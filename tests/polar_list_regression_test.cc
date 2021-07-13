@@ -16,6 +16,7 @@ Copyright 2020 Ahmet Inan <inan@aicodix.de>
 #include "polar_list_decoder.hh"
 #include "polar_encoder.hh"
 #include "polar_freezer.hh"
+#include "crc.hh"
 
 bool get_bit(const uint32_t *bits, int idx)
 {
@@ -27,6 +28,9 @@ int main()
 	const int M = 16;
 	const int N = 1 << M;
 	const bool systematic = true;
+	const bool crc_aided = true;
+	CODE::CRC<uint32_t> crc(0xD419CC15);
+	const int C = 32;
 #if 0
 	typedef int8_t code_type;
 	double SCALE = 2;
@@ -99,8 +103,21 @@ int main()
 		double avg_mbs = 0;
 		int64_t loops = 0;
 		while (uncorrected_errors < 1000 && ++loops < 100) {
-			for (int i = 0; i < K; ++i)
-				message[i] = 1 - 2 * data();
+			if (crc_aided) {
+				crc.reset();
+				for (int i = 0; i < K-C; ++i) {
+					bool bit = data();
+					crc(bit);
+					message[i] = 1 - 2 * bit;
+				}
+				for (int i = 0; i < C; ++i) {
+					bool bit = (crc() >> i) & 1;
+					message[K-C+i] = 1 - 2 * bit;
+				}
+			} else {
+				for (int i = 0; i < K; ++i)
+					message[i] = 1 - 2 * data();
+			}
 
 			if (systematic) {
 				CODE::PolarSysEnc<code_type> sysenc;
@@ -147,19 +164,22 @@ int main()
 						decoded[j++] = temp[i];
 			}
 
-			int best = 0;
-			if (1) {
-				for (int k = 0; k < SIMD_WIDTH; ++k)
-					if (metric[k] < metric[best])
-						best = k;
-			} else {
-				int errs[SIMD_WIDTH] = { 0 };
-				for (int i = 0; i < K; ++i)
-					for (int k = 0; k < SIMD_WIDTH; ++k)
-						errs[k] += message[i] != decoded[i].v[k];
-				for (int k = 0; k < SIMD_WIDTH; ++k)
-					if (errs[k] < errs[best])
-						best = k;
+			int order[SIMD_WIDTH];
+			for (int k = 0; k < SIMD_WIDTH; ++k)
+				order[k] = k;
+			std::sort(order, order+SIMD_WIDTH, [metric](int a, int b){ return metric[a] < metric[b]; });
+
+			int best = order[0];
+			if (crc_aided) {
+				for (int k = 0; k < SIMD_WIDTH; ++k) {
+					crc.reset();
+					for (int i = 0; i < K; ++i)
+						crc(decoded[i].v[order[k]] < 0);
+					if (crc() == 0) {
+						best = order[k];
+						break;
+					}
+				}
 			}
 
 			for (int i = 0; i < N; ++i)
