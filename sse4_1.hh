@@ -613,7 +613,7 @@ template <>
 inline SIMD<double, 2> vcopysign(SIMD<double, 2> a, SIMD<double, 2> b)
 {
 	SIMD<double, 2> tmp;
-	__m128 negz = _mm_set1_pd(-0.);
+	__m128d negz = _mm_set1_pd(-0.);
 	tmp.m = _mm_or_pd(
 		_mm_andnot_pd(negz, a.m),
 		_mm_and_pd(negz, b.m));
