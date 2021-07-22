@@ -25,13 +25,15 @@ bool get_bit(const uint32_t *bits, int idx)
 
 int main()
 {
-	const int M = 11;
+	const int M = 16;
 	const int N = 1 << M;
+	const int C = 32;
+	const int S = 65536 - 64800;
+	const int K = 43200 - 10*16 + C + S;
 	const bool systematic = true;
 	const bool crc_aided = true;
 	CODE::CRC<uint32_t> crc(0xD419CC15);
-	const int C = 32;
-#if 1
+#if 0
 	typedef int8_t code_type;
 	double SCALE = 2;
 #else
@@ -55,22 +57,22 @@ int main()
 	auto codeword = new code_type[N];
 	auto temp = new simd_type[N];
 
-	long double erasure_probability = 0.5;
-	int K = (1 - erasure_probability) * N;
+	long double erasure_probability = (long double)(N - K) / N;
 	double design_SNR = 10 * std::log10(-std::log(erasure_probability));
 	std::cerr << "design SNR: " << design_SNR << std::endl;
+	auto freeze = new CODE::PolarCodeConst0<M>;
+	std::cerr << "sizeof(PolarCodeConst0<M>) = " << sizeof(CODE::PolarCodeConst0<M>) << std::endl;
+	double better_SNR = design_SNR + 1.59175;
+	std::cerr << "better SNR: " << better_SNR << std::endl;
+	long double probability = std::exp(-pow(10.0, better_SNR / 10));
+	(*freeze)(frozen, M, K, probability);
+	delete freeze;
 	if (0) {
-		CODE::PolarFreezer freeze;
-		long double freezing_threshold = 0 ? 0.5 : std::numeric_limits<float>::epsilon();
-		K = freeze(frozen, M, erasure_probability, freezing_threshold);
-	} else {
-		auto freeze = new CODE::PolarCodeConst0<M>;
-		std::cerr << "sizeof(PolarCodeConst0<M>) = " << sizeof(CODE::PolarCodeConst0<M>) << std::endl;
-		double better_SNR = design_SNR + 1.59175;
-		std::cerr << "better SNR: " << better_SNR << std::endl;
-		long double probability = std::exp(-pow(10.0, better_SNR / 10));
-		(*freeze)(frozen, M, K, probability);
-		delete freeze;
+		std::cout << "static const uint32_t frozen[" << (N+31)/32 << "] = { " << std::hex;
+		for (int i = 0; i < (N+31)/32; ++i)
+			std::cout << "0x" << frozen[i] << ", ";
+		std::cout << "};" << std::endl;
+		return 0;
 	}
 	std::cerr << "Polar(" << N << ", " << K << ")" << std::endl;
 	auto message = new code_type[K];
@@ -105,15 +107,17 @@ int main()
 		while (uncorrected_errors < 1000 && ++loops < 1000) {
 			if (crc_aided) {
 				crc.reset();
-				for (int i = 0; i < K-C; ++i) {
+				for (int i = 0; i < K-C-S; ++i) {
 					bool bit = data();
 					crc(bit);
 					message[i] = 1 - 2 * bit;
 				}
 				for (int i = 0; i < C; ++i) {
 					bool bit = (crc() >> i) & 1;
-					message[K-C+i] = 1 - 2 * bit;
+					message[K-C-S+i] = 1 - 2 * bit;
 				}
+				for (int i = 0; i < S; ++i)
+					message[K-S+i] = 1;
 			} else {
 				for (int i = 0; i < K; ++i)
 					message[i] = 1 - 2 * data();
@@ -146,6 +150,14 @@ int main()
 			for (int i = 0; i < N; ++i)
 				codeword[i] = CODE::PolarHelper<code_type>::quant(fact * symb[i]);
 
+			for (int i = 0, j = 0; i < N && j < K; ++i) {
+				if (!get_bit(frozen, i)) {
+					if (j >= K-S)
+						codeword[i] = CODE::PolarHelper<code_type>::quant(9000);
+					++j;
+				}
+			}
+
 			for (int i = 0; i < N; ++i)
 				noisy[i] = codeword[i];
 
@@ -153,7 +165,7 @@ int main()
 			(*decode)(metric, decoded, codeword, frozen, M);
 			auto end = std::chrono::system_clock::now();
 			auto usec = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
-			double mbs = (double)K / usec.count();
+			double mbs = (double)(K-C-S) / usec.count();
 			avg_mbs += mbs;
 
 			if (systematic) {
@@ -173,7 +185,7 @@ int main()
 			if (crc_aided) {
 				for (int k = 0; k < SIMD_WIDTH; ++k) {
 					crc.reset();
-					for (int i = 0; i < K; ++i)
+					for (int i = 0; i < K-S; ++i)
 						crc(decoded[i].v[order[k]] < 0);
 					if (crc() == 0) {
 						best = order[k];
@@ -186,23 +198,23 @@ int main()
 				awgn_errors += noisy[i] * (orig[i] < 0);
 			for (int i = 0; i < N; ++i)
 				quantization_erasures += !noisy[i];
-			for (int i = 0; i < K; ++i)
+			for (int i = 0; i < K-C-S; ++i)
 				uncorrected_errors += decoded[i].v[best] * message[i] <= 0;
-			for (int i = 0; i < K; ++i)
+			for (int i = 0; i < K-C-S; ++i)
 				ambiguity_erasures += !decoded[i].v[best];
 		}
 
 		avg_mbs /= loops;
 
 		max_mbs = std::max(max_mbs, avg_mbs);
-		double bit_error_rate = (double)uncorrected_errors / (double)(K * loops);
+		double bit_error_rate = (double)uncorrected_errors / (double)((K-C-S) * loops);
 		if (!uncorrected_errors)
 			min_SNR = std::min(min_SNR, SNR);
 		else
 			count = 0;
 
 		int MOD_BITS = 1; // BPSK
-		double code_rate = (double)K / (double)N;
+		double code_rate = (double)(K-C-S) / (double)N;
 		double spectral_efficiency = code_rate * MOD_BITS;
 		double EbN0 = 10 * std::log10(sigma_signal * sigma_signal / (spectral_efficiency * 2 * sigma_noise * sigma_noise));
 
