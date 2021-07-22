@@ -514,7 +514,7 @@ static const int BCH_T = 12;
 #if 1
 typedef DVB_T2_TABLE_A3 TABLE;
 static const float QEF_SNR = 0.3;
-static const int BCH_T = 12;
+static const int BCH_T = 10;
 #endif
 #if 0
 typedef DVB_T2_TABLE_A6 TABLE;
