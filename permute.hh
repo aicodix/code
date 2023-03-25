@@ -35,5 +35,19 @@ public:
 	}
 };
 
+template <typename TYPE>
+void BitReversalPermute(TYPE *array, int n) {
+	for (int i = 0, j = 0; i < n - 1; ++i) {
+		if (i < j)
+			std::swap(array[i], array[j]);
+		int k = n >> 1;
+		while (j & k) {
+			j ^= k;
+			k >>= 1;
+		}
+		j ^= k;
+	}
+}
+
 }
 
