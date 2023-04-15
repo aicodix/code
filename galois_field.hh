@@ -189,11 +189,18 @@ Value<M, POLY, TYPE> operator * (Value<M, POLY, TYPE> a, Value<M, POLY, TYPE> b)
 }
 
 template <int M, int POLY, typename TYPE>
+Index<M, POLY, TYPE> rcp(Index<M, POLY, TYPE> a)
+{
+	assert(a.i < a.modulus());
+	return Index<M, POLY, TYPE>(!a.i ? 0 : a.modulus() - a.i);
+}
+
+template <int M, int POLY, typename TYPE>
 Value<M, POLY, TYPE> rcp(Value<M, POLY, TYPE> a)
 {
 	assert(a.v <= a.N);
 	assert(a.v);
-	return value(Index<M, POLY, TYPE>(index(a).modulus() - index(a).i));
+	return value(rcp(index(a)));
 }
 
 template <int M, int POLY, typename TYPE>
