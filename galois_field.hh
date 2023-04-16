@@ -172,6 +172,18 @@ Value<M, POLY, TYPE> operator + (Value<M, POLY, TYPE> a, Value<M, POLY, TYPE> b)
 }
 
 template <int M, int POLY, typename TYPE>
+Value<M, POLY, TYPE> operator - (Value<M, POLY, TYPE> a)
+{
+	return a;
+}
+
+template <int M, int POLY, typename TYPE>
+Value<M, POLY, TYPE> operator - (Value<M, POLY, TYPE> a, Value<M, POLY, TYPE> b)
+{
+	return a + b;
+}
+
+template <int M, int POLY, typename TYPE>
 Index<M, POLY, TYPE> operator * (Index<M, POLY, TYPE> a, Index<M, POLY, TYPE> b)
 {
 	assert(a.i < a.modulus());
