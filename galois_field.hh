@@ -318,4 +318,91 @@ private:
 	GF::Tables<M, POLY, TYPE> Tables;
 };
 
+template <int M, int64_t POLY, typename TYPE>
+struct GaloisFieldReference
+{
+	static const int64_t Q = int64_t(1) << M;
+	static const TYPE N = Q - 1;
+	static_assert(M <= 8 * sizeof(TYPE), "TYPE not wide enough");
+	static_assert(Q == (POLY & ~(Q - 1)), "POLY not of degree Q");
+	static const TYPE P = POLY;
+	TYPE v;
+	GaloisFieldReference() = default;
+	explicit GaloisFieldReference(TYPE v) : v(v)
+	{
+		assert(v <= N);
+	}
+	GaloisFieldReference<M, POLY, TYPE> operator *= (GaloisFieldReference<M, POLY, TYPE> a)
+	{
+		return *this = *this * a;
+	}
+	GaloisFieldReference<M, POLY, TYPE> operator += (GaloisFieldReference<M, POLY, TYPE> a)
+	{
+		return *this = *this + a;
+	}
+};
+
+template <int M, int64_t POLY, typename TYPE>
+bool operator == (GaloisFieldReference<M, POLY, TYPE> a, GaloisFieldReference<M, POLY, TYPE> b)
+{
+	return a.v == b.v;
+}
+
+template <int M, int64_t POLY, typename TYPE>
+bool operator != (GaloisFieldReference<M, POLY, TYPE> a, GaloisFieldReference<M, POLY, TYPE> b)
+{
+	return a.v != b.v;
+}
+
+template <int M, int64_t POLY, typename TYPE>
+GaloisFieldReference<M, POLY, TYPE> operator + (GaloisFieldReference<M, POLY, TYPE> a, GaloisFieldReference<M, POLY, TYPE> b)
+{
+	return GaloisFieldReference<M, POLY, TYPE>(a.v ^ b.v);
+}
+
+template <int M, int64_t POLY, typename TYPE>
+GaloisFieldReference<M, POLY, TYPE> operator - (GaloisFieldReference<M, POLY, TYPE> a, GaloisFieldReference<M, POLY, TYPE> b)
+{
+	return a + b;
+}
+
+template <int M, int64_t POLY, typename TYPE>
+GaloisFieldReference<M, POLY, TYPE> operator - (GaloisFieldReference<M, POLY, TYPE> a)
+{
+	return a;
+}
+
+template <int M, int64_t POLY, typename TYPE>
+GaloisFieldReference<M, POLY, TYPE> operator * (GaloisFieldReference<M, POLY, TYPE> a, GaloisFieldReference<M, POLY, TYPE> b)
+{
+	GaloisFieldReference<M, POLY, TYPE> p(0);
+	for (int i = 0; i < M; ++i) {
+		if (b.v & 1)
+			p.v ^= a.v;
+		if (a.v & (TYPE(1) << (M - 1)))
+			a.v = (a.v << 1) ^ a.P;
+		else
+			a.v <<= 1;
+		b.v >>= 1;
+	}
+	return p;
+}
+
+template <int M, int64_t POLY, typename TYPE>
+GaloisFieldReference<M, POLY, TYPE> rcp(GaloisFieldReference<M, POLY, TYPE> a)
+{
+	assert(a.v);
+	GaloisFieldReference<M, POLY, TYPE> t(a *= a);
+	for (int i = 0; i < M - 2; ++i)
+		t *= a *= a;
+	return t;
+}
+
+template <int M, int64_t POLY, typename TYPE>
+GaloisFieldReference<M, POLY, TYPE> operator / (GaloisFieldReference<M, POLY, TYPE> a, GaloisFieldReference<M, POLY, TYPE> b)
+{
+	assert(b.v);
+	return a * rcp(b);
+}
+
 }
