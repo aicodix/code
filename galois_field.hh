@@ -403,13 +403,16 @@ GaloisFieldReference<M, POLY, TYPE> rcp(GaloisFieldReference<M, POLY, TYPE> a)
 			++d;
 		return d;
 	};
-	int j = M - degree(r);
+	int k = degree(r);
+	int j = M - k;
 	newr ^= r << j;
 	newt ^= t << j;
 	while (newr != 1) {
-		int j = degree(newr) - degree(r);
+		int l = degree(newr);
+		int j = l - k;
 		if (j < 0) {
 			j = -j;
+			k = l;
 			std::swap(newr, r);
 			std::swap(newt, t);
 		}
