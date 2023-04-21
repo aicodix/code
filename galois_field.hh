@@ -395,9 +395,9 @@ GaloisFieldReference<M, POLY, TYPE> rcp(GaloisFieldReference<M, POLY, TYPE> a)
 #if 1
 	if (a.v == 1)
 		return a;
-	uint32_t newr = POLY, r = a.v;
-	uint32_t newt = 0, t = 1;
-	auto degree = [](uint32_t a) {
+	TYPE newr = a.P, r = a.v;
+	TYPE newt = 0, t = 1;
+	auto degree = [](TYPE a) {
 		int d = 0;
 		while (a >>= 1)
 			++d;
