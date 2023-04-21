@@ -325,7 +325,7 @@ struct GaloisFieldReference
 	static const TYPE N = Q - 1;
 	static_assert(M <= 8 * sizeof(TYPE), "TYPE not wide enough");
 	static_assert(Q == (POLY & ~(Q - 1)), "POLY not of degree Q");
-	static const TYPE P = POLY;
+	static const TYPE P = TYPE(POLY);
 	TYPE v;
 	GaloisFieldReference() = default;
 	explicit GaloisFieldReference(TYPE v) : v(v)
