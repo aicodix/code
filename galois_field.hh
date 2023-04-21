@@ -398,10 +398,14 @@ GaloisFieldReference<M, POLY, TYPE> rcp(GaloisFieldReference<M, POLY, TYPE> a)
 	TYPE newr = a.P, r = a.v;
 	TYPE newt = 0, t = 1;
 	auto degree = [](TYPE a) {
+#if 1
+		return 31 - __builtin_clz(a);
+#else
 		int d = 0;
 		while (a >>= 1)
 			++d;
 		return d;
+#endif
 	};
 	int k = degree(r);
 	int j = M - k;
