@@ -392,10 +392,32 @@ template <int M, int64_t POLY, typename TYPE>
 GaloisFieldReference<M, POLY, TYPE> rcp(GaloisFieldReference<M, POLY, TYPE> a)
 {
 	assert(a.v);
+#if 1
+	uint32_t r = POLY, newr = a.v;
+	uint32_t t = 0, newt = 1;
+	auto degree = [](uint32_t a) {
+		int d = 0;
+		while (a >>= 1)
+			++d;
+		return d;
+	};
+	while (newr != 1) {
+		int j = degree(newr) - degree(r);
+		if (j < 0) {
+			j = -j;
+			std::swap(newr, r);
+			std::swap(newt, t);
+		}
+		newr ^= r << j;
+		newt ^= t << j;
+	}
+	return GaloisFieldReference<M, POLY, TYPE>(newt);
+#else
 	GaloisFieldReference<M, POLY, TYPE> t(a *= a);
 	for (int i = 0; i < M - 2; ++i)
 		t *= a *= a;
 	return t;
+#endif
 }
 
 template <int M, int64_t POLY, typename TYPE>
