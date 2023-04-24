@@ -35,8 +35,8 @@ void crs_test(int trials)
 		for (int i = 0; i < numbers_total; ++i)
 			numbers[i] = i;
 		for (int i = 0; i < block_count; i++) {
-			auto hat = std::bind(distribution(i, numbers_total - 1), generator);
-			std::swap(numbers[i], numbers[hat()]);
+			std::uniform_int_distribution<int> hat(i, numbers_total - 1);
+			std::swap(numbers[i], numbers[hat(generator)]);
 		}
 		for (int i = 0; i < block_count; ++i)
 			encode(orig, blocks + block_bytes * i, numbers[i], block_bytes, block_count);
