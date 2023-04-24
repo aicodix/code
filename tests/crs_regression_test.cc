@@ -5,6 +5,7 @@ Copyright 2023 Ahmet Inan <inan@aicodix.de>
 */
 
 #include <cassert>
+#include <chrono>
 #include <random>
 #include <iostream>
 #include <functional>
@@ -38,10 +39,19 @@ void crs_test(int trials)
 			std::uniform_int_distribution<int> hat(i, numbers_total - 1);
 			std::swap(numbers[i], numbers[hat(generator)]);
 		}
+		auto enc_start = std::chrono::system_clock::now();
 		for (int i = 0; i < block_count; ++i)
 			encode(orig, blocks + block_bytes * i, numbers[i], block_bytes, block_count);
+		auto enc_end = std::chrono::system_clock::now();
+		auto enc_usec = std::chrono::duration_cast<std::chrono::microseconds>(enc_end - enc_start);
+		double enc_mbs = double(data_bytes) / enc_usec.count();
 		uint8_t *data = new uint8_t[data_bytes];
+		auto dec_start = std::chrono::system_clock::now();
 		decode(data, blocks, numbers, block_bytes, block_count);
+		auto dec_end = std::chrono::system_clock::now();
+		auto dec_usec = std::chrono::duration_cast<std::chrono::microseconds>(dec_end - dec_start);
+		double dec_mbs = double(data_bytes) / dec_usec.count();
+		std::cout << "block count = " << block_count << ", block size = " << block_bytes << " bytes, encoding speed = " << enc_mbs << " megabyte per second, decoding speed = " << dec_mbs << " megabyte per second" << std::endl;
 		for (int i = 0; i < data_bytes; ++i)
 			assert(data[i] == orig[i]);
 		delete[] numbers;
