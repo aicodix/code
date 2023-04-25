@@ -54,23 +54,14 @@ struct CauchyReedSolomonDecoder
 	IndexType inverse_cauchy_matrix(const ValueType *rows, int i, int j, int n)
 	{
 		ValueType col_i(ValueType::N - i);
-		IndexType prod_xy(0);
+		IndexType prod_xy(0), prod_x(0), prod_y(0);
 		for (int k = 0; k < n; k++) {
 			ValueType col_k(ValueType::N - k);
 			prod_xy *= index(rows[j] + col_k) * index(rows[k] + col_i);
-		}
-		IndexType prod_x(0);
-		for (int k = 0; k < n; k++) {
-			if (k != j) {
+			if (k != j)
 				prod_x *= index(rows[j] + rows[k]);
-			}
-		}
-		IndexType prod_y(0);
-		for (int k = 0; k < n; k++) {
-			if (k != i) {
-				ValueType col_k(ValueType::N - k);
+			if (k != i)
 				prod_y *= index(col_i + col_k);
-			}
 		}
 		return prod_xy / (index(rows[j] + col_i) * prod_x * prod_y);
 	}
