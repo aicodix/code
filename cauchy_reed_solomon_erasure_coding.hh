@@ -65,29 +65,26 @@ struct CauchyReedSolomonDecoder
 		}
 		return prod_xy / (index(rows[j] + col_i) * prod_x * prod_y);
 	}
-	void operator()(ValueType *data, const ValueType *blocks, const ValueType *block_nums, int block_len, int block_cnt)
+	void operator()(ValueType *data, const ValueType *blocks, const ValueType *block_nums, int block_num, int block_len, int block_cnt)
 	{
-		for (int i = 0; i < block_cnt; i++) {
-			for (int k = 0; k < block_cnt; k++) {
-				IndexType b_ik = inverse_cauchy_matrix(block_nums, i, k, block_cnt);
-				for (int j = 0; j < block_len; j++) {
-					if (k)
-						data[j] = fma(b_ik, blocks[block_len*k+j], data[j]);
-					else
-						data[j] = b_ik * blocks[block_len*k+j];
-				}
+		for (int k = 0; k < block_cnt; k++) {
+			IndexType b_ik = inverse_cauchy_matrix(block_nums, block_num, k, block_cnt);
+			for (int j = 0; j < block_len; j++) {
+				if (k)
+					data[j] = fma(b_ik, blocks[block_len*k+j], data[j]);
+				else
+					data[j] = b_ik * blocks[block_len*k+j];
 			}
-			data += block_len;
 		}
 	}
-	void operator()(value_type *data, const value_type *blocks, const value_type *block_nums, int block_len, int block_cnt)
+	void operator()(value_type *data, const value_type *blocks, const value_type *block_nums, int block_num, int block_len, int block_cnt)
 	{
-		(*this)(reinterpret_cast<ValueType *>(data), reinterpret_cast<const ValueType *>(blocks), reinterpret_cast<const ValueType *>(block_nums), block_len, block_cnt);
+		(*this)(reinterpret_cast<ValueType *>(data), reinterpret_cast<const ValueType *>(blocks), reinterpret_cast<const ValueType *>(block_nums), block_num, block_len, block_cnt);
 	}
-	void operator()(void *data, const void *blocks, const value_type *block_numbers, int block_bytes, int block_count)
+	void operator()(void *data, const void *blocks, const value_type *block_numbers, int block_number, int block_bytes, int block_count)
 	{
 		assert(block_bytes % sizeof(value_type) == 0);
-		(*this)(reinterpret_cast<value_type *>(data), reinterpret_cast<const value_type *>(blocks), block_numbers, block_bytes / sizeof(value_type), block_count);
+		(*this)(reinterpret_cast<value_type *>(data), reinterpret_cast<const value_type *>(blocks), block_numbers, block_number, block_bytes / sizeof(value_type), block_count);
 	}
 };
 

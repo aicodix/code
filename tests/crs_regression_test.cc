@@ -47,7 +47,8 @@ void crs_test(int trials)
 		double enc_mbs = double(data_bytes) / enc_usec.count();
 		uint8_t *data = new uint8_t[data_bytes];
 		auto dec_start = std::chrono::system_clock::now();
-		decode(data, blocks, numbers, block_bytes, block_count);
+		for (int i = 0; i < block_count; ++i)
+			decode(data + block_bytes * i, blocks, numbers, i, block_bytes, block_count);
 		auto dec_end = std::chrono::system_clock::now();
 		auto dec_usec = std::chrono::duration_cast<std::chrono::microseconds>(dec_end - dec_start);
 		double dec_mbs = double(data_bytes) / dec_usec.count();
