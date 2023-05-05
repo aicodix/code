@@ -51,11 +51,15 @@ public:
 	{
 		if (s < 0)
 			s += WIDTH;
+		TYPE ret;
+#ifdef __aarch64__
+		ret.m = vqtbl1q_s8(a.m, vunsigned(rot[s]).m);
+#else
 		int8x8x2_t b { vget_low_s8(a.m), vget_high_s8(a.m) };
 		int8x8_t c = vtbl2_s8(b, vget_low_s8(rot[s].m));
 		int8x8_t d = vtbl2_s8(b, vget_high_s8(rot[s].m));
-		TYPE ret;
 		ret.m = vcombine_s8(c, d);
+#endif
 		return ret;
 	}
 };
