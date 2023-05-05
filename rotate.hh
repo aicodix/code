@@ -30,7 +30,7 @@ public:
 	}
 };
 
-#ifdef __ARM_NEON__
+#ifdef __ARM_NEON
 template <int WIDTH>
 class Rotate<SIMD<int8_t, 16>, WIDTH>
 {

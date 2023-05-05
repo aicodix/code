@@ -8,6 +8,9 @@ CXX = clang++ -stdlib=libc++ -march=native
 #CXX = armv7a-hardfloat-linux-gnueabi-g++ -static -mfpu=neon -march=armv7-a
 #QEMU = qemu-arm
 
+#CXX = aarch64-unknown-linux-gnu-g++ -static
+#QEMU = qemu-aarch64
+
 .PHONY: clean test
 
 tests := $(basename $(wildcard *_test.*))
