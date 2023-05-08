@@ -35,29 +35,29 @@ struct CauchyReedSolomonErasureCoding
 		}
 		return prod_xy / (index(rows[j] + col_i) * prod_x * prod_y);
 	}
+	void multiply_accumulate(ValueType *c, const ValueType *a, IndexType b, int len, bool init)
+	{
+		if (init) {
+			for (int i = 0; i < len; i++)
+				c[i] = b * a[i];
+		} else {
+			for (int i = 0; i < len; i++)
+				c[i] = fma(b, a[i], c[i]);
+		}
+	}
 	void encode(const ValueType *data, ValueType *block, int block_num, int block_len, int block_cnt)
 	{
 		assert(block_num <= ValueType::N - block_cnt);
 		for (int k = 0; k < block_cnt; k++) {
 			IndexType a_ik = cauchy_matrix(block_num, k);
-			for (int j = 0; j < block_len; j++) {
-				if (k)
-					block[j] = fma(a_ik, data[block_len*k+j], block[j]);
-				else
-					block[j] = a_ik * data[block_len*k+j];
-			}
+			multiply_accumulate(block, data + block_len * k, a_ik, block_len, !k);
 		}
 	}
 	void decode(ValueType *data, const ValueType *blocks, const ValueType *block_nums, int block_num, int block_len, int block_cnt)
 	{
 		for (int k = 0; k < block_cnt; k++) {
 			IndexType b_ik = inverse_cauchy_matrix(block_nums, block_num, k, block_cnt);
-			for (int j = 0; j < block_len; j++) {
-				if (k)
-					data[j] = fma(b_ik, blocks[block_len*k+j], data[j]);
-				else
-					data[j] = b_ik * blocks[block_len*k+j];
-			}
+			multiply_accumulate(data, blocks + block_len * k, b_ik, block_len, !k);
 		}
 	}
 	void encode(const value_type *data, value_type *block, int block_num, int block_len, int block_cnt)
