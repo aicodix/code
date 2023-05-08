@@ -15,8 +15,7 @@ Copyright 2023 Ahmet Inan <inan@aicodix.de>
 template <typename GF>
 void crs_test(int trials)
 {
-	CODE::CauchyReedSolomonEncoder<GF> encode;
-	CODE::CauchyReedSolomonDecoder<GF> decode;
+	CODE::CauchyReedSolomonErasureCoding<GF> crs;
 	std::random_device rd;
 	std::default_random_engine generator(rd());
 	typedef std::uniform_int_distribution<int> distribution;
@@ -41,14 +40,14 @@ void crs_test(int trials)
 		}
 		auto enc_start = std::chrono::system_clock::now();
 		for (int i = 0; i < block_count; ++i)
-			encode(orig, blocks + block_bytes * i, numbers[i], block_bytes, block_count);
+			crs.encode(orig, blocks + block_bytes * i, numbers[i], block_bytes, block_count);
 		auto enc_end = std::chrono::system_clock::now();
 		auto enc_usec = std::chrono::duration_cast<std::chrono::microseconds>(enc_end - enc_start);
 		double enc_mbs = double(data_bytes) / enc_usec.count();
 		uint8_t *data = new uint8_t[data_bytes];
 		auto dec_start = std::chrono::system_clock::now();
 		for (int i = 0; i < block_count; ++i)
-			decode(data + block_bytes * i, blocks, numbers, i, block_bytes, block_count);
+			crs.decode(data + block_bytes * i, blocks, numbers, i, block_bytes, block_count);
 		auto dec_end = std::chrono::system_clock::now();
 		auto dec_usec = std::chrono::duration_cast<std::chrono::microseconds>(dec_end - dec_start);
 		double dec_mbs = double(data_bytes) / dec_usec.count();
