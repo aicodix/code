@@ -4,6 +4,7 @@ Regression Test for the Cauchy Reed Solomon Encoder and Decoder
 Copyright 2023 Ahmet Inan <inan@aicodix.de>
 */
 
+#include <cstdlib>
 #include <cassert>
 #include <chrono>
 #include <random>
@@ -15,6 +16,11 @@ Copyright 2023 Ahmet Inan <inan@aicodix.de>
 template <typename GF>
 void crs_test(int trials)
 {
+#ifdef __AVX2__
+	int SIMD = 32;
+#else
+	int SIMD = 16;
+#endif
 	CODE::CauchyReedSolomonErasureCoding<GF> crs;
 	std::random_device rd;
 	std::default_random_engine generator(rd());
@@ -25,12 +31,13 @@ void crs_test(int trials)
 	while (--trials) {
 		int block_count = rnd_cnt();
 		int numbers_total = GF::Q - block_count;
-		int block_bytes = rnd_len() * sizeof(typename GF::value_type);
+		int block_bytes = rnd_len() * sizeof(typename GF::value_type) * SIMD;
 		int data_bytes = block_count * block_bytes;
-		uint8_t *orig = new uint8_t[data_bytes];
+		uint8_t *orig = reinterpret_cast<uint8_t *>(std::aligned_alloc(SIMD, data_bytes));
+		uint8_t *data = reinterpret_cast<uint8_t *>(std::aligned_alloc(SIMD, data_bytes));
+		uint8_t *blocks = reinterpret_cast<uint8_t *>(std::aligned_alloc(SIMD, data_bytes));
 		for (int i = 0; i < data_bytes; ++i)
 			orig[i] = rnd_dat();
-		uint8_t *blocks = new uint8_t[data_bytes];
 		auto numbers = new typename GF::value_type[numbers_total];
 		for (int i = 0; i < numbers_total; ++i)
 			numbers[i] = i;
@@ -44,7 +51,6 @@ void crs_test(int trials)
 		auto enc_end = std::chrono::system_clock::now();
 		auto enc_usec = std::chrono::duration_cast<std::chrono::microseconds>(enc_end - enc_start);
 		double enc_mbs = double(data_bytes) / enc_usec.count();
-		uint8_t *data = new uint8_t[data_bytes];
 		auto dec_start = std::chrono::system_clock::now();
 		for (int i = 0; i < block_count; ++i)
 			crs.decode(data + block_bytes * i, blocks, numbers, i, block_bytes, block_count);
@@ -55,9 +61,9 @@ void crs_test(int trials)
 		for (int i = 0; i < data_bytes; ++i)
 			assert(data[i] == orig[i]);
 		delete[] numbers;
-		delete[] blocks;
-		delete[] orig;
-		delete[] data;
+		std::free(blocks);
+		std::free(orig);
+		std::free(data);
 	}
 }
 
