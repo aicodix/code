@@ -11,24 +11,30 @@ Copyright 2023 Ahmet Inan <inan@aicodix.de>
 namespace CODE {
 
 template <int SIZE>
-class ReversibleFisherYatesShuffle
+struct FisherYatesShuffle
+{
+	template <typename TYPE>
+	void operator()(TYPE *array)
+	{
+		CODE::Xorshift32 prng;
+		for (int i = 0; i < SIZE-1; ++i)
+			std::swap(array[i], array[i + prng() % (SIZE - i)]);
+	}
+};
+
+template <int SIZE>
+class ReverseFisherYatesShuffle
 {
 	int seq[SIZE-1];
 public:
-	ReversibleFisherYatesShuffle()
+	ReverseFisherYatesShuffle()
 	{
 		CODE::Xorshift32 prng;
 		for (int i = 0; i < SIZE-1; ++i)
 			seq[i] = i + prng() % (SIZE - i);
 	}
 	template <typename TYPE>
-	void forward(TYPE *array)
-	{
-		for (int i = 0; i < SIZE-1; ++i)
-			std::swap(array[i], array[seq[i]]);
-	}
-	template <typename TYPE>
-	void reverse(TYPE *array)
+	void operator()(TYPE *array)
 	{
 		for (int i = SIZE-2; i >= 0; --i)
 			std::swap(array[i], array[seq[i]]);
