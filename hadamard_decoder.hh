@@ -16,7 +16,7 @@ public:
 	int operator()(const int8_t *code)
 	{
 		int sum[N];
-		for (int i = 0; i < N; i += 2) {
+		for (int i = 0; i < N-1; i += 2) {
 			sum[i] = code[i] + code[i+1];
 			sum[i+1] = code[i] - code[i+1];
 		}

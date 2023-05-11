@@ -18,7 +18,7 @@ public:
 		int sum[W];
 		sum[0] = code[0];
 		sum[1] = -code[0];
-		for (int i = 1; i < W; i += 2) {
+		for (int i = 1; i < W-2; i += 2) {
 			sum[i+1] = code[i] + code[i+1];
 			sum[i+2] = code[i] - code[i+1];
 		}
