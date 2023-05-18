@@ -376,7 +376,13 @@ template <int M, int64_t POLY, typename TYPE>
 GaloisFieldReference<M, POLY, TYPE> operator * (GaloisFieldReference<M, POLY, TYPE> a, GaloisFieldReference<M, POLY, TYPE> b)
 {
 	GaloisFieldReference<M, POLY, TYPE> p(0);
+#if 0
+	if (a.v < b.v)
+		std::swap(a, b);
+	while (a.v && b.v) {
+#else
 	for (int i = 0; i < M; ++i) {
+#endif
 		if (b.v & 1)
 			p.v ^= a.v;
 		if (a.v & (TYPE(1) << (M - 1)))
