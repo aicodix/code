@@ -25,6 +25,7 @@ struct CauchyReedSolomonErasureCoding
 	typedef typename GF::value_type value_type;
 	typedef typename GF::ValueType ValueType;
 	typedef typename GF::IndexType IndexType;
+	IndexType row_num, row_den;
 	// $a_{ij} = \frac{1}{x_i + y_j}$
 	IndexType cauchy_matrix(int i, int j)
 	{
@@ -34,6 +35,7 @@ struct CauchyReedSolomonErasureCoding
 	// $b_{ij} = \frac{\prod_{k=1}^{n}{(x_j + y_k)(x_k + y_i)}}{(x_j + y_i)\prod_{k \ne j}^{n}{(x_j - x_k)}\prod_{k \ne i}^{n}{(y_i - y_k)}}$
 	IndexType inverse_cauchy_matrix(const ValueType *rows, int i, int j, int n)
 	{
+#if 0
 		ValueType col_i(ValueType::N - i);
 		IndexType prod_xy(0), prod_x(0), prod_y(0);
 		for (int k = 0; k < n; k++) {
@@ -45,6 +47,28 @@ struct CauchyReedSolomonErasureCoding
 				prod_y *= index(col_i + col_k);
 		}
 		return prod_xy / (index(rows[j] + col_i) * prod_x * prod_y);
+#else
+		ValueType col_i(ValueType::N - i);
+		if (j == 0) {
+			IndexType num(0), den(0);
+			for (int k = 0; k < n; k++) {
+				ValueType col_k(ValueType::N - k);
+				num *= index(rows[k] + col_i);
+				if (k != i)
+					den *= index(col_i + col_k);
+			}
+			row_num = num;
+			row_den = den;
+		}
+		IndexType num(row_num), den(row_den);
+		for (int k = 0; k < n; k++) {
+			ValueType col_k(ValueType::N - k);
+			num *= index(rows[j] + col_k);
+			if (k != j)
+				den *= index(rows[j] + rows[k]);
+		}
+		return num / (index(rows[j] + col_i) * den);
+#endif
 	}
 #if defined(__ARM_NEON) && !defined(__aarch64__)
 	static inline uint8x16_t vqtbl1q_u8(uint8x16_t lut, uint8x16_t idx)
