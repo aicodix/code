@@ -27,12 +27,14 @@ struct CauchyReedSolomonErasureCoding
 	typedef typename GF::IndexType IndexType;
 	IndexType row_num, row_den;
 	// $a_{ij} = \frac{1}{x_i + y_j}$
+	__attribute__((flatten))
 	IndexType cauchy_matrix(int i, int j)
 	{
 		ValueType row(i), col(ValueType::N - j);
 		return rcp(index(row + col));
 	}
 	// $b_{ij} = \frac{\prod_{k=1}^{n}{(x_j + y_k)(x_k + y_i)}}{(x_j + y_i)\prod_{k \ne j}^{n}{(x_j - x_k)}\prod_{k \ne i}^{n}{(y_i - y_k)}}$
+	__attribute__((flatten))
 	IndexType inverse_cauchy_matrix(const ValueType *rows, int i, int j, int n)
 	{
 #if 0
@@ -80,7 +82,8 @@ struct CauchyReedSolomonErasureCoding
 	}
 #endif
 #if defined(__ARM_NEON) || defined(__AVX2__) || defined(__SSE4_1__)
-	void mac_simd(uint8_t *c, const uint8_t *a, IndexType b, int size, bool init)
+	__attribute__((flatten))
+	static inline void mac_simd(uint8_t *c, const uint8_t *a, IndexType b, int size, bool init)
 	{
 		alignas(16) uint8_t bln[16], bhn[16];
 		for (int i = 0; i < 16; ++i) {
@@ -135,7 +138,8 @@ struct CauchyReedSolomonErasureCoding
 #endif
 #endif
 	}
-	void mac_simd(uint16_t *c, const uint16_t *a, IndexType b, int size, bool init)
+	__attribute__((flatten))
+	static inline void mac_simd(uint16_t *c, const uint16_t *a, IndexType b, int size, bool init)
 	{
 		alignas(16) uint8_t blll[16], bllh[16], blhl[16], blhh[16], bhll[16], bhlh[16], bhhl[16], bhhh[16];
 		for (int i = 0; i < 16; ++i) {
@@ -272,7 +276,8 @@ struct CauchyReedSolomonErasureCoding
 #endif
 	}
 #endif
-	void multiply_accumulate(ValueType *c, const ValueType *a, IndexType b, int len, bool init)
+	__attribute__((flatten))
+	static inline void multiply_accumulate(ValueType *c, const ValueType *a, IndexType b, int len, bool init)
 	{
 #if defined(__ARM_NEON) || defined(__AVX2__) || defined(__SSE4_1__)
 #ifdef __AVX2__
