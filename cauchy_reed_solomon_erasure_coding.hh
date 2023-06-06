@@ -44,9 +44,9 @@ struct CauchyReedSolomonErasureCoding
 			ValueType col_k(ValueType::N - k);
 			prod_xy *= index(rows[j] + col_k) * index(rows[k] + col_i);
 			if (k != j)
-				prod_x *= index(rows[j] + rows[k]);
+				prod_x *= index(rows[j] - rows[k]);
 			if (k != i)
-				prod_y *= index(col_i + col_k);
+				prod_y *= index(col_i - col_k);
 		}
 		return prod_xy / (index(rows[j] + col_i) * prod_x * prod_y);
 #else
@@ -57,7 +57,7 @@ struct CauchyReedSolomonErasureCoding
 				ValueType col_k(ValueType::N - k);
 				num *= index(rows[k] + col_i);
 				if (k != i)
-					den *= index(col_i + col_k);
+					den *= index(col_i - col_k);
 			}
 			row_num = num;
 			row_den = den;
@@ -67,7 +67,7 @@ struct CauchyReedSolomonErasureCoding
 			ValueType col_k(ValueType::N - k);
 			num *= index(rows[j] + col_k);
 			if (k != j)
-				den *= index(rows[j] + rows[k]);
+				den *= index(rows[j] - rows[k]);
 		}
 		return num / (index(rows[j] + col_i) * den);
 #endif
