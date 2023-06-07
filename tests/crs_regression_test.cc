@@ -30,7 +30,7 @@ void crs_test(int trials)
 	auto rnd_dat = std::bind(distribution(0, 255), generator);
 	while (--trials) {
 		int block_count = rnd_cnt();
-		int numbers_total = GF::Q - block_count;
+		int identifiers_total = GF::Q - block_count;
 		int block_bytes = rnd_len() * sizeof(typename GF::value_type) * SIMD;
 		int data_bytes = block_count * block_bytes;
 		uint8_t *orig = reinterpret_cast<uint8_t *>(std::aligned_alloc(SIMD, data_bytes));
@@ -38,29 +38,29 @@ void crs_test(int trials)
 		uint8_t *blocks = reinterpret_cast<uint8_t *>(std::aligned_alloc(SIMD, data_bytes));
 		for (int i = 0; i < data_bytes; ++i)
 			orig[i] = rnd_dat();
-		auto numbers = new typename GF::value_type[numbers_total];
-		for (int i = 0; i < numbers_total; ++i)
-			numbers[i] = i;
+		auto identifiers = new typename GF::value_type[identifiers_total];
+		for (int i = 0; i < identifiers_total; ++i)
+			identifiers[i] = block_count + i;
 		for (int i = 0; i < block_count; i++) {
-			std::uniform_int_distribution<int> hat(i, numbers_total - 1);
-			std::swap(numbers[i], numbers[hat(generator)]);
+			std::uniform_int_distribution<int> hat(i, identifiers_total - 1);
+			std::swap(identifiers[i], identifiers[hat(generator)]);
 		}
 		auto enc_start = std::chrono::system_clock::now();
 		for (int i = 0; i < block_count; ++i)
-			crs.encode(orig, blocks + block_bytes * i, numbers[i], block_bytes, block_count);
+			crs.encode(orig, blocks + block_bytes * i, identifiers[i], block_bytes, block_count);
 		auto enc_end = std::chrono::system_clock::now();
 		auto enc_usec = std::chrono::duration_cast<std::chrono::microseconds>(enc_end - enc_start);
 		double enc_mbs = double(data_bytes) / enc_usec.count();
 		auto dec_start = std::chrono::system_clock::now();
 		for (int i = 0; i < block_count; ++i)
-			crs.decode(data + block_bytes * i, blocks, numbers, i, block_bytes, block_count);
+			crs.decode(data + block_bytes * i, blocks, identifiers, i, block_bytes, block_count);
 		auto dec_end = std::chrono::system_clock::now();
 		auto dec_usec = std::chrono::duration_cast<std::chrono::microseconds>(dec_end - dec_start);
 		double dec_mbs = double(data_bytes) / dec_usec.count();
 		std::cout << "block count = " << block_count << ", block size = " << block_bytes << " bytes, encoding speed = " << enc_mbs << " megabyte per second, decoding speed = " << dec_mbs << " megabyte per second" << std::endl;
 		for (int i = 0; i < data_bytes; ++i)
 			assert(data[i] == orig[i]);
-		delete[] numbers;
+		delete[] identifiers;
 		std::free(blocks);
 		std::free(orig);
 		std::free(data);
