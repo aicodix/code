@@ -305,10 +305,10 @@ struct CauchyReedSolomonErasureCoding
 			multiply_accumulate(block, data + block_len * k, a_ik, block_len, !k);
 		}
 	}
-	void decode(ValueType *data, const ValueType *blocks, const ValueType *block_ids, int block_id, int block_len, int block_cnt)
+	void decode(ValueType *data, const ValueType *blocks, const ValueType *block_ids, int block_idx, int block_len, int block_cnt)
 	{
 		for (int k = 0; k < block_cnt; k++) {
-			IndexType b_ik = inverse_cauchy_matrix(block_ids, block_id, k, block_cnt);
+			IndexType b_ik = inverse_cauchy_matrix(block_ids, block_idx, k, block_cnt);
 			multiply_accumulate(data, blocks + block_len * k, b_ik, block_len, !k);
 		}
 	}
@@ -316,19 +316,19 @@ struct CauchyReedSolomonErasureCoding
 	{
 		encode(reinterpret_cast<const ValueType *>(data), reinterpret_cast<ValueType *>(block), block_id, block_len, block_cnt);
 	}
-	void decode(value_type *data, const value_type *blocks, const value_type *block_ids, int block_id, int block_len, int block_cnt)
+	void decode(value_type *data, const value_type *blocks, const value_type *block_ids, int block_idx, int block_len, int block_cnt)
 	{
-		decode(reinterpret_cast<ValueType *>(data), reinterpret_cast<const ValueType *>(blocks), reinterpret_cast<const ValueType *>(block_ids), block_id, block_len, block_cnt);
+		decode(reinterpret_cast<ValueType *>(data), reinterpret_cast<const ValueType *>(blocks), reinterpret_cast<const ValueType *>(block_ids), block_idx, block_len, block_cnt);
 	}
 	void encode(const void *data, void *block, int block_identifier, int block_bytes, int block_count)
 	{
 		assert(block_bytes % sizeof(value_type) == 0);
 		encode(reinterpret_cast<const value_type *>(data), reinterpret_cast<value_type *>(block), block_identifier, block_bytes / sizeof(value_type), block_count);
 	}
-	void decode(void *data, const void *blocks, const value_type *block_identifiers, int block_identifier, int block_bytes, int block_count)
+	void decode(void *data, const void *blocks, const value_type *block_identifiers, int block_index, int block_bytes, int block_count)
 	{
 		assert(block_bytes % sizeof(value_type) == 0);
-		decode(reinterpret_cast<value_type *>(data), reinterpret_cast<const value_type *>(blocks), block_identifiers, block_identifier, block_bytes / sizeof(value_type), block_count);
+		decode(reinterpret_cast<value_type *>(data), reinterpret_cast<const value_type *>(blocks), block_identifiers, block_index, block_bytes / sizeof(value_type), block_count);
 	}
 };
 
