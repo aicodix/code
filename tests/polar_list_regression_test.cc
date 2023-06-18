@@ -17,6 +17,7 @@ Copyright 2020 Ahmet Inan <inan@aicodix.de>
 #include "polar_encoder.hh"
 #include "polar_freezer.hh"
 #include "crc.hh"
+#include "sequence.h"
 
 bool get_bit(const uint32_t *bits, int idx)
 {
@@ -25,7 +26,7 @@ bool get_bit(const uint32_t *bits, int idx)
 
 int main()
 {
-	const int M = 11;
+	const int M = 10;
 	const int N = 1 << M;
 	const bool systematic = true;
 	const bool crc_aided = true;
@@ -59,6 +60,7 @@ int main()
 	int K = (1 - erasure_probability) * N;
 	double design_SNR = 10 * std::log10(-std::log(erasure_probability));
 	std::cerr << "design SNR: " << design_SNR << std::endl;
+#if 0
 	if (0) {
 		CODE::PolarFreezer freeze;
 		long double freezing_threshold = 0 ? 0.5 : std::numeric_limits<float>::epsilon();
@@ -69,9 +71,16 @@ int main()
 		double better_SNR = design_SNR + 1.59175;
 		std::cerr << "better SNR: " << better_SNR << std::endl;
 		long double probability = std::exp(-pow(10.0, better_SNR / 10));
+		std::cerr << "prob: " << probability << std::endl;
 		(*freeze)(frozen, M, K, probability);
 		delete freeze;
 	}
+#else
+	for (int i = 0; i < N / 32; ++i)
+		frozen[i] = 0;
+	for (int i = 0; i < N - K; ++i)
+		frozen[sequence[i]/32] |= 1 << (sequence[i]%32);
+#endif
 	std::cerr << "Polar(" << N << ", " << K << ")" << std::endl;
 	auto message = new code_type[K];
 	auto decoded = new simd_type[K];
@@ -102,7 +111,7 @@ int main()
 		int64_t ambiguity_erasures = 0;
 		double avg_mbs = 0;
 		int64_t loops = 0;
-		while (uncorrected_errors < 10000 && ++loops < 1000) {
+		while (uncorrected_errors < 100000 && ++loops < 1000000) {
 			if (crc_aided) {
 				crc.reset();
 				for (int i = 0; i < K-C; ++i) {
