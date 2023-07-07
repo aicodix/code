@@ -16,6 +16,7 @@ Copyright 2020 Ahmet Inan <inan@aicodix.de>
 #include "polar_decoder.hh"
 #include "polar_encoder.hh"
 #include "polar_freezer.hh"
+#include "polar_sequence.hh"
 
 bool get_bit(const uint32_t *bits, int idx)
 {
@@ -39,26 +40,33 @@ int main()
 	typedef std::default_random_engine generator;
 	typedef std::uniform_int_distribution<int> distribution;
 	auto data = std::bind(distribution(0, 1), generator(rd()));
-	auto frozen = new uint32_t[(N+31)/32];
+	auto frozen = new uint32_t[N/32];
 	auto codeword = new code_type[N];
 	auto temp = new code_type[N];
 
-	long double erasure_probability = 1. / 3.;
+	double erasure_probability = 1. / 3.;
 	int K = (1 - erasure_probability) * N;
 	double design_SNR = 10 * std::log10(-std::log(erasure_probability));
 	std::cerr << "design SNR: " << design_SNR << std::endl;
-	if (0) {
-		CODE::PolarFreezer freeze;
-		long double freezing_threshold = 0 ? 0.5 : std::numeric_limits<float>::epsilon();
-		K = freeze(frozen, M, erasure_probability, freezing_threshold);
-	} else {
+	double better_SNR = design_SNR + 0.5;//1.59175;
+	std::cerr << "better SNR: " << better_SNR << std::endl;
+	double probability = std::exp(-pow(10.0, better_SNR / 10));
+	if (1) {
 		auto freeze = new CODE::PolarCodeConst0<M>;
 		std::cerr << "sizeof(PolarCodeConst0<M>) = " << sizeof(CODE::PolarCodeConst0<M>) << std::endl;
-		double better_SNR = design_SNR + 0.5;//1.59175;
-		std::cerr << "better SNR: " << better_SNR << std::endl;
-		long double probability = std::exp(-pow(10.0, better_SNR / 10));
 		(*freeze)(frozen, M, K, probability);
 		delete freeze;
+	} else {
+		auto sequence = new int[N];
+		auto construct = new CODE::PolarSeqConst0<M>;
+		std::cerr << "sizeof(PolarSeqConst0<M>) = " << sizeof(CODE::PolarSeqConst0<M>) << std::endl;
+		(*construct)(sequence, M, probability);
+		delete construct;
+		for (int i = 0; i < N / 32; ++i)
+			frozen[i] = 0;
+		for (int i = 0; i < N - K; ++i)
+			frozen[sequence[i]/32] |= 1 << (sequence[i]%32);
+		delete[] sequence;
 	}
 	std::cerr << "Polar(" << N << ", " << K << ")" << std::endl;
 	auto message = new code_type[K];

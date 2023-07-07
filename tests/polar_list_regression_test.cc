@@ -15,7 +15,7 @@ Copyright 2020 Ahmet Inan <inan@aicodix.de>
 #include "polar_helper.hh"
 #include "polar_list_decoder.hh"
 #include "polar_encoder.hh"
-#include "polar_freezer.hh"
+#include "polar_sequence.hh"
 #include "crc.hh"
 #include "sequence.h"
 
@@ -52,35 +52,33 @@ int main()
 	typedef std::default_random_engine generator;
 	typedef std::uniform_int_distribution<int> distribution;
 	auto data = std::bind(distribution(0, 1), generator(rd()));
-	auto frozen = new uint32_t[(N+31)/32];
+	auto frozen = new uint32_t[N/32];
 	auto codeword = new code_type[N];
 	auto temp = new simd_type[N];
 
-	long double erasure_probability = 0.5;
+	const int *reliability_sequence;
+	double erasure_probability = 0.5;
 	int K = (1 - erasure_probability) * N;
 	double design_SNR = 10 * std::log10(-std::log(erasure_probability));
 	std::cerr << "design SNR: " << design_SNR << std::endl;
-#if 0
 	if (0) {
-		CODE::PolarFreezer freeze;
-		long double freezing_threshold = 0 ? 0.5 : std::numeric_limits<float>::epsilon();
-		K = freeze(frozen, M, erasure_probability, freezing_threshold);
-	} else {
-		auto freeze = new CODE::PolarCodeConst0<M>;
-		std::cerr << "sizeof(PolarCodeConst0<M>) = " << sizeof(CODE::PolarCodeConst0<M>) << std::endl;
+		auto construct = new CODE::PolarSeqConst0<M>;
+		std::cerr << "sizeof(PolarSeqConst0<M>) = " << sizeof(CODE::PolarSeqConst0<M>) << std::endl;
 		double better_SNR = design_SNR + 1.59175;
 		std::cerr << "better SNR: " << better_SNR << std::endl;
-		long double probability = std::exp(-pow(10.0, better_SNR / 10));
+		double probability = std::exp(-pow(10.0, better_SNR / 10));
 		std::cerr << "prob: " << probability << std::endl;
-		(*freeze)(frozen, M, K, probability);
-		delete freeze;
+		auto rel_seq = new int[N];
+		(*construct)(rel_seq, M, probability);
+		delete construct;
+		reliability_sequence = rel_seq;
+	} else {
+		reliability_sequence = sequence;
 	}
-#else
 	for (int i = 0; i < N / 32; ++i)
 		frozen[i] = 0;
 	for (int i = 0; i < N - K; ++i)
-		frozen[sequence[i]/32] |= 1 << (sequence[i]%32);
-#endif
+		frozen[reliability_sequence[i]/32] |= 1 << (reliability_sequence[i]%32);
 	std::cerr << "Polar(" << N << ", " << K << ")" << std::endl;
 	auto message = new code_type[K];
 	auto decoded = new simd_type[K];
