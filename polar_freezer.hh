@@ -21,7 +21,7 @@ class PolarFreezer
 		bits[idx/32] &= ~(1 << (idx%32));
 		bits[idx/32] |= (uint32_t)val << (idx%32);
 	}
-	static void freeze(uint32_t *bits, long double pe, long double th, int i, int h)
+	static void freeze(uint32_t *bits, double pe, double th, int i, int h)
 	{
 		if (h) {
 			freeze(bits, pe * (2-pe), th, i, h/2);
@@ -31,7 +31,7 @@ class PolarFreezer
 		}
 	}
 public:
-	int operator()(uint32_t *frozen_bits, int level, long double erasure_probability = 0.5L, long double freezing_threshold = 0.5L)
+	int operator()(uint32_t *frozen_bits, int level, double erasure_probability = 0.5, double freezing_threshold = 0.5)
 	{
 		int length = 1 << level;
 		freeze(frozen_bits, erasure_probability, freezing_threshold, 0, length / 2);
@@ -53,7 +53,7 @@ class PolarCodeConst0
 	{
 		bits[idx/32] |= 1 << (idx%32);
 	}
-	void compute(long double pe, int i, int h)
+	void compute(double pe, int i, int h)
 	{
 		if (h) {
 			compute(pe * (2-pe), i, h/2);
@@ -62,10 +62,10 @@ class PolarCodeConst0
 			prob[i] = pe;
 		}
 	}
-	long double prob[1<<MAX_M];
+	double prob[1<<MAX_M];
 	int index[1<<MAX_M];
 public:
-	void operator()(uint32_t *frozen_bits, int level, int K, long double erasure_probability = std::exp(-1.L))
+	void operator()(uint32_t *frozen_bits, int level, int K, double erasure_probability = std::exp(-1.))
 	{
 		assert(level <= MAX_M);
 		int length = 1 << level;
