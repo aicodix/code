@@ -16,6 +16,7 @@ Copyright 2020 Ahmet Inan <inan@aicodix.de>
 #include "polar_list_decoder.hh"
 #include "polar_encoder.hh"
 #include "polar_sequence.hh"
+#include "polar_parity_aided.hh"
 #include "crc.hh"
 #include "sequence.h"
 
@@ -28,10 +29,13 @@ int main()
 {
 	const int M = 10;
 	const int N = 1 << M;
-	const bool systematic = true;
+	const bool systematic = false;
 	const bool crc_aided = true;
+	const bool par_aided = true;
+	static_assert(!par_aided || !systematic, "systematic and parity aided are mutually exclusive");
 	CODE::CRC<uint32_t> crc(0xD419CC15);
 	const int C = 32;
+	const int S = 32;
 #if 1
 	typedef int8_t code_type;
 	double SCALE = 2;
@@ -79,12 +83,16 @@ int main()
 		frozen[i] = 0;
 	for (int i = 0; i < N - K; ++i)
 		frozen[reliability_sequence[i]/32] |= 1 << (reliability_sequence[i]%32);
+	int P = K / (S + 1);
+	if (par_aided)
+		K -= P;
 	std::cerr << "Polar(" << N << ", " << K << ")" << std::endl;
 	auto message = new code_type[K];
 	auto decoded = new simd_type[K];
 	CODE::PolarHelper<simd_type>::PATH metric[SIMD_WIDTH];
 	std::cerr << "sizeof(PolarListDecoder<simd_type, M>) = " << sizeof(CODE::PolarListDecoder<simd_type, M>) << std::endl;
 	auto decode = new CODE::PolarListDecoder<simd_type, M>;
+	auto par_dec = new CODE::PolarParityDecoder<simd_type, M>;
 
 	auto orig = new code_type[N];
 	auto noisy = new code_type[N];
@@ -132,6 +140,9 @@ int main()
 				for (int i = 0, j = 0; i < N; ++i)
 					if (!get_bit(frozen, i))
 						assert(codeword[i] == message[j++]);
+			} else if (par_aided) {
+				CODE::PolarParityEncoder<code_type> encode;
+				encode(codeword, message, frozen, M, S);
 			} else {
 				CODE::PolarEncoder<code_type> encode;
 				encode(codeword, message, frozen, M);
@@ -157,7 +168,10 @@ int main()
 				noisy[i] = codeword[i];
 
 			auto start = std::chrono::system_clock::now();
-			(*decode)(metric, decoded, codeword, frozen, M);
+			if (par_aided)
+				(*par_dec)(metric, decoded, codeword, frozen, M, S);
+			else
+				(*decode)(metric, decoded, codeword, frozen, M);
 			auto end = std::chrono::system_clock::now();
 			auto usec = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
 			double mbs = (double)K / usec.count();
