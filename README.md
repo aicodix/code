@@ -111,6 +111,11 @@ Successive cancellation [list decoding](https://en.wikipedia.org/wiki/List_decod
 
 List size depends on used SIMD type. Decoding performance of the fixed-point implementation is better with shorter codes, as the list size is larger but a deterioration can be observed with larger codes.
 
+### [polar_parity_aided.hh](polar_parity_aided.hh)
+
+Parity check aided successive cancellation [list decoding](https://en.wikipedia.org/wiki/List_decoding) of [polar codes](https://en.wikipedia.org/wiki/Polar_code_(coding_theory)).
+![Polar decoder comparisons](polar_ber.png)
+
 ### [osd.hh](osd.hh)
 
 Ordered statistics decoding allows the practical [soft-decision decoding](https://en.wikipedia.org/wiki/Soft-decision_decoder) of short to medium sized [linear codes](https://en.wikipedia.org/wiki/Linear_code).
