@@ -109,7 +109,7 @@ int main()
 		int64_t ambiguity_erasures = 0;
 		double avg_mbs = 0;
 		int64_t loops = 0;
-		while (uncorrected_errors < 100000 && ++loops < 1000000) {
+		while (uncorrected_errors < 10000 && ++loops < 1000) {
 			if (crc_aided) {
 				crc.reset();
 				for (int i = 0; i < K-C; ++i) {
