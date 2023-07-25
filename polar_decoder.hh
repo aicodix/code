@@ -242,7 +242,7 @@ struct PolarTree<TYPE, 1>
 template <typename TYPE, int MAX_M>
 class PolarDecoder
 {
-	static_assert(MAX_M >= 5 && MAX_M <= 29);
+	static_assert(MAX_M >= 5 && MAX_M <= 20);
 	typedef PolarHelper<TYPE> PH;
 	static const int MAX_N = 1 << MAX_M;
 	TYPE soft[2*MAX_N];
@@ -272,15 +272,6 @@ public:
 		case 18: PolarTree<TYPE, 18>::decode(&message, hard, soft, frozen); break;
 		case 19: PolarTree<TYPE, 19>::decode(&message, hard, soft, frozen); break;
 		case 20: PolarTree<TYPE, 20>::decode(&message, hard, soft, frozen); break;
-		case 21: PolarTree<TYPE, 21>::decode(&message, hard, soft, frozen); break;
-		case 22: PolarTree<TYPE, 22>::decode(&message, hard, soft, frozen); break;
-		case 23: PolarTree<TYPE, 23>::decode(&message, hard, soft, frozen); break;
-		case 24: PolarTree<TYPE, 24>::decode(&message, hard, soft, frozen); break;
-		case 25: PolarTree<TYPE, 25>::decode(&message, hard, soft, frozen); break;
-		case 26: PolarTree<TYPE, 26>::decode(&message, hard, soft, frozen); break;
-		case 27: PolarTree<TYPE, 27>::decode(&message, hard, soft, frozen); break;
-		case 28: PolarTree<TYPE, 28>::decode(&message, hard, soft, frozen); break;
-		case 29: PolarTree<TYPE, 29>::decode(&message, hard, soft, frozen); break;
 		default: assert(false);
 		}
 	}
