@@ -20,10 +20,10 @@ class PolarParityEncoder
 		return (bits[idx/32] >> (idx%32)) & 1;
 	}
 public:
-	void operator()(TYPE *codeword, const TYPE *message, const uint32_t *frozen, int level, int stride)
+	void operator()(TYPE *codeword, const TYPE *message, const uint32_t *frozen, int level, int stride, int first)
 	{
 		int length = 1 << level;
-		int count = stride;
+		int count = first;
 		TYPE parity = PH::one();
 		for (int i = 0; i < length; i += 2) {
 			TYPE msg0, msg1;
@@ -345,7 +345,7 @@ class PolarParityDecoder
 	TYPE hard[MAX_N];
 	MAP maps[MAX_N];
 public:
-	void operator()(PATH *metric, TYPE *message, const VALUE *codeword, const uint32_t *frozen, int level, int stride)
+	void operator()(PATH *metric, TYPE *message, const VALUE *codeword, const uint32_t *frozen, int level, int stride, int first)
 	{
 		assert(level <= MAX_M);
 		int index = 0;
@@ -356,7 +356,7 @@ public:
 		for (int i = 0; i < length; ++i)
 			soft[length+i] = vdup<TYPE>(codeword[i]);
 		TYPE parity = PH::one();
-		int count = stride;
+		int count = first;
 
 		switch (level) {
 		case 5: PolarParityTree<TYPE, 5>::decode(metric, message, maps, &index, hard, soft, *frozen, &parity, &count, stride); break;

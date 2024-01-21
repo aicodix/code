@@ -84,6 +84,9 @@ int main()
 	for (int i = 0; i < N - K; ++i)
 		frozen[reliability_sequence[i]/32] |= 1 << (reliability_sequence[i]%32);
 	int P = K / (S + 1);
+	int F = K % (S + 1);
+	if (!crc_aided)
+		F += S;
 	if (par_aided)
 		K -= P;
 	std::cerr << "Polar(" << N << ", " << K << ")" << std::endl;
@@ -142,7 +145,7 @@ int main()
 						assert(codeword[i] == message[j++]);
 			} else if (par_aided) {
 				CODE::PolarParityEncoder<code_type> encode;
-				encode(codeword, message, frozen, M, S);
+				encode(codeword, message, frozen, M, S, F);
 			} else {
 				CODE::PolarEncoder<code_type> encode;
 				encode(codeword, message, frozen, M);
@@ -169,7 +172,7 @@ int main()
 
 			auto start = std::chrono::system_clock::now();
 			if (par_aided)
-				(*par_dec)(metric, decoded, codeword, frozen, M, S);
+				(*par_dec)(metric, decoded, codeword, frozen, M, S, F);
 			else
 				(*decode)(metric, decoded, codeword, frozen, M);
 			auto end = std::chrono::system_clock::now();
