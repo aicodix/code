@@ -237,5 +237,158 @@ public:
 	}
 };
 
+template <int N, int K, int O, int L>
+class OrderedStatisticsListDecoder
+{
+	static const int S = sizeof(size_t);
+	static const int W = (N+S-1) & ~(S-1);
+	int8_t G[W*K];
+	int8_t codeword[W], candidate[W*2*L];
+	int8_t softperm[W];
+	int16_t perm[W];
+	int score[2*L], scoreperm[2*L];
+	void row_echelon()
+	{
+		for (int k = 0; k < K; ++k) {
+			// find pivot in this column
+			for (int j = k; j < K; ++j) {
+				if (G[W*j+k]) {
+					for (int i = k; j != k && i < N; ++i)
+						std::swap(G[W*j+i], G[W*k+i]);
+					break;
+				}
+			}
+			// keep searching for suitable column for pivot
+			// beware: this will use columns >= K if necessary.
+			for (int j = k + 1; !G[W*k+k] && j < N; ++j) {
+				for (int h = k; h < K; ++h) {
+					if (G[W*h+j]) {
+						// account column swap
+						std::swap(perm[k], perm[j]);
+						for (int i = 0; i < K; ++i)
+							std::swap(G[W*i+k], G[W*i+j]);
+						for (int i = k; h != k && i < N; ++i)
+							std::swap(G[W*h+i], G[W*k+i]);
+						break;
+					}
+				}
+			}
+			assert(G[W*k+k]);
+			// zero out column entries below pivot
+			for (int j = k + 1; j < K; ++j)
+				if (G[W*j+k])
+					for (int i = k; i < N; ++i)
+						G[W*j+i] ^= G[W*k+i];
+		}
+	}
+	void systematic()
+	{
+		for (int k = K-1; k; --k)
+			for (int j = 0; j < k; ++j)
+				if (G[W*j+k])
+					for (int i = k; i < N; ++i)
+						G[W*j+i] ^= G[W*k+i];
+	}
+	void encode()
+	{
+		for (int i = K; i < N; ++i)
+			codeword[i] = codeword[0] & G[i];
+		for (int j = 1; j < K; ++j)
+			for (int i = K; i < N; ++i)
+				codeword[i] ^= codeword[j] & G[W*j+i];
+	}
+	void flip(int j)
+	{
+		for (int i = 0; i < W; ++i)
+			codeword[i] ^= G[W*j+i];
+	}
+	static int metric(const int8_t *hard, const int8_t *soft)
+	{
+		int sum = 0;
+		for (int i = 0; i < W; ++i)
+			sum += (1 - 2 * hard[i]) * soft[i];
+		return sum;
+	}
+public:
+	void operator()(int *rank, uint8_t *hard, const int8_t *soft, const int8_t *genmat)
+	{
+		for (int i = 0; i < N; ++i)
+			perm[i] = i;
+		for (int i = 0; i < N; ++i)
+			softperm[i] = std::abs(std::max<int8_t>(soft[i], -127));
+		std::sort(perm, perm+N, [this](int a, int b){ return softperm[a] > softperm[b]; });
+		for (int j = 0; j < K; ++j)
+			for (int i = 0; i < N; ++i)
+				G[W*j+i] = genmat[N*j+perm[i]];
+		row_echelon();
+		systematic();
+		for (int i = 0; i < N; ++i)
+			softperm[i] = std::max<int8_t>(soft[perm[i]], -127);
+		for (int i = N; i < W; ++i)
+			softperm[i] = 0;
+		for (int i = 0; i < K; ++i)
+			codeword[i] = softperm[i] < 0;
+		encode();
+		for (int i = 0; i < W; ++i)
+			candidate[i] = codeword[i];
+		score[0] = metric(codeword, softperm);
+		int count = 1;
+		int worst = -1;
+		for (int i = 0; i < 2*L; ++i)
+			scoreperm[i] = i;
+		auto update = [this, &count, &worst]() {
+			int met = metric(codeword, softperm);
+			if (met > worst) {
+				score[scoreperm[count]] = met;
+				for (int i = 0; i < W; ++i)
+					candidate[scoreperm[count]*W+i] = codeword[i];
+				if (++count >= 2*L) {
+					std::nth_element(scoreperm, scoreperm+(L-1), scoreperm+2*L, [this](int a, int b){ return score[a] > score[b]; });
+					worst = score[scoreperm[L-1]];
+					count = L;
+				}
+			}
+		};
+		for (int a = 0; O >= 1 && a < K; ++a) {
+			flip(a);
+			update();
+			for (int b = a + 1; O >= 2 && b < K; ++b) {
+				flip(b);
+				update();
+				for (int c = b + 1; O >= 3 && c < K; ++c) {
+					flip(c);
+					update();
+					for (int d = c + 1; O >= 4 && d < K; ++d) {
+						flip(d);
+						update();
+						for (int e = d + 1; O >= 5 && e < K; ++e) {
+							flip(e);
+							update();
+							for (int f = e + 1; O >= 6 && f < K; ++f) {
+								flip(f);
+								update();
+								flip(f);
+							}
+							flip(e);
+						}
+						flip(d);
+					}
+					flip(c);
+				}
+				flip(b);
+			}
+			flip(a);
+		}
+		std::sort(scoreperm, scoreperm+count, [this](int a, int b){ return score[a] > score[b]; });
+		for (int j = 0, r = 0; j < L; ++j) {
+			if (j > 0 && score[scoreperm[j-1]] != score[scoreperm[j]])
+				++r;
+			rank[j] = r;
+			for (int i = 0; i < N; ++i)
+				set_be_bit(hard+j*((N+7)/8), perm[i], candidate[scoreperm[j]*W+i]);
+		}
+	}
+};
+
 }
 
