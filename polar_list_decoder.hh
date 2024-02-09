@@ -316,7 +316,7 @@ public:
 		for (int k = 0; k < TYPE::SIZE; ++k)
 			perm[k] = k;
 		std::sort(perm, perm + TYPE::SIZE, [metric](int a, int b) { return metric[a] < metric[b]; });
-		for (int i = 0, r = 0; i < TYPE::SIZE; ++i) {
+		for (int i = 0, r = 0; rank != nullptr && i < TYPE::SIZE; ++i) {
 			if (i > 0 && metric[perm[i-1]] != metric[perm[i]])
 				++r;
 			rank[i] = r;
