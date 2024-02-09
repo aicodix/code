@@ -85,6 +85,7 @@ int main()
 		int quantization_erasures = 0;
 		int uncorrected_errors = 0;
 		int ambiguity_erasures = 0;
+		int frame_errors = 0;
 		int bchdec_errors = 0;
 		for (int l = 0; l < loops; ++l) {
 			for (int i = 0; i < KW; ++i)
@@ -139,8 +140,15 @@ int main()
 				quantization_erasures += !noisy[i];
 			for (int i = 0; i < N; ++i)
 				uncorrected_errors += CODE::get_be_bit(decoded, i) != CODE::get_be_bit(codeword, i);
-			if (!unique)
+			if (unique) {
+				bool error = false;
+				for (int i = 0; i < N; ++i)
+					error |= CODE::get_be_bit(decoded, i) != CODE::get_be_bit(codeword, i);
+				frame_errors += error;
+			} else {
 				ambiguity_erasures += N;
+				++frame_errors;
+			}
 
 			for (int i = 0; i < K; ++i)
 				CODE::set_be_bit(message, i, noisy[i] < 0);
@@ -159,6 +167,7 @@ int main()
 				bchdec_errors += CODE::get_be_bit(parity, i-K) != CODE::get_be_bit(codeword, i);
 		}
 
+		double frame_error_rate = (double)frame_errors / (double)loops;
 		double bit_error_rate = (double)uncorrected_errors / (double)(N * loops);
 		if (!uncorrected_errors && !ambiguity_erasures)
 			min_SNR = std::min(min_SNR, SNR);
@@ -177,10 +186,11 @@ int main()
 			std::cerr << quantization_erasures << " erasures caused by quantization." << std::endl;
 			std::cerr << uncorrected_errors << " errors uncorrected." << std::endl;
 			std::cerr << ambiguity_erasures << " ambiguity erasures." << std::endl;
+			std::cerr << frame_error_rate << " frame error rate." << std::endl;
 			std::cerr << bit_error_rate << " bit error rate." << std::endl;
 			std::cerr << bchdec_ber << " BCH decoder bit error rate." << std::endl;
 		} else {
-			std::cout << SNR << " " << bit_error_rate  << " " << bchdec_ber << " " << EbN0 << std::endl;
+			std::cout << SNR << " " << frame_error_rate << " " << bit_error_rate << " " << bchdec_ber << " " << EbN0 << std::endl;
 		}
 	}
 	std::cerr << "QEF at: " << min_SNR << " SNR" << std::endl;
