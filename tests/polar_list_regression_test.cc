@@ -92,7 +92,6 @@ int main()
 	std::cerr << "Polar(" << N << ", " << K << ")" << std::endl;
 	auto message = new code_type[K];
 	auto decoded = new simd_type[K];
-	CODE::PolarHelper<simd_type>::PATH metric[SIMD_WIDTH];
 	std::cerr << "sizeof(PolarListDecoder<simd_type, M>) = " << sizeof(CODE::PolarListDecoder<simd_type, M>) << std::endl;
 	auto decode = new CODE::PolarListDecoder<simd_type, M>;
 	auto par_dec = new CODE::PolarParityDecoder<simd_type, M>;
@@ -172,9 +171,9 @@ int main()
 
 			auto start = std::chrono::system_clock::now();
 			if (par_aided)
-				(*par_dec)(metric, decoded, codeword, frozen, M, S, F);
+				(*par_dec)(nullptr, decoded, codeword, frozen, M, S, F);
 			else
-				(*decode)(metric, decoded, codeword, frozen, M);
+				(*decode)(nullptr, decoded, codeword, frozen, M);
 			auto end = std::chrono::system_clock::now();
 			auto usec = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
 			double mbs = (double)K / usec.count();
@@ -188,19 +187,14 @@ int main()
 						decoded[j++] = temp[i];
 			}
 
-			int order[SIMD_WIDTH];
-			for (int k = 0; k < SIMD_WIDTH; ++k)
-				order[k] = k;
-			std::sort(order, order+SIMD_WIDTH, [metric](int a, int b){ return metric[a] < metric[b]; });
-
-			int best = order[0];
+			int best = 0;
 			if (crc_aided) {
 				for (int k = 0; k < SIMD_WIDTH; ++k) {
 					crc.reset();
 					for (int i = 0; i < K; ++i)
-						crc(decoded[i].v[order[k]] < 0);
+						crc(decoded[i].v[k] < 0);
 					if (crc() == 0) {
-						best = order[k];
+						best = k;
 						break;
 					}
 				}
