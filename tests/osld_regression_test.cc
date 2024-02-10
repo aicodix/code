@@ -115,7 +115,7 @@ int main()
 			double DIST = 2; // BPSK
 			double fact = DIST / (sigma_noise * sigma_noise);
 			for (int i = 0; i < N; ++i)
-				noisy[i] = std::min<double>(std::max<double>(std::nearbyint(fact * symb[i]), -128), 127);
+				noisy[i] = std::min<double>(std::max<double>(std::nearbyint(fact * symb[i]), -127), 127);
 
 			osddec(rank, decoded, noisy, genmat);
 			bool unique = rank[0] != rank[1];

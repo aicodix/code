@@ -98,7 +98,7 @@ int main()
 			float DIST = 2; // BPSK
 			float fact = DIST / (sigma_noise * sigma_noise);
 			for (int i = 0; i < CODE_LEN; ++i)
-				code[i] = std::min<float>(std::max<float>(std::nearbyint(fact * symb[i]), -128), 127);
+				code[i] = std::min<float>(std::max<float>(std::nearbyint(fact * symb[i]), -127), 127);
 
 			for (int i = 0; i < CODE_LEN; ++i)
 				noisy[i] = code[i];

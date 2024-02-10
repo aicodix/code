@@ -172,7 +172,7 @@ struct PolarHelper<int8_t>
 	template <typename IN>
 	static int8_t quant(IN in)
 	{
-		return std::min<IN>(std::max<IN>(std::nearbyint(in), -128), 127);
+		return std::min<IN>(std::max<IN>(std::nearbyint(in), -127), 127);
 	}
 	static int8_t qabs(int8_t a)
 	{
@@ -184,11 +184,11 @@ struct PolarHelper<int8_t>
 	}
 	static int8_t qadd(int8_t a, int8_t b)
 	{
-		return std::min<int16_t>(std::max<int16_t>(int16_t(a) + int16_t(b), -128), 127);
+		return std::min<int16_t>(std::max<int16_t>(int16_t(a) + int16_t(b), -127), 127);
 	}
 	static int8_t qmul(int8_t a, int8_t b)
 	{
-		// return std::min<int16_t>(std::max<int16_t>(int16_t(a) * int16_t(b), -128), 127);
+		// return std::min<int16_t>(std::max<int16_t>(int16_t(a) * int16_t(b), -127), 127);
 		// only used for hard decision values anyway
 		return a * b;
 	}
@@ -198,7 +198,7 @@ struct PolarHelper<int8_t>
 	}
 	static int8_t madd(int8_t a, int8_t b, int8_t c)
 	{
-		return std::min<int16_t>(std::max<int16_t>(int16_t(a) * int16_t(b) + int16_t(c), -128), 127);
+		return std::min<int16_t>(std::max<int16_t>(int16_t(a) * int16_t(b) + int16_t(c), -127), 127);
 	}
 };
 
