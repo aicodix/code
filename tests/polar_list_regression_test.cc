@@ -117,6 +117,7 @@ int main()
 		int64_t quantization_erasures = 0;
 		int64_t uncorrected_errors = 0;
 		int64_t ambiguity_erasures = 0;
+		int64_t frame_errors = 0;
 		double avg_mbs = 0;
 		int64_t loops = 0;
 		while (uncorrected_errors < 10000 && ++loops < 1000) {
@@ -169,11 +170,12 @@ int main()
 			for (int i = 0; i < N; ++i)
 				noisy[i] = codeword[i];
 
+			int rank[SIMD_WIDTH];
 			auto start = std::chrono::system_clock::now();
 			if (par_aided)
-				(*par_dec)(nullptr, decoded, codeword, frozen, M, S, F);
+				(*par_dec)(rank, decoded, codeword, frozen, M, S, F);
 			else
-				(*decode)(nullptr, decoded, codeword, frozen, M);
+				(*decode)(rank, decoded, codeword, frozen, M);
 			auto end = std::chrono::system_clock::now();
 			auto usec = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
 			double mbs = (double)K / usec.count();
@@ -189,15 +191,23 @@ int main()
 
 			int best = 0;
 			if (crc_aided) {
+				bool error = true;
 				for (int k = 0; k < SIMD_WIDTH; ++k) {
 					crc.reset();
 					for (int i = 0; i < K; ++i)
 						crc(decoded[i].v[k] < 0);
 					if (crc() == 0) {
 						best = k;
+						error = false;
 						break;
 					}
 				}
+				frame_errors += error;
+			} else {
+				bool error = rank[0] == rank[1];
+				for (int i = 0; i < K; ++i)
+					error |= decoded[i].v[0] * message[i] <= 0;
+				frame_errors += error;
 			}
 
 			for (int i = 0; i < N; ++i)
@@ -213,6 +223,7 @@ int main()
 		avg_mbs /= loops;
 
 		max_mbs = std::max(max_mbs, avg_mbs);
+		double frame_error_rate = (double)frame_errors / (double)loops;
 		double bit_error_rate = (double)uncorrected_errors / (double)(K * loops);
 		if (!uncorrected_errors)
 			min_SNR = std::min(min_SNR, SNR);
@@ -231,10 +242,11 @@ int main()
 			std::cerr << quantization_erasures << " erasures caused by quantization." << std::endl;
 			std::cerr << uncorrected_errors << " errors uncorrected." << std::endl;
 			std::cerr << ambiguity_erasures << " ambiguity erasures." << std::endl;
+			std::cerr << frame_error_rate << " frame error rate." << std::endl;
 			std::cerr << bit_error_rate << " bit error rate." << std::endl;
 			std::cerr << avg_mbs << " megabit per second." << std::endl;
 		} else {
-			std::cout << SNR << " " << bit_error_rate << " " << avg_mbs << " " << EbN0 << std::endl;
+			std::cout << SNR << " " << frame_error_rate << " " << bit_error_rate << " " << avg_mbs << " " << EbN0 << std::endl;
 		}
 	}
 	std::cerr << "QEF at: " << min_SNR << " SNR, speed: " << max_mbs << " Mb/s." << std::endl;
