@@ -146,9 +146,9 @@ struct PolarHelper<SIMD<int8_t, WIDTH>>
 	static TYPE madd(TYPE a, TYPE b, TYPE c)
 	{
 #ifdef __ARM_NEON
-		return vqadd(vmul(a, vmax(b, vdup<TYPE>(-127))), c);
+		return vmax(vqadd(vmul(a, vmax(b, vdup<TYPE>(-127))), c), vdup<TYPE>(-127));
 #else
-		return vqadd(vsign(vmax(b, vdup<TYPE>(-127)), a), c);
+		return vmax(vqadd(vsign(vmax(b, vdup<TYPE>(-127)), a), c), vdup<TYPE>(-127));
 #endif
 	}
 };
