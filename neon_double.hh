@@ -1061,3 +1061,23 @@ inline SIMD<int32_t, 8> vclamp(SIMD<int32_t, 8> x, int32_t a, int32_t b)
 	return tmp;
 }
 
+#ifdef __aarch64__
+template <>
+inline SIMD<uint8_t, 32> vshuf(SIMD<uint8_t, 32> a, SIMD<uint8_t, 32> b)
+{
+	SIMD<uint8_t, 32> tmp;
+	tmp.m[0] = vorrq_u8(vqtbl1q_u8(a.m[0], b.m[0]), vqtbl1q_u8(a.m[1], vsubq_u8(b.m[0], vdupq_n_u8(16))));
+	tmp.m[1] = vorrq_u8(vqtbl1q_u8(a.m[0], b.m[1]), vqtbl1q_u8(a.m[1], vsubq_u8(b.m[1], vdupq_n_u8(16))));
+	return tmp;
+}
+
+template <>
+inline SIMD<int8_t, 32> vshuf(SIMD<int8_t, 32> a, SIMD<uint8_t, 32> b)
+{
+	SIMD<int8_t, 32> tmp;
+	tmp.m[0] = vorrq_s8(vqtbl1q_s8(a.m[0], b.m[0]), vqtbl1q_s8(a.m[1], vsubq_u8(b.m[0], vdupq_n_u8(16))));
+	tmp.m[1] = vorrq_s8(vqtbl1q_s8(a.m[0], b.m[1]), vqtbl1q_s8(a.m[1], vsubq_u8(b.m[1], vdupq_n_u8(16))));
+	return tmp;
+}
+#endif
+
