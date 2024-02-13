@@ -1502,6 +1502,9 @@ static inline SIMD<double, WIDTH> vshuf(SIMD<double, WIDTH> a, SIMD<uint64_t, WI
 #else
 #ifdef __SSE4_1__
 #include "sse4_1.hh"
+#include "sse4_1_double.hh"
+#include "sse4_1_triple.hh"
+#include "sse4_1_quadruple.hh"
 #endif
 #endif
 
