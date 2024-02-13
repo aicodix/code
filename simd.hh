@@ -1498,6 +1498,7 @@ static inline SIMD<double, WIDTH> vshuf(SIMD<double, WIDTH> a, SIMD<uint64_t, WI
 #if 1
 #ifdef __AVX2__
 #include "avx2.hh"
+#include "avx2_double.hh"
 #else
 #ifdef __SSE4_1__
 #include "sse4_1.hh"
