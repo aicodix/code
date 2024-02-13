@@ -602,10 +602,9 @@ template <>
 inline SIMD<float, 8> vcopysign(SIMD<float, 8> a, SIMD<float, 8> b)
 {
 	SIMD<float, 8> tmp;
-	__m256 negz = _mm256_set1_ps(-0.f);
 	tmp.m = _mm256_or_ps(
-		_mm256_andnot_ps(negz, a.m),
-		_mm256_and_ps(negz, b.m));
+		_mm256_andnot_ps(_mm256_set1_ps(-0.f), a.m),
+		_mm256_and_ps(_mm256_set1_ps(-0.f), b.m));
 	return tmp;
 }
 
@@ -613,10 +612,9 @@ template <>
 inline SIMD<double, 4> vcopysign(SIMD<double, 4> a, SIMD<double, 4> b)
 {
 	SIMD<double, 4> tmp;
-	__m256d negz = _mm256_set1_pd(-0.);
 	tmp.m = _mm256_or_pd(
-		_mm256_andnot_pd(negz, a.m),
-		_mm256_and_pd(negz, b.m));
+		_mm256_andnot_pd(_mm256_set1_pd(-0.), a.m),
+		_mm256_and_pd(_mm256_set1_pd(-0.), b.m));
 	return tmp;
 }
 
