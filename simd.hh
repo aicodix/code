@@ -1507,6 +1507,8 @@ static inline SIMD<double, WIDTH> vshuf(SIMD<double, WIDTH> a, SIMD<uint64_t, WI
 #ifdef __ARM_NEON
 #include "neon.hh"
 #include "neon_double.hh"
+#include "neon_triple.hh"
+#include "neon_quadruple.hh"
 #endif
 #endif
 
