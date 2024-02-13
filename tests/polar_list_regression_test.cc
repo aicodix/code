@@ -37,20 +37,16 @@ int main()
 	const int C = 32;
 	const int S = 32;
 #if 1
+	const int L = 32;
 	typedef int8_t code_type;
 	double SCALE = 2;
 #else
+	const int L = 8;
 	typedef float code_type;
 	double SCALE = 1;
 #endif
 
-#ifdef __AVX2__
-	const int SIZEOF_SIMD = 32;
-#else
-	const int SIZEOF_SIMD = 16;
-#endif
-	const int SIMD_WIDTH = SIZEOF_SIMD / sizeof(code_type);
-	typedef SIMD<code_type, SIMD_WIDTH> simd_type;
+	typedef SIMD<code_type, L> simd_type;
 
 	std::random_device rd;
 	typedef std::default_random_engine generator;
@@ -170,7 +166,7 @@ int main()
 			for (int i = 0; i < N; ++i)
 				noisy[i] = codeword[i];
 
-			int rank[SIMD_WIDTH];
+			int rank[L];
 			auto start = std::chrono::system_clock::now();
 			if (par_aided)
 				(*par_dec)(rank, decoded, codeword, frozen, M, S, F);
@@ -192,7 +188,7 @@ int main()
 			int best = 0;
 			if (crc_aided) {
 				bool error = true;
-				for (int k = 0; k < SIMD_WIDTH; ++k) {
+				for (int k = 0; k < L; ++k) {
 					crc.reset();
 					for (int i = 0; i < K; ++i)
 						crc(decoded[i].v[k] < 0);
