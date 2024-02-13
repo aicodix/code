@@ -1281,3 +1281,43 @@ inline SIMD<int64_t, 8> vclamp(SIMD<int64_t, 8> x, int64_t a, int64_t b)
 	return tmp;
 }
 
+template <>
+inline SIMD<uint8_t, 64> vshuf(SIMD<uint8_t, 64> a, SIMD<uint8_t, 64> b)
+{
+	SIMD<uint8_t, 64> tmp;
+	for (int i = 0; i < 2; ++i) {
+		__m256i c = _mm256_or_si256(b.m[i], _mm256_cmpgt_epi8(b.m[i], _mm256_set1_epi8(15)));
+		__m256i d = _mm256_or_si256(_mm256_sub_epi8(b.m[i], _mm256_set1_epi8(16)), _mm256_cmpgt_epi8(b.m[i], _mm256_set1_epi8(31)));
+		__m256i e = _mm256_or_si256(_mm256_sub_epi8(b.m[i], _mm256_set1_epi8(32)), _mm256_cmpgt_epi8(b.m[i], _mm256_set1_epi8(47)));
+		__m256i f = _mm256_sub_epi8(b.m[i], _mm256_set1_epi8(48));
+		__m256i g = _mm256_or_si256(
+			_mm256_shuffle_epi8(_mm256_permute2x128_si256(a.m[0], a.m[0], 0), c),
+			_mm256_shuffle_epi8(_mm256_permute2x128_si256(a.m[0], a.m[0], 17), d));
+		__m256i h = _mm256_or_si256(
+			_mm256_shuffle_epi8(_mm256_permute2x128_si256(a.m[1], a.m[1], 0), e),
+			_mm256_shuffle_epi8(_mm256_permute2x128_si256(a.m[1], a.m[1], 17), f));
+		tmp.m[i] = _mm256_or_si256(g, h);
+	}
+	return tmp;
+}
+
+template <>
+inline SIMD<int8_t, 64> vshuf(SIMD<int8_t, 64> a, SIMD<uint8_t, 64> b)
+{
+	SIMD<int8_t, 64> tmp;
+	for (int i = 0; i < 2; ++i) {
+		__m256i c = _mm256_or_si256(b.m[i], _mm256_cmpgt_epi8(b.m[i], _mm256_set1_epi8(15)));
+		__m256i d = _mm256_or_si256(_mm256_sub_epi8(b.m[i], _mm256_set1_epi8(16)), _mm256_cmpgt_epi8(b.m[i], _mm256_set1_epi8(31)));
+		__m256i e = _mm256_or_si256(_mm256_sub_epi8(b.m[i], _mm256_set1_epi8(32)), _mm256_cmpgt_epi8(b.m[i], _mm256_set1_epi8(47)));
+		__m256i f = _mm256_sub_epi8(b.m[i], _mm256_set1_epi8(48));
+		__m256i g = _mm256_or_si256(
+			_mm256_shuffle_epi8(_mm256_permute2x128_si256(a.m[0], a.m[0], 0), c),
+			_mm256_shuffle_epi8(_mm256_permute2x128_si256(a.m[0], a.m[0], 17), d));
+		__m256i h = _mm256_or_si256(
+			_mm256_shuffle_epi8(_mm256_permute2x128_si256(a.m[1], a.m[1], 0), e),
+			_mm256_shuffle_epi8(_mm256_permute2x128_si256(a.m[1], a.m[1], 17), f));
+		tmp.m[i] = _mm256_or_si256(g, h);
+	}
+	return tmp;
+}
+
