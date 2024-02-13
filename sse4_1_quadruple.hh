@@ -1272,3 +1272,29 @@ inline SIMD<int32_t, 16> vclamp(SIMD<int32_t, 16> x, int32_t a, int32_t b)
 	return tmp;
 }
 
+template <>
+inline SIMD<uint8_t, 64> vshuf(SIMD<uint8_t, 64> a, SIMD<uint8_t, 64> b)
+{
+	SIMD<uint8_t, 64> tmp;
+	for (int i = 0; i < 4; ++i)
+		tmp.m[i] = _mm_or_si128(_mm_or_si128(_mm_or_si128(
+			_mm_shuffle_epi8(a.m[0], _mm_or_si128(b.m[i], _mm_cmpgt_epi8(b.m[i], _mm_set1_epi8(15)))),
+			_mm_shuffle_epi8(a.m[1], _mm_or_si128(_mm_sub_epi8(b.m[i], _mm_set1_epi8(16)), _mm_cmpgt_epi8(b.m[i], _mm_set1_epi8(31))))),
+			_mm_shuffle_epi8(a.m[2], _mm_or_si128(_mm_sub_epi8(b.m[i], _mm_set1_epi8(32)), _mm_cmpgt_epi8(b.m[i], _mm_set1_epi8(47))))),
+			_mm_shuffle_epi8(a.m[3], _mm_sub_epi8(b.m[i], _mm_set1_epi8(48))));
+	return tmp;
+}
+
+template <>
+inline SIMD<int8_t, 64> vshuf(SIMD<int8_t, 64> a, SIMD<uint8_t, 64> b)
+{
+	SIMD<int8_t, 64> tmp;
+	for (int i = 0; i < 4; ++i)
+		tmp.m[i] = _mm_or_si128(_mm_or_si128(_mm_or_si128(
+			_mm_shuffle_epi8(a.m[0], _mm_or_si128(b.m[i], _mm_cmpgt_epi8(b.m[i], _mm_set1_epi8(15)))),
+			_mm_shuffle_epi8(a.m[1], _mm_or_si128(_mm_sub_epi8(b.m[i], _mm_set1_epi8(16)), _mm_cmpgt_epi8(b.m[i], _mm_set1_epi8(31))))),
+			_mm_shuffle_epi8(a.m[2], _mm_or_si128(_mm_sub_epi8(b.m[i], _mm_set1_epi8(32)), _mm_cmpgt_epi8(b.m[i], _mm_set1_epi8(47))))),
+			_mm_shuffle_epi8(a.m[3], _mm_sub_epi8(b.m[i], _mm_set1_epi8(48))));
+	return tmp;
+}
+
