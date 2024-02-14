@@ -1179,6 +1179,14 @@ inline SIMD<int8_t, 32> vshuf(SIMD<int8_t, 32> a, SIMD<uint8_t, 32> b)
 }
 
 template <>
+inline SIMD<uint32_t, 8> vshuf(SIMD<uint32_t, 8> a, SIMD<uint32_t, 8> b)
+{
+	SIMD<uint32_t, 8> tmp;
+	tmp.m = _mm256_permutevar8x32_epi32(a.m, b.m);
+	return tmp;
+}
+
+template <>
 inline SIMD<float, 8> vshuf(SIMD<float, 8> a, SIMD<uint32_t, 8> b)
 {
 	SIMD<float, 8> tmp;
