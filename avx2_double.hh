@@ -11,7 +11,7 @@ Copyright 2024 Ahmet Inan <inan@aicodix.de>
 template <>
 union SIMD<float, 16>
 {
-	static const int SIZE = 8;
+	static const int SIZE = 16;
 	typedef float value_type;
 	typedef uint32_t uint_type;
 	__m256 m[2];
@@ -22,7 +22,7 @@ union SIMD<float, 16>
 template <>
 union SIMD<double, 8>
 {
-	static const int SIZE = 4;
+	static const int SIZE = 8;
 	typedef double value_type;
 	typedef uint64_t uint_type;
 	__m256d m[2];
@@ -33,7 +33,7 @@ union SIMD<double, 8>
 template <>
 union SIMD<int8_t, 64>
 {
-	static const int SIZE = 32;
+	static const int SIZE = 64;
 	typedef int8_t value_type;
 	typedef uint8_t uint_type;
 	__m256i m[2];
@@ -44,7 +44,7 @@ union SIMD<int8_t, 64>
 template <>
 union SIMD<int16_t, 32>
 {
-	static const int SIZE = 16;
+	static const int SIZE = 32;
 	typedef int16_t value_type;
 	typedef uint16_t uint_type;
 	__m256i m[2];
@@ -55,7 +55,7 @@ union SIMD<int16_t, 32>
 template <>
 union SIMD<int32_t, 16>
 {
-	static const int SIZE = 8;
+	static const int SIZE = 16;
 	typedef int32_t value_type;
 	typedef uint32_t uint_type;
 	__m256i m[2];
@@ -66,7 +66,7 @@ union SIMD<int32_t, 16>
 template <>
 union SIMD<int64_t, 8>
 {
-	static const int SIZE = 4;
+	static const int SIZE = 8;
 	typedef int64_t value_type;
 	typedef uint64_t uint_type;
 	__m256i m[2];
@@ -77,7 +77,7 @@ union SIMD<int64_t, 8>
 template <>
 union SIMD<uint8_t, 64>
 {
-	static const int SIZE = 32;
+	static const int SIZE = 64;
 	typedef uint8_t value_type;
 	typedef uint8_t uint_type;
 	__m256i m[2];
@@ -88,7 +88,7 @@ union SIMD<uint8_t, 64>
 template <>
 union SIMD<uint16_t, 32>
 {
-	static const int SIZE = 16;
+	static const int SIZE = 32;
 	typedef uint16_t value_type;
 	typedef uint16_t uint_type;
 	__m256i m[2];
@@ -99,7 +99,7 @@ union SIMD<uint16_t, 32>
 template <>
 union SIMD<uint32_t, 16>
 {
-	static const int SIZE = 8;
+	static const int SIZE = 16;
 	typedef uint32_t value_type;
 	typedef uint32_t uint_type;
 	__m256i m[2];
@@ -110,7 +110,7 @@ union SIMD<uint32_t, 16>
 template <>
 union SIMD<uint64_t, 8>
 {
-	static const int SIZE = 4;
+	static const int SIZE = 8;
 	typedef uint64_t value_type;
 	typedef uint64_t uint_type;
 	__m256i m[2];
