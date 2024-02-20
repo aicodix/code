@@ -162,7 +162,7 @@ class LDPCDecoder
 
 					TYPE out = vsign(other(mag, min0, min1), mine(signs, inp));
 
-					out = vclamp(out, -32, 31);
+					out = vclamp(out, -31, 31);
 
 					out = selfcorr(bl[k], out);
 
