@@ -4,6 +4,7 @@ Test for the Bose Chaudhuri Hocquenghem Encoder
 Copyright 2018 Ahmet Inan <inan@aicodix.de>
 */
 
+#include <cstdint>
 #include <cassert>
 #include <iostream>
 #include "bitman.hh"

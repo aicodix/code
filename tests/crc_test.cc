@@ -4,6 +4,7 @@ Test for the Cyclic redundancy check
 Copyright 2018 Ahmet Inan <inan@aicodix.de>
 */
 
+#include <cstdint>
 #include <cassert>
 #include <iostream>
 #include <bitset>

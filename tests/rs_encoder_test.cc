@@ -4,6 +4,7 @@ Test for the Reed Solomon Encoder
 Copyright 2018 Ahmet Inan <inan@aicodix.de>
 */
 
+#include <cstdint>
 #include <cassert>
 #include <iostream>
 #include "galois_field.hh"

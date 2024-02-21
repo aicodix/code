@@ -1338,8 +1338,8 @@ inline SIMD<float, 16> vshuf(SIMD<float, 16> a, SIMD<uint32_t, 16> b)
 	SIMD<float, 16> tmp;
 	for (int i = 0; i < 2; ++i)
 		tmp.m[i] = _mm256_or_ps(
-			_mm256_and_ps(_mm256_permutevar8x32_ps(a.m[0], b.m[i]), _mm256_cmpgt_epi32(_mm256_set1_epi32(8), b.m[i])),
-			_mm256_and_ps(_mm256_permutevar8x32_ps(a.m[1], _mm256_sub_epi32(b.m[i], _mm256_set1_epi32(8))), _mm256_cmpgt_epi32(b.m[i], _mm256_set1_epi32(7))));
+			_mm256_and_ps(_mm256_permutevar8x32_ps(a.m[0], b.m[i]), (__m256)_mm256_cmpgt_epi32(_mm256_set1_epi32(8), b.m[i])),
+			_mm256_and_ps(_mm256_permutevar8x32_ps(a.m[1], _mm256_sub_epi32(b.m[i], _mm256_set1_epi32(8))), (__m256)_mm256_cmpgt_epi32(b.m[i], _mm256_set1_epi32(7))));
 	return tmp;
 }
 
