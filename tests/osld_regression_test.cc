@@ -20,14 +20,14 @@ int main()
 	const bool oracle = true;
 #if 1
 	// BCH(127, 64) T=10
-	const int O = 2;
+	const int O = 4;
 	const int N = 127;
 	const int K = 64;
 	const int NR = 20;
-	const int loops = 1000;
+	const int loops = 10;
 	const double low_SNR = -5;
 	const double high_SNR = 5;
-	const double QEF_SNR = 1.5;
+	const double QEF_SNR = -2;
 	typedef CODE::GaloisField<7, 0b10001001, uint8_t> GF;
 	std::initializer_list<int> minpols {
 		0b10001001, 0b10001111, 0b10011101,
