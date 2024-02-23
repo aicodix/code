@@ -30,10 +30,8 @@ int main()
 	const bool systematic = true;
 #if 1
 	typedef int8_t code_type;
-	double SCALE = 2;
 #else
 	typedef float code_type;
-	double SCALE = 1;
 #endif
 
 	std::random_device rd;
@@ -124,7 +122,7 @@ int main()
 			// $LLR=log(\frac{p(x=+1|y)}{p(x=-1|y)})$
 			// $p(x|\mu,\sigma)=\frac{1}{\sqrt{2\pi}\sigma}}e^{-\frac{(x-\mu)^2}{2\sigma^2}}$
 			double DIST = 2; // BPSK
-			double fact = SCALE * DIST / (sigma_noise * sigma_noise);
+			double fact = DIST / (sigma_noise * sigma_noise);
 			for (int i = 0; i < N; ++i)
 				codeword[i] = CODE::PolarHelper<code_type>::quant(fact * symb[i]);
 
