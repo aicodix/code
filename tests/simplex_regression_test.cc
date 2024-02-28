@@ -76,7 +76,7 @@ int main()
 		int awgn_errors = 0;
 		int quantization_erasures = 0;
 		int uncorrected_errors = 0;
-		int decoder_errors = 0;
+		int ambiguity_errors = 0;
 		for (int loop = 0; loop < LOOPS; ++loop) {
 			int8_t code[CODE_LEN], orig[CODE_LEN], noisy[CODE_LEN];
 			float symb[CODE_LEN];
@@ -110,8 +110,7 @@ int main()
 			for (int i = 0; i < CODE_LEN; ++i)
 				quantization_erasures += !noisy[i];
 			uncorrected_errors += dec < 0 ? DATA_LEN : popcnt(dat^dec);
-			for (int i = 0; dec >= 0 && i < DATA_LEN; ++i)
-				decoder_errors += ((dec^dat)&(1<<i)) && orig[i] * noisy[i] > 0;
+			ambiguity_errors += dec < 0;
 		}
 		float bit_error_rate = (float)uncorrected_errors / (float)(DATA_LEN * LOOPS);
 		if (bit_error_rate < 0.0001)
@@ -121,7 +120,7 @@ int main()
 			std::cerr << SNR << " Es/N0 => AWGN with standard deviation of " << sigma_noise << " and mean " << mean_noise << std::endl;
 			std::cerr << awgn_errors << " errors caused by AWGN." << std::endl;
 			std::cerr << quantization_erasures << " erasures caused by quantization." << std::endl;
-			std::cerr << decoder_errors << " errors caused by decoder." << std::endl;
+			std::cerr << ambiguity_errors << " ambiguity errors." << std::endl;
 			std::cerr << uncorrected_errors << " errors uncorrected." << std::endl;
 			std::cerr << bit_error_rate << " bit error rate." << std::endl;
 		} else {
