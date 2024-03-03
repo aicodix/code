@@ -109,6 +109,15 @@ struct PolarParityNode<TYPE, 0>
 				fork[2*k] -= sft.v[k];
 			else
 				fork[2*k+1] += sft.v[k];
+		if (*count == 0) {
+			TYPE chk = *parity;
+			*parity = PH::one();
+			for (int k = 0; k < TYPE::SIZE; ++k)
+				if (chk.v[k] < 0)
+					fork[2*k] = 1000;
+				else
+					fork[2*k+1] = 1000;
+		}
 		int perm[2*TYPE::SIZE];
 		for (int k = 0; k < 2*TYPE::SIZE; ++k)
 			perm[k] = k;
@@ -136,11 +145,6 @@ struct PolarParityNode<TYPE, 0>
 		} else {
 			message[*index-1] = vshuf(message[*index-1], map);
 			maps[*index-1] = vshuf(maps[*index-1], map);
-			TYPE chk = vshuf(*parity, map);
-			for (int k = 0; k < TYPE::SIZE; ++k)
-				if (chk.v[k] != hrd.v[k])
-					metric[k] = 1000;
-			*parity = PH::one();
 			*count = stride;
 		}
 		*hard = hrd;
