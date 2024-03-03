@@ -381,19 +381,12 @@ public:
 		default: assert(false);
 		}
 
-		int perm[TYPE::SIZE];
-		for (int k = 0; k < TYPE::SIZE; ++k)
-			perm[k] = k;
-		std::sort(perm, perm + TYPE::SIZE, [metric](int a, int b) { return metric[a] < metric[b]; });
 		for (int i = 0, r = 0; rank != nullptr && i < TYPE::SIZE; ++i) {
-			if (i > 0 && metric[perm[i-1]] != metric[perm[i]])
+			if (i > 0 && metric[i-1] != metric[i])
 				++r;
 			rank[i] = r;
 		}
-		MAP acc;
-		for (int k = 0; k < TYPE::SIZE; ++k)
-			acc.v[k] = perm[k];
-		acc = vshuf(maps[index-1], acc);
+		MAP acc = maps[index-1];
 		for (int i = index-2; i >= 0; --i) {
 			message[i] = vshuf(message[i], acc);
 			acc = vshuf(maps[i], acc);
