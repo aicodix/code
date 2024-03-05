@@ -113,9 +113,9 @@ struct PolarParityNode<TYPE, 0>
 			*parity = PH::one();
 			for (int k = 0; k < TYPE::SIZE; ++k)
 				if (chk.v[k] < 0)
-					fork.v[2*k] = 1000;
+					fork.v[2*k] = 1000000;
 				else
-					fork.v[2*k+1] = 1000;
+					fork.v[2*k+1] = 1000000;
 		}
 		auto perm = vorder(fork);
 		for (int k = 0; k < TYPE::SIZE; ++k)
@@ -352,7 +352,7 @@ public:
 		PATH metric[TYPE::SIZE];
 		metric[0] = 0;
 		for (int k = 1; k < TYPE::SIZE; ++k)
-			metric[k] = 1000;
+			metric[k] = 1000000;
 		int length = 1 << level;
 		for (int i = 0; i < length; ++i)
 			soft[length+i] = vdup<TYPE>(codeword[i]);

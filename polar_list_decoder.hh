@@ -287,7 +287,7 @@ public:
 		int count = 0;
 		metric[0] = 0;
 		for (int k = 1; k < TYPE::SIZE; ++k)
-			metric[k] = 1000;
+			metric[k] = 1000000;
 		int length = 1 << level;
 		for (int i = 0; i < length; ++i)
 			soft[length+i] = vdup<TYPE>(codeword[i]);
