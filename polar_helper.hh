@@ -7,6 +7,7 @@ Copyright 2020 Ahmet Inan <inan@aicodix.de>
 #pragma once
 
 #include "simd.hh"
+#include "sort.hh"
 
 namespace CODE {
 
@@ -105,7 +106,7 @@ template <int WIDTH>
 struct PolarHelper<SIMD<int8_t, WIDTH>>
 {
 	typedef SIMD<int8_t, WIDTH> TYPE;
-	typedef int PATH;
+	typedef int32_t PATH;
 	typedef SIMD<uint8_t, WIDTH> MAP;
 	static TYPE one()
 	{
@@ -156,7 +157,7 @@ struct PolarHelper<SIMD<int8_t, WIDTH>>
 template <>
 struct PolarHelper<int8_t>
 {
-	typedef int PATH;
+	typedef int32_t PATH;
 	static int8_t one()
 	{
 		return 1;

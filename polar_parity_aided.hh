@@ -6,7 +6,6 @@ Copyright 2023 Ahmet Inan <inan@aicodix.de>
 
 #pragma once
 
-#include <algorithm>
 #include "polar_helper.hh"
 
 namespace CODE {
@@ -101,41 +100,32 @@ struct PolarParityNode<TYPE, 0>
 	static MAP rate1(PATH *metric, TYPE *message, MAP *maps, int *index, TYPE *hard, TYPE *soft, TYPE *parity, int *count, int stride)
 	{
 		TYPE sft = soft[1];
-		PATH fork[2*TYPE::SIZE];
+		SIMD<PATH, 2*TYPE::SIZE> fork;
 		for (int k = 0; k < TYPE::SIZE; ++k)
-			fork[2*k] = fork[2*k+1] = metric[k];
+			fork.v[2*k] = fork.v[2*k+1] = metric[k];
 		for (int k = 0; k < TYPE::SIZE; ++k)
 			if (sft.v[k] < 0)
-				fork[2*k] -= sft.v[k];
+				fork.v[2*k] -= sft.v[k];
 			else
-				fork[2*k+1] += sft.v[k];
+				fork.v[2*k+1] += sft.v[k];
 		if (*count == 0) {
 			TYPE chk = *parity;
 			*parity = PH::one();
 			for (int k = 0; k < TYPE::SIZE; ++k)
 				if (chk.v[k] < 0)
-					fork[2*k] = 1000;
+					fork.v[2*k] = 1000;
 				else
-					fork[2*k+1] = 1000;
+					fork.v[2*k+1] = 1000;
 		}
-		int perm[2*TYPE::SIZE];
-		for (int k = 0; k < 2*TYPE::SIZE; ++k)
-			perm[k] = k;
-#if 1
-		std::stable_sort(perm, perm+2*TYPE::SIZE, [fork](int a, int b){ return fork[a] < fork[b]; });
-#else
-		std::partial_sort(perm, perm+TYPE::SIZE-1, perm+2*TYPE::SIZE, [fork](int a, int b){
-			return fork[a] < fork[b] ? true : fork[a] > fork[b] ? false : a < b;
-		});
-#endif
+		auto perm = vorder(fork);
 		for (int k = 0; k < TYPE::SIZE; ++k)
-			metric[k] = fork[perm[k]];
+			metric[k] = fork.v[perm.v[k]];
 		MAP map;
 		for (int k = 0; k < TYPE::SIZE; ++k)
-			map.v[k] = perm[k] >> 1;
+			map.v[k] = perm.v[k] >> 1;
 		TYPE hrd;
 		for (int k = 0; k < TYPE::SIZE; ++k)
-			hrd.v[k] = 1 - 2 * (perm[k] & 1);
+			hrd.v[k] = 1 - 2 * (perm.v[k] & 1);
 		if (*count) {
 			message[*index] = hrd;
 			*parity = PH::qmul(vshuf(*parity, map), hrd);
