@@ -6,6 +6,8 @@ Copyright 2024 Ahmet Inan <inan@aicodix.de>
 
 #pragma once
 
+namespace CODE {
+
 template <typename TYPE>
 static void insertion_sort(TYPE *a, int n)
 {
@@ -17,8 +19,8 @@ static void insertion_sort(TYPE *a, int n)
 	}
 }
 
-template <typename TYPE>
-static void insertion_sort(int *p, TYPE *a, int n)
+template <typename INDEX, typename TYPE>
+static void insertion_sort(INDEX *p, TYPE *a, int n)
 {
 	p[0] = 0;
 	for (int i = 1, j; i < n; ++i) {
@@ -30,5 +32,7 @@ static void insertion_sort(int *p, TYPE *a, int n)
 		a[j] = t;
 		p[j] = i;
 	}
+}
+
 }
 

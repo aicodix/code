@@ -23,13 +23,13 @@ int main()
 		for (int i = 0; i < size; ++i)
 			a[i] = b[i] = c[i] = d[i] = rand();
 		std::sort(a, a+size);
-		insertion_sort(b, size);
+		CODE::insertion_sort(b, size);
 		for (int i = 0; i < size; ++i)
 			assert(a[i] == b[i]);
 		for (int i = 0; i < size; ++i)
 			e[i] = i;
 		std::stable_sort(e, e+size, [c](int i, int j){ return c[i] < c[j]; });
-		insertion_sort(f, d, size);
+		CODE::insertion_sort(f, d, size);
 		for (int i = 0; i < size; ++i)
 			assert(e[i] == f[i]);
 	}

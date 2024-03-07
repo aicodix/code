@@ -6,6 +6,7 @@ Copyright 2020 Ahmet Inan <inan@aicodix.de>
 
 #pragma once
 
+#include "sort.hh"
 #include "polar_helper.hh"
 
 namespace CODE {
@@ -61,16 +62,7 @@ struct PolarListNode<TYPE, 0>
 			else
 				fork[2*k+1] += sft.v[k];
 		int perm[2*TYPE::SIZE];
-		perm[0] = 0;
-		for (int i = 1, j; i < 2*TYPE::SIZE; ++i) {
-			PATH t = fork[i];
-			for (j = i; j > 0 && fork[j-1] > t; --j) {
-				fork[j] = fork[j-1];
-				perm[j] = perm[j-1];
-			}
-			fork[j] = t;
-			perm[j] = i;
-		}
+		CODE::insertion_sort(perm, fork, 2*TYPE::SIZE);
 		for (int k = 0; k < TYPE::SIZE; ++k)
 			metric[k] = fork[k];
 		MAP map;
