@@ -1,5 +1,5 @@
 /*
-Regression Test for the SIMD wrappers sort
+Regression Test for the SIMD sorting wrappers
 
 Copyright 2024 Ahmet Inan <inan@aicodix.de>
 */
@@ -10,7 +10,7 @@ Copyright 2024 Ahmet Inan <inan@aicodix.de>
 #include <algorithm>
 #include <functional>
 #include "simd.hh"
-#include "sort.hh"
+#include "simd_sort.hh"
 
 int main()
 {
@@ -38,7 +38,7 @@ int main()
 		for (int i = 0; i < WIDTH; ++i)
 			assert(d.v[i] == e.v[i]);
 	}
-	std::cerr << "Sort regression test passed!" << std::endl;
+	std::cerr << "SIMD sort regression test passed!" << std::endl;
 	return 0;
 }
 
