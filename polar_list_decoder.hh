@@ -52,23 +52,33 @@ struct PolarListNode<TYPE, 0>
 	static MAP rate1(PATH *metric, TYPE *message, MAP *maps, int *count, TYPE *hard, TYPE *soft)
 	{
 		TYPE sft = soft[1];
-		SIMD<PATH, 2*TYPE::SIZE> fork;
+		PATH fork[2*TYPE::SIZE];
 		for (int k = 0; k < TYPE::SIZE; ++k)
-			fork.v[2*k] = fork.v[2*k+1] = metric[k];
+			fork[2*k] = fork[2*k+1] = metric[k];
 		for (int k = 0; k < TYPE::SIZE; ++k)
 			if (sft.v[k] < 0)
-				fork.v[2*k] -= sft.v[k];
+				fork[2*k] -= sft.v[k];
 			else
-				fork.v[2*k+1] += sft.v[k];
-		auto perm = vorder(fork);
+				fork[2*k+1] += sft.v[k];
+		int perm[2*TYPE::SIZE];
+		perm[0] = 0;
+		for (int i = 1, j; i < 2*TYPE::SIZE; ++i) {
+			PATH t = fork[i];
+			for (j = i; j > 0 && fork[j-1] > t; --j) {
+				fork[j] = fork[j-1];
+				perm[j] = perm[j-1];
+			}
+			fork[j] = t;
+			perm[j] = i;
+		}
 		for (int k = 0; k < TYPE::SIZE; ++k)
-			metric[k] = fork.v[perm.v[k]];
+			metric[k] = fork[k];
 		MAP map;
 		for (int k = 0; k < TYPE::SIZE; ++k)
-			map.v[k] = perm.v[k] >> 1;
+			map.v[k] = perm[k] >> 1;
 		TYPE hrd;
 		for (int k = 0; k < TYPE::SIZE; ++k)
-			hrd.v[k] = 1 - 2 * (perm.v[k] & 1);
+			hrd.v[k] = 1 - 2 * (perm[k] & 1);
 		message[*count] = hrd;
 		maps[*count] = map;
 		++*count;
