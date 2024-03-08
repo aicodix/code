@@ -34,7 +34,7 @@ static void insertion_sort(INDEX *p, TYPE *a, int n)
 	}
 }
 
-template <typename TYPE, int MAX_N>
+template <typename TYPE, int MAX_N, int M = 32>
 class MergeSort
 {
 	TYPE tmp[MAX_N];
@@ -50,7 +50,9 @@ class MergeSort
 public:
 	void operator()(TYPE *a, int n)
 	{
-		for (int l = 1; l < n; l *= 2) {
+		for (int i = 0; i < n; i += M)
+			insertion_sort(a+i, i > n-M ? n-i : M);
+		for (int l = M; l < n; l *= 2) {
 			for (int i = 0; i < n; i += 2*l)
 				merge(a, n, i, i+l, i+2*l);
 			for (int i = 0; i < n; ++i)
