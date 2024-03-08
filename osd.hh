@@ -8,6 +8,7 @@ Copyright 2020 Ahmet Inan <inan@aicodix.de>
 
 #include <initializer_list>
 #include "bitman.hh"
+#include "sort.hh"
 
 namespace CODE {
 
@@ -104,6 +105,7 @@ class OrderedStatisticsDecoder
 	int8_t codeword[W], candidate[W];
 	int8_t softperm[W];
 	int16_t perm[W];
+	MergeSort<int16_t, N> sort;
 	void row_echelon()
 	{
 		for (int k = 0; k < K; ++k) {
@@ -173,7 +175,7 @@ public:
 			perm[i] = i;
 		for (int i = 0; i < N; ++i)
 			softperm[i] = std::abs(std::max<int8_t>(soft[i], -127));
-		std::sort(perm, perm+N, [this](int a, int b){ return softperm[a] > softperm[b]; });
+		sort(perm, N, [this](int a, int b){ return softperm[a] > softperm[b]; });
 		for (int j = 0; j < K; ++j)
 			for (int i = 0; i < N; ++i)
 				G[W*j+i] = genmat[N*j+perm[i]];
@@ -247,6 +249,7 @@ class OrderedStatisticsListDecoder
 	int8_t softperm[W];
 	int16_t perm[W];
 	int score[L], cperm[L];
+	MergeSort<int16_t, N> sort;
 	void row_echelon()
 	{
 		for (int k = 0; k < K; ++k) {
@@ -332,7 +335,7 @@ public:
 			perm[i] = i;
 		for (int i = 0; i < N; ++i)
 			softperm[i] = std::abs(std::max<int8_t>(soft[i], -127));
-		std::sort(perm, perm+N, [this](int a, int b){ return softperm[a] > softperm[b]; });
+		sort(perm, N, [this](int a, int b){ return softperm[a] > softperm[b]; });
 		for (int j = 0; j < K; ++j)
 			for (int i = 0; i < N; ++i)
 				G[W*j+i] = genmat[N*j+perm[i]];

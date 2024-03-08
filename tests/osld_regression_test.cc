@@ -7,7 +7,6 @@ Copyright 2024 Ahmet Inan <inan@aicodix.de>
 #include <random>
 #include <cassert>
 #include <iostream>
-#include <algorithm>
 #include <functional>
 #include "osd.hh"
 #include "galois_field.hh"
