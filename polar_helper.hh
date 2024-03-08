@@ -105,7 +105,7 @@ template <int WIDTH>
 struct PolarHelper<SIMD<int8_t, WIDTH>>
 {
 	typedef SIMD<int8_t, WIDTH> TYPE;
-	typedef int32_t PATH;
+	typedef int PATH;
 	typedef SIMD<uint8_t, WIDTH> MAP;
 	static TYPE one()
 	{
@@ -156,7 +156,7 @@ struct PolarHelper<SIMD<int8_t, WIDTH>>
 template <>
 struct PolarHelper<int8_t>
 {
-	typedef int32_t PATH;
+	typedef int PATH;
 	static int8_t one()
 	{
 		return 1;
