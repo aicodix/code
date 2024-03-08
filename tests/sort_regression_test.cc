@@ -14,10 +14,14 @@ Copyright 2024 Ahmet Inan <inan@aicodix.de>
 int main()
 {
 	const int MAX_N = 128;
-	std::random_device rd;
+	unsigned seed = 42;
+	if (1) {
+		std::random_device rd;
+		seed = rd();
+	}
 	typedef std::default_random_engine generator;
 	typedef std::uniform_int_distribution<int> distribution;
-	auto rand = std::bind(distribution(1, MAX_N), generator(rd()));
+	auto rand = std::bind(distribution(1, MAX_N), generator(seed));
 	int a[MAX_N], b[MAX_N], c[MAX_N], d[MAX_N], e[MAX_N], f[MAX_N], g[MAX_N];
 	CODE::MergeSort<int, MAX_N> merge_sort;
 	for (int loop = 0; loop < 1000000; ++loop) {
