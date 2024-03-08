@@ -34,5 +34,30 @@ static void insertion_sort(INDEX *p, TYPE *a, int n)
 	}
 }
 
+template <typename TYPE, int MAX_N>
+class MergeSort
+{
+	TYPE tmp[MAX_N];
+	void merge(TYPE *a, int n, int left, int right, int end)
+	{
+		if (right > n)
+			right = n;
+		if (end > n)
+			end = n;
+		for (int i = left, j = right, k = left; k < end; ++k)
+			tmp[k] = (i < right && (j >= end || a[i] <= a[j])) ? a[i++] : a[j++];
+	}
+public:
+	void operator()(TYPE *a, int n)
+	{
+		for (int l = 1; l < n; l *= 2) {
+			for (int i = 0; i < n; i += 2*l)
+				merge(a, n, i, i+l, i+2*l);
+			for (int i = 0; i < n; ++i)
+				a[i] = tmp[i];
+		}
+	}
+};
+
 }
 
