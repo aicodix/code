@@ -6,15 +6,11 @@ Copyright 2024 Ahmet Inan <inan@aicodix.de>
 
 #pragma once
 
-#include <cassert>
-
 namespace CODE {
 
 template <typename TYPE, TYPE PRIME>
 struct PrimeField
 {
-	static_assert(std::is_unsigned<TYPE>::value, "TYPE must be unsigned");
-	static_assert(std::numeric_limits<TYPE>::max() / (PRIME-1) >= (PRIME-1), "Type not wide enough");
 	static constexpr TYPE P = PRIME;
 	TYPE v;
 	PrimeField() = default;
