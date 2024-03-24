@@ -110,9 +110,22 @@ PrimeField<TYPE, PRIME> operator * (PrimeField<TYPE, PRIME> a, PrimeField<TYPE, 
 }
 
 template <typename TYPE, TYPE PRIME>
+PrimeField<TYPE, PRIME> pow(PrimeField<TYPE, PRIME> a, TYPE m)
+{
+	PrimeField<TYPE, PRIME> t(1);
+	for (;m; m >>= 1, a *= a)
+		if (m & 1)
+			t *= a;
+	return t;
+}
+
+template <typename TYPE, TYPE PRIME>
 PrimeField<TYPE, PRIME> rcp(PrimeField<TYPE, PRIME> a)
 {
 	assert(a.v);
+#if 1
+	return pow(a, a.P - 2);
+#else
 	if (a.v == 1)
 		return a;
 	TYPE t = 0, newt = 1;
@@ -128,6 +141,7 @@ PrimeField<TYPE, PRIME> rcp(PrimeField<TYPE, PRIME> a)
 	if (t >= a.P)
 		t += a.P;
 	return PrimeField<TYPE, PRIME>(t);
+#endif
 }
 
 template <typename TYPE, TYPE PRIME>
