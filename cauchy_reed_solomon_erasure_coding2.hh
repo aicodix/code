@@ -23,7 +23,7 @@ struct CauchyReedSolomonErasureCoding2
 	__attribute__((flatten))
 	PF inverse_cauchy_matrix(const PF *rows, int i, int j, int n)
 	{
-#if 1
+#if 0
 		PF col_i(i);
 		PF prod_xy(1), prod_x(1), prod_y(1);
 		for (int k = 0; k < n; k++) {
@@ -41,9 +41,9 @@ struct CauchyReedSolomonErasureCoding2
 			PF num(1), den(1);
 			for (int k = 0; k < n; k++) {
 				PF col_k(k);
-				num *= (rows[k] + col_i);
+				num *= add(rows[k], col_i);
 				if (k != i)
-					den *= (col_i - col_k);
+					den *= sub(col_i, col_k);
 			}
 			row_num = num;
 			row_den = den;
@@ -51,11 +51,11 @@ struct CauchyReedSolomonErasureCoding2
 		PF num(row_num), den(row_den);
 		for (int k = 0; k < n; k++) {
 			PF col_k(k);
-			num *= (rows[j] + col_k);
+			num *= add(rows[j], col_k);
 			if (k != j)
-				den *= (rows[j] - rows[k]);
+				den *= sub(rows[j], rows[k]);
 		}
-		return num / ((rows[j] + col_i) * den);
+		return num / (add(rows[j], col_i) * den);
 #endif
 	}
 	__attribute__((flatten))
