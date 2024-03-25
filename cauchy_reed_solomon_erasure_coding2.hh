@@ -59,14 +59,17 @@ struct CauchyReedSolomonErasureCoding2
 #endif
 	}
 	__attribute__((flatten))
-	static inline void multiply_accumulate(PF *c, const PF *a, PF b, int len, bool init)
+	static inline void multiply_accumulate(PF *c, const PF *a, PF b, int len, bool first, bool last)
 	{
-		if (init) {
+		if (first) {
 			for (int i = 0; i < len; i++)
 				c[i] = b * a[i];
+		} else if (last) {
+			for (int i = 0; i < len; i++)
+				c[i] = reduce(add(c[i], b * a[i]));
 		} else {
 			for (int i = 0; i < len; i++)
-				c[i] += b * a[i];
+				c[i] = add(c[i], b * a[i]);
 		}
 	}
 	void encode(const PF *data, PF *block, int block_id, int block_len, int block_cnt)
@@ -74,14 +77,14 @@ struct CauchyReedSolomonErasureCoding2
 		assert(block_id >= block_cnt && block_id < int(PF::P) / 2);
 		for (int k = 0; k < block_cnt; k++) {
 			PF a_ik = cauchy_matrix(block_id, k);
-			multiply_accumulate(block, data + block_len * k, a_ik, block_len, !k);
+			multiply_accumulate(block, data + block_len * k, a_ik, block_len, !k, k == block_cnt - 1);
 		}
 	}
 	void decode(PF *data, const PF *blocks, const PF *block_ids, int block_idx, int block_len, int block_cnt)
 	{
 		for (int k = 0; k < block_cnt; k++) {
 			PF b_ik = inverse_cauchy_matrix(block_ids, block_idx, k, block_cnt);
-			multiply_accumulate(data, blocks + block_len * k, b_ik, block_len, !k);
+			multiply_accumulate(data, blocks + block_len * k, b_ik, block_len, !k, k == block_cnt - 1);
 		}
 	}
 };
