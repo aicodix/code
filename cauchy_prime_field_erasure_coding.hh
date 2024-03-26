@@ -11,6 +11,7 @@ namespace CODE {
 template <typename PF, typename IO, int MAX_LEN>
 struct CauchyPrimeFieldErasureCoding
 {
+	static_assert(MAX_LEN < int(PF::P-1), "Block length must be smaller than largest field value");
 	PF temp[MAX_LEN];
 	bool used[PF::P];
 	PF row_num, row_den;
@@ -114,7 +115,7 @@ struct CauchyPrimeFieldErasureCoding
 	int encode(const IO *data, IO *block, int block_id, int block_len, int block_cnt)
 	{
 		assert(block_id >= block_cnt && block_id < int(PF::P) / 2);
-		assert(block_len < int(PF::P-1) && block_len <= MAX_LEN);
+		assert(block_len <= MAX_LEN);
 		for (int k = 0; k < block_cnt; k++) {
 			PF a_ik = cauchy_matrix(block_id, k);
 			mac(data + block_len * k, a_ik, block_len, !k, k == block_cnt - 1);
@@ -126,6 +127,7 @@ struct CauchyPrimeFieldErasureCoding
 	}
 	void decode(IO *data, const IO *blocks, const IO *block_subs, const IO *block_ids, int block_idx, int block_len, int block_cnt)
 	{
+		assert(block_len <= MAX_LEN);
 		for (int k = 0; k < block_cnt; k++) {
 			PF b_ik = inverse_cauchy_matrix(block_ids, block_idx, k, block_cnt);
 			mac_sub(data, blocks + block_len * k, b_ik, block_subs[k], block_len, !k, k == block_cnt - 1);
