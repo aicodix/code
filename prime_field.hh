@@ -72,7 +72,7 @@ PrimeField<TYPE, PRIME> operator + (PrimeField<TYPE, PRIME> a, PrimeField<TYPE, 
 template <typename TYPE, TYPE PRIME>
 PrimeField<TYPE, PRIME> sub(PrimeField<TYPE, PRIME> a, PrimeField<TYPE, PRIME> b)
 {
-	return PrimeField<TYPE, PRIME>(a.v - b.v + a.P);
+	return PrimeField<TYPE, PRIME>(a.v - b.v + (a.v < b.v ? a.P : 0));
 }
 
 template <typename TYPE, TYPE PRIME>
