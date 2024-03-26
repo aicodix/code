@@ -41,20 +41,30 @@ struct CauchyReedSolomonErasureCoding2
 			PF num(1), den(1);
 			for (int k = 0; k < n; k++) {
 				PF col_k(k);
-				num *= add(rows[k], col_i);
+				num = mul(num, add(rows[k], col_i));
 				if (k != i)
-					den *= sub(col_i, col_k);
+					den = mul(den, sub(col_i, col_k));
+				if (k & 1) {
+					num = reduce(num);
+					den = reduce(den);
+				}
 			}
-			row_num = num;
-			row_den = den;
+			row_num = reduce(num);
+			row_den = reduce(den);
 		}
 		PF num(row_num), den(row_den);
 		for (int k = 0; k < n; k++) {
 			PF col_k(k);
-			num *= add(rows[j], col_k);
+			num = mul(num, add(rows[j], col_k));
 			if (k != j)
-				den *= sub(rows[j], rows[k]);
+				den = mul(den, sub(rows[j], rows[k]));
+			if (k & 1) {
+				num = reduce(num);
+				den = reduce(den);
+			}
 		}
+		num = reduce(num);
+		den = reduce(den);
 		return num / (add(rows[j], col_i) * den);
 #endif
 	}
