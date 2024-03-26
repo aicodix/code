@@ -39,12 +39,13 @@ struct CauchyReedSolomonErasureCoding2
 		PF col_i(i);
 		if (j == 0) {
 			PF num(1), den(1);
-			for (int k = 0; k < n; k++) {
+			for (int k = 0, r = 2; k < n; k++, --r) {
 				PF col_k(k);
 				num = mul(num, add(rows[k], col_i));
 				if (k != i)
 					den = mul(den, sub(col_i, col_k));
-				if (k & 1) {
+				if (!r) {
+					r = 3;
 					num = reduce(num);
 					den = reduce(den);
 				}
@@ -53,12 +54,13 @@ struct CauchyReedSolomonErasureCoding2
 			row_den = reduce(den);
 		}
 		PF num(row_num), den(row_den);
-		for (int k = 0; k < n; k++) {
+		for (int k = 0, r = 2; k < n; k++, --r) {
 			PF col_k(k);
 			num = mul(num, add(rows[j], col_k));
 			if (k != j)
 				den = mul(den, sub(rows[j], rows[k]));
-			if (k & 1) {
+			if (!r) {
+				r = 3;
 				num = reduce(num);
 				den = reduce(den);
 			}
