@@ -118,26 +118,7 @@ PrimeField<TYPE, PRIME> pow(PrimeField<TYPE, PRIME> a, TYPE m)
 template <typename TYPE, TYPE PRIME>
 PrimeField<TYPE, PRIME> rcp(PrimeField<TYPE, PRIME> a)
 {
-	assert(a.v);
-#if 1
 	return pow(a, a.P - 2);
-#else
-	if (a.v == 1)
-		return a;
-	TYPE t = 0, newt = 1;
-	TYPE r = a.P, newr = a.v;
-	while (newr) {
-		TYPE quotient = r / newr;
-		t -= quotient * newt;
-		r -= quotient * newr;
-		std::swap(newt, t);
-		std::swap(newr, r);
-	}
-	assert(r == 1);
-	if (t >= a.P)
-		t += a.P;
-	return PrimeField<TYPE, PRIME>(t);
-#endif
 }
 
 template <typename TYPE, TYPE PRIME>
