@@ -21,7 +21,7 @@ struct CauchyPrimeFieldErasureCoding
 		return rcp(row + col);
 	}
 	// $b_{ij} = \frac{\prod_{k=1}^{n}{(x_j + y_k)(x_k + y_i)}}{(x_j + y_i)\prod_{k \ne j}^{n}{(x_j - x_k)}\prod_{k \ne i}^{n}{(y_i - y_k)}}$
-	PF inverse_cauchy_matrix(const int *rows, int i, int j, int n)
+	PF inverse_cauchy_matrix(const IO *rows, int i, int j, int n)
 	{
 #if 0
 		PF row_j(rows[j]), col_i(i);
@@ -83,9 +83,9 @@ struct CauchyPrimeFieldErasureCoding
 				temp[i] = add(temp[i], b * PF(a[i]));
 		}
 	}
-	void mac_sub(IO *c, const IO *a, PF b, int len, bool first, bool last)
+	void mac_sub(IO *c, const IO *a, PF b, IO s, int len, bool first, bool last)
 	{
-		int s = a[len], v = PF::P-1;
+		int v = PF::P-1;
 		if (first && last) {
 			for (int i = 0; i < len; i++)
 				c[i] = (b * PF(a[i] == s ? v : a[i]))();
@@ -111,7 +111,7 @@ struct CauchyPrimeFieldErasureCoding
 			++s;
 		return s;
 	}
-	void encode(const IO *data, IO *block, int block_id, int block_len, int block_cnt)
+	int encode(const IO *data, IO *block, int block_id, int block_len, int block_cnt)
 	{
 		assert(block_id >= block_cnt && block_id < int(PF::P) / 2);
 		assert(block_len < int(PF::P-1) && block_len <= MAX_LEN);
@@ -122,13 +122,13 @@ struct CauchyPrimeFieldErasureCoding
 		int sub = find_unused(block_len);
 		for (int i = 0; i < block_len; ++i)
 			block[i] = temp[i]() == PF::P-1 ? sub : temp[i]();
-		block[block_len] = sub;
+		return sub;
 	}
-	void decode(IO *data, const IO *blocks, const int *block_ids, int block_idx, int block_len, int block_cnt)
+	void decode(IO *data, const IO *blocks, const IO *block_subs, const IO *block_ids, int block_idx, int block_len, int block_cnt)
 	{
 		for (int k = 0; k < block_cnt; k++) {
 			PF b_ik = inverse_cauchy_matrix(block_ids, block_idx, k, block_cnt);
-			mac_sub(data, blocks + (block_len+1) * k, b_ik, block_len, !k, k == block_cnt - 1);
+			mac_sub(data, blocks + block_len * k, b_ik, block_subs[k], block_len, !k, k == block_cnt - 1);
 		}
 	}
 };
