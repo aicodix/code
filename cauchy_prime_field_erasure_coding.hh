@@ -73,15 +73,18 @@ struct CauchyPrimeFieldErasureCoding
 	}
 	void mac(const IO *a, PF b, int len, bool first, bool last)
 	{
-		if (first) {
+		if (first && last) {
 			for (int i = 0; i < len; i++)
 				temp[i] = b * PF(a[i]);
+		} else if (first) {
+			for (int i = 0; i < len; i++)
+				temp[i] = mul(b, PF(a[i]));
 		} else if (last) {
 			for (int i = 0; i < len; i++)
-				temp[i] = reduce(add(temp[i], b * PF(a[i])));
+				temp[i] = reduce(add(temp[i], mul(b, PF(a[i]))));
 		} else {
 			for (int i = 0; i < len; i++)
-				temp[i] = add(temp[i], b * PF(a[i]));
+				temp[i] = add(temp[i], mul(b, PF(a[i])));
 		}
 	}
 	void mac_sub(IO *c, const IO *a, PF b, IO s, int len, bool first, bool last)
@@ -92,13 +95,13 @@ struct CauchyPrimeFieldErasureCoding
 				c[i] = (b * PF(a[i] == s ? v : a[i]))();
 		} else if (first) {
 			for (int i = 0; i < len; i++)
-				temp[i] = b * PF(a[i] == s ? v : a[i]);
+				temp[i] = mul(b, PF(a[i] == s ? v : a[i]));
 		} else if (last) {
 			for (int i = 0; i < len; i++)
-				c[i] = reduce(add(temp[i], b * PF(a[i] == s ? v : a[i])))();
+				c[i] = reduce(add(temp[i], mul(b, PF(a[i] == s ? v : a[i]))))();
 		} else {
 			for (int i = 0; i < len; i++)
-				temp[i] = add(temp[i], b * PF(a[i] == s ? v : a[i]));
+				temp[i] = add(temp[i], mul(b, PF(a[i] == s ? v : a[i])));
 		}
 	}
 	int find_unused(int block_len)
