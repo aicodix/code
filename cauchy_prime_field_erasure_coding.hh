@@ -13,7 +13,7 @@ struct CauchyPrimeFieldErasureCoding
 {
 	static_assert(MAX_LEN < int(PF::P-1), "Block length must be smaller than largest field value");
 	PF temp[MAX_LEN];
-	bool used[PF::P];
+	uint8_t used[(PF::P+7)/8];
 	PF row_num, row_den;
 	// $a_{ij} = \frac{1}{x_i + y_j}$
 	PF cauchy_matrix(int i, int j)
@@ -103,12 +103,12 @@ struct CauchyPrimeFieldErasureCoding
 	}
 	int find_unused(int block_len)
 	{
-		for (int i = 0; i < int(PF::P); ++i)
-			used[i] = false;
+		for (int i = 0; i < int(PF::P+7)/8; ++i)
+			used[i] = 0;
 		for (int i = 0; i < block_len; ++i)
-			used[temp[i]()] = true;
+			used[temp[i]()/8] |= 1 << temp[i]()%8;
 		int s = 0;
-		while (used[s])
+		while (used[s/8] & 1 << s%8)
 			++s;
 		return s;
 	}
