@@ -38,6 +38,11 @@ public:
 		(*this)();
 		return reg != r;
 	}
+	int next()
+	{
+		(*this)();
+		return reg;
+	}
 	bool operator()()
 	{
 		bool fb = reg & test;
