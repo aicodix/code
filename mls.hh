@@ -26,10 +26,14 @@ public:
 	{
 		reg = r;
 	}
+	int length()
+	{
+		return hibit(poly) - 1;
+	}
 	bool bad(int r = 1)
 	{
 		reg = r;
-		int len = hibit(poly) - 1;
+		int len = length();
 		for (int i = 1; i < len; ++i) {
 			(*this)();
 			if (reg == r)
