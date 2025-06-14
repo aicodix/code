@@ -16,7 +16,7 @@ public:
 	typedef uint32_t result_type;
 	static constexpr result_type min()
 	{
-		return 0;
+		return 1;
 	}
 	static constexpr result_type max()
 	{
@@ -44,7 +44,7 @@ public:
 	typedef uint64_t result_type;
 	static constexpr result_type min()
 	{
-		return 0;
+		return 1;
 	}
 	static constexpr result_type max()
 	{
@@ -77,7 +77,7 @@ public:
 	typedef uint32_t result_type;
 	static constexpr result_type min()
 	{
-		return 0;
+		return 1;
 	}
 	static constexpr result_type max()
 	{
@@ -119,7 +119,7 @@ public:
 	typedef uint32_t result_type;
 	static constexpr result_type min()
 	{
-		return 0;
+		return 1;
 	}
 	static constexpr result_type max()
 	{
