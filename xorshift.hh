@@ -8,6 +8,37 @@ Copyright 2018 Ahmet Inan <inan@aicodix.de>
 
 namespace CODE {
 
+template <typename TYPE, int BITS, int FIRST, int SECOND, int THIRD, int SEED = 1>
+class XorShiftMask
+{
+	static const TYPE mask = (1 << BITS) - 1;
+	TYPE y_;
+public:
+	typedef TYPE result_type;
+	static constexpr result_type min()
+	{
+		return 1;
+	}
+	static constexpr result_type max()
+	{
+		return mask;
+	}
+	XorShiftMask(TYPE y = SEED) : y_(y) {}
+	void reset(TYPE y = SEED)
+	{
+		y_ = y;
+	}
+	TYPE operator()()
+	{
+		y_ ^= y_ << FIRST;
+		y_ &= mask;
+		y_ ^= y_ >> SECOND;
+		y_ ^= y_ << THIRD;
+		y_ &= mask;
+		return y_;
+	}
+};
+
 class Xorshift32
 {
 	static const uint32_t Y = 2463534242;
