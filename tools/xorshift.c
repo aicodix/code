@@ -16,6 +16,16 @@ int next(int y, int a, int b, int c, int mask) {
 	return y;
 }
 
+int popcnt(int x)
+{
+	int cnt = 0;
+	while (x) {
+		++cnt;
+		x &= x-1;
+	}
+	return cnt;
+}
+
 int main(int argc, char **argv) {
 	if (argc != 2 && argc != 5)
 		return 1;
@@ -27,8 +37,9 @@ int main(int argc, char **argv) {
 		int b = atoi(argv[3]);
 		int c = atoi(argv[4]);
 		for (int y = seed, i = mask; i; --i) {
-			printf("%d\n", y);
-			y = next(y, a, b, c, mask);
+			int x = next(y, a, b, c, mask);
+			printf("%d %d\n", y, popcnt(x ^ y));
+			y = x;
 		}
 		return 0;
 	}
