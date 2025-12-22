@@ -1,5 +1,5 @@
 /*
-Regression Test for the Polar Encoder and List Decoder
+Regression Test for the Parity aided Polar Encoder and List Decoder
 
 Copyright 2020 Ahmet Inan <inan@aicodix.de>
 */
@@ -13,9 +13,8 @@ Copyright 2020 Ahmet Inan <inan@aicodix.de>
 #include <algorithm>
 #include <functional>
 #include "polar_helper.hh"
-#include "polar_list_decoder.hh"
-#include "polar_encoder.hh"
 #include "polar_sequence.hh"
+#include "polar_parity_aided.hh"
 #include "crc.hh"
 #include "sequence.h"
 
@@ -28,10 +27,10 @@ int main()
 {
 	const int M = 10;
 	const int N = 1 << M;
-	const bool systematic = false;
 	const bool crc_aided = true;
 	CODE::CRC<uint32_t> crc(0xD419CC15);
 	const int C = 32;
+	const int S = 32;
 #if 1
 	const int L = 32;
 	typedef int8_t code_type;
@@ -48,7 +47,6 @@ int main()
 	auto data = std::bind(distribution(0, 1), generator(rd()));
 	auto frozen = new uint32_t[N/32];
 	auto codeword = new code_type[N];
-	auto temp = new simd_type[N];
 
 	const int *reliability_sequence;
 	double erasure_probability = 0.3;
@@ -73,11 +71,16 @@ int main()
 		frozen[i] = 0;
 	for (int i = 0; i < N - K; ++i)
 		frozen[reliability_sequence[i]/32] |= 1 << (reliability_sequence[i]%32);
+	int P = K / (S + 1);
+	int F = K % (S + 1);
+	if (!crc_aided)
+		F += S;
+	K -= P;
 	std::cerr << "Polar(" << N << ", " << K << ")" << std::endl;
 	auto message = new code_type[K];
 	auto decoded = new simd_type[K];
-	std::cerr << "sizeof(PolarListDecoder<simd_type, M>) = " << sizeof(CODE::PolarListDecoder<simd_type, M>) << std::endl;
-	auto decode = new CODE::PolarListDecoder<simd_type, M>;
+	std::cerr << "sizeof(PolarParityDecoder<simd_type, M>) = " << sizeof(CODE::PolarParityDecoder<simd_type, M>) << std::endl;
+	auto decode = new CODE::PolarParityDecoder<simd_type, M>;
 
 	auto orig = new code_type[N];
 	auto noisy = new code_type[N];
@@ -120,16 +123,8 @@ int main()
 					message[i] = 1 - 2 * data();
 			}
 
-			if (systematic) {
-				CODE::PolarSysEnc<code_type> sysenc;
-				sysenc(codeword, message, frozen, M);
-				for (int i = 0, j = 0; i < N; ++i)
-					if (!get_bit(frozen, i))
-						assert(codeword[i] == message[j++]);
-			} else {
-				CODE::PolarEncoder<code_type> encode;
-				encode(codeword, message, frozen, M);
-			}
+			CODE::PolarParityEncoder<code_type> encode;
+			encode(codeword, message, frozen, M, S, F);
 
 			for (int i = 0; i < N; ++i)
 				orig[i] = codeword[i];
@@ -152,19 +147,11 @@ int main()
 
 			int rank[L];
 			auto start = std::chrono::system_clock::now();
-			(*decode)(rank, decoded, codeword, frozen, M);
+			(*decode)(rank, decoded, codeword, frozen, M, S, F);
 			auto end = std::chrono::system_clock::now();
 			auto usec = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
 			double mbs = (double)K / usec.count();
 			avg_mbs += mbs;
-
-			if (systematic) {
-				CODE::PolarEncoder<simd_type> encode;
-				encode(temp, decoded, frozen, M);
-				for (int i = 0, j = 0; i < N; ++i)
-					if (!get_bit(frozen, i))
-						decoded[j++] = temp[i];
-			}
 
 			int best = 0;
 			if (crc_aided) {
@@ -229,6 +216,6 @@ int main()
 	std::cerr << "QEF at: " << min_SNR << " SNR, speed: " << max_mbs << " Mb/s." << std::endl;
 	double QEF_SNR = design_SNR + 0.5;
 	assert(min_SNR < QEF_SNR);
-	std::cerr << "Polar list regression test passed!" << std::endl;
+	std::cerr << "Polar parity regression test passed!" << std::endl;
 	return 0;
 }

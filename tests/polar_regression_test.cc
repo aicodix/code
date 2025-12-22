@@ -1,5 +1,5 @@
 /*
-Regression Test for the Polar Encoder and Decoders
+Regression Test for the Polar Encoder and Decoder
 
 Copyright 2020 Ahmet Inan <inan@aicodix.de>
 */
