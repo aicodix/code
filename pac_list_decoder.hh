@@ -39,6 +39,14 @@ struct PACListNode<TYPE, 0>
 	typedef PolarHelper<TYPE> PH;
 	typedef typename PH::PATH PATH;
 	typedef typename PH::MAP MAP;
+	static bool conv(int *state, bool input)
+	{
+		bool s1 = *state & 1;
+		bool s2 = *state & 2;
+		bool output = input ^ s1 ^ s2;
+		*state = (s1 << 1) | output;
+		return output;
+	}
 	static MAP rate0(PATH *metric, TYPE *hard, TYPE *soft)
 	{
 		*hard = PH::one();
@@ -50,28 +58,34 @@ struct PACListNode<TYPE, 0>
 			map.v[k] = k;
 		return map;
 	}
-	static MAP rate1(PATH *metric, TYPE *message, MAP *maps, int *count, TYPE *hard, TYPE *soft)
+	static MAP rate1(PATH *metric, TYPE *message, MAP *maps, int *count, int *state, TYPE *hard, TYPE *soft)
 	{
 		TYPE sft = soft[1];
-		PATH fork[2*TYPE::SIZE];
+		PATH mfork[2*TYPE::SIZE];
 		for (int k = 0; k < TYPE::SIZE; ++k)
-			fork[2*k] = fork[2*k+1] = metric[k];
+			mfork[2*k] = mfork[2*k+1] = metric[k];
+		int sfork[2*TYPE::SIZE];
 		for (int k = 0; k < TYPE::SIZE; ++k)
-			if (sft.v[k] < 0)
-				fork[2*k] -= sft.v[k];
-			else
-				fork[2*k+1] += sft.v[k];
+			sfork[2*k] = sfork[2*k+1] = state[k];
+		for (int k = 0; k < 2*TYPE::SIZE; ++k)
+			if (conv(sfork+k, k&1) != sft.v[k>>1] < 0)
+				mfork[k] += std::abs(sft.v[k>>1]);
 		int perm[2*TYPE::SIZE];
-		CODE::insertion_sort(perm, fork, 2*TYPE::SIZE);
+		CODE::insertion_sort(perm, mfork, 2*TYPE::SIZE);
 		for (int k = 0; k < TYPE::SIZE; ++k)
-			metric[k] = fork[k];
+			metric[k] = mfork[k];
 		MAP map;
 		for (int k = 0; k < TYPE::SIZE; ++k)
 			map.v[k] = perm[k] >> 1;
+		TYPE msg;
+		for (int k = 0; k < TYPE::SIZE; ++k)
+			msg.v[k] = 1 - 2 * (perm[k] & 1);
+		for (int k = 0; k < TYPE::SIZE; ++k)
+			state[k] = sfork[perm[k]];
 		TYPE hrd;
 		for (int k = 0; k < TYPE::SIZE; ++k)
-			hrd.v[k] = 1 - 2 * (perm[k] & 1);
-		message[*count] = hrd;
+			hrd.v[k] = 1 - 2 * (state[k] & 1);
+		message[*count] = msg;
 		maps[*count] = map;
 		++*count;
 		*hard = hrd;
@@ -86,14 +100,14 @@ struct PACListTree
 	typedef typename PH::PATH PATH;
 	typedef typename PH::MAP MAP;
 	static const int N = 1 << M;
-	static MAP decode(PATH *metric, TYPE *message, MAP *maps, int *count, TYPE *hard, TYPE *soft, const uint32_t *frozen)
+	static MAP decode(PATH *metric, TYPE *message, MAP *maps, int *count, int *state, TYPE *hard, TYPE *soft, const uint32_t *frozen)
 	{
 		for (int i = 0; i < N/2; ++i)
 			soft[i+N/2] = PH::prod(soft[i+N], soft[i+N/2+N]);
-		MAP lmap = PACListTree<TYPE, M-1>::decode(metric, message, maps, count, hard, soft, frozen);
+		MAP lmap = PACListTree<TYPE, M-1>::decode(metric, message, maps, count, state, hard, soft, frozen);
 		for (int i = 0; i < N/2; ++i)
 			soft[i+N/2] = PH::madd(hard[i], vshuf(soft[i+N], lmap), vshuf(soft[i+N/2+N], lmap));
-		MAP rmap = PACListTree<TYPE, M-1>::decode(metric, message, maps, count, hard+N/2, soft, frozen+N/2/32);
+		MAP rmap = PACListTree<TYPE, M-1>::decode(metric, message, maps, count, state, hard+N/2, soft, frozen+N/2/32);
 		for (int i = 0; i < N/2; ++i)
 			hard[i] = PH::qmul(vshuf(hard[i], rmap), hard[i+N/2]);
 		return vshuf(lmap, rmap);
@@ -108,7 +122,7 @@ struct PACListTree<TYPE, 6>
 	typedef typename PH::MAP MAP;
 	static const int M = 6;
 	static const int N = 1 << M;
-	static MAP decode(PATH *metric, TYPE *message, MAP *maps, int *count, TYPE *hard, TYPE *soft, const uint32_t *frozen)
+	static MAP decode(PATH *metric, TYPE *message, MAP *maps, int *count, int *state, TYPE *hard, TYPE *soft, const uint32_t *frozen)
 	{
 		for (int i = 0; i < N/2; ++i)
 			soft[i+N/2] = PH::prod(soft[i+N], soft[i+N/2+N]);
@@ -116,13 +130,13 @@ struct PACListTree<TYPE, 6>
 		if (frozen[0] == 0xffffffff)
 			lmap = PACListNode<TYPE, M-1>::rate0(metric, hard, soft);
 		else
-			lmap = PACListTree<TYPE, M-1>::decode(metric, message, maps, count, hard, soft, frozen[0]);
+			lmap = PACListTree<TYPE, M-1>::decode(metric, message, maps, count, state, hard, soft, frozen[0]);
 		for (int i = 0; i < N/2; ++i)
 			soft[i+N/2] = PH::madd(hard[i], vshuf(soft[i+N], lmap), vshuf(soft[i+N/2+N], lmap));
 		if (frozen[1] == 0xffffffff)
 			rmap = PACListNode<TYPE, M-1>::rate0(metric, hard+N/2, soft);
 		else
-			rmap = PACListTree<TYPE, M-1>::decode(metric, message, maps, count, hard+N/2, soft, frozen[1]);
+			rmap = PACListTree<TYPE, M-1>::decode(metric, message, maps, count, state, hard+N/2, soft, frozen[1]);
 		for (int i = 0; i < N/2; ++i)
 			hard[i] = PH::qmul(vshuf(hard[i], rmap), hard[i+N/2]);
 		return vshuf(lmap, rmap);
@@ -137,7 +151,7 @@ struct PACListTree<TYPE, 5>
 	typedef typename PH::MAP MAP;
 	static const int M = 5;
 	static const int N = 1 << M;
-	static MAP decode(PATH *metric, TYPE *message, MAP *maps, int *count, TYPE *hard, TYPE *soft, uint32_t frozen)
+	static MAP decode(PATH *metric, TYPE *message, MAP *maps, int *count, int *state, TYPE *hard, TYPE *soft, uint32_t frozen)
 	{
 		for (int i = 0; i < N/2; ++i)
 			soft[i+N/2] = PH::prod(soft[i+N], soft[i+N/2+N]);
@@ -145,13 +159,13 @@ struct PACListTree<TYPE, 5>
 		if ((frozen & ((1<<(1<<(M-1)))-1)) == ((1<<(1<<(M-1)))-1))
 			lmap = PACListNode<TYPE, M-1>::rate0(metric, hard, soft);
 		else
-			lmap = PACListTree<TYPE, M-1>::decode(metric, message, maps, count, hard, soft, frozen & ((1<<(1<<(M-1)))-1));
+			lmap = PACListTree<TYPE, M-1>::decode(metric, message, maps, count, state, hard, soft, frozen & ((1<<(1<<(M-1)))-1));
 		for (int i = 0; i < N/2; ++i)
 			soft[i+N/2] = PH::madd(hard[i], vshuf(soft[i+N], lmap), vshuf(soft[i+N/2+N], lmap));
 		if (frozen >> (N/2) == ((1<<(1<<(M-1)))-1))
 			rmap = PACListNode<TYPE, M-1>::rate0(metric, hard+N/2, soft);
 		else
-			rmap = PACListTree<TYPE, M-1>::decode(metric, message, maps, count, hard+N/2, soft, frozen >> (N/2));
+			rmap = PACListTree<TYPE, M-1>::decode(metric, message, maps, count, state, hard+N/2, soft, frozen >> (N/2));
 		for (int i = 0; i < N/2; ++i)
 			hard[i] = PH::qmul(vshuf(hard[i], rmap), hard[i+N/2]);
 		return vshuf(lmap, rmap);
@@ -166,7 +180,7 @@ struct PACListTree<TYPE, 4>
 	typedef typename PH::MAP MAP;
 	static const int M = 4;
 	static const int N = 1 << M;
-	static MAP decode(PATH *metric, TYPE *message, MAP *maps, int *count, TYPE *hard, TYPE *soft, uint32_t frozen)
+	static MAP decode(PATH *metric, TYPE *message, MAP *maps, int *count, int *state, TYPE *hard, TYPE *soft, uint32_t frozen)
 	{
 		for (int i = 0; i < N/2; ++i)
 			soft[i+N/2] = PH::prod(soft[i+N], soft[i+N/2+N]);
@@ -174,13 +188,13 @@ struct PACListTree<TYPE, 4>
 		if ((frozen & ((1<<(1<<(M-1)))-1)) == ((1<<(1<<(M-1)))-1))
 			lmap = PACListNode<TYPE, M-1>::rate0(metric, hard, soft);
 		else
-			lmap = PACListTree<TYPE, M-1>::decode(metric, message, maps, count, hard, soft, frozen & ((1<<(1<<(M-1)))-1));
+			lmap = PACListTree<TYPE, M-1>::decode(metric, message, maps, count, state, hard, soft, frozen & ((1<<(1<<(M-1)))-1));
 		for (int i = 0; i < N/2; ++i)
 			soft[i+N/2] = PH::madd(hard[i], vshuf(soft[i+N], lmap), vshuf(soft[i+N/2+N], lmap));
 		if (frozen >> (N/2) == ((1<<(1<<(M-1)))-1))
 			rmap = PACListNode<TYPE, M-1>::rate0(metric, hard+N/2, soft);
 		else
-			rmap = PACListTree<TYPE, M-1>::decode(metric, message, maps, count, hard+N/2, soft, frozen >> (N/2));
+			rmap = PACListTree<TYPE, M-1>::decode(metric, message, maps, count, state, hard+N/2, soft, frozen >> (N/2));
 		for (int i = 0; i < N/2; ++i)
 			hard[i] = PH::qmul(vshuf(hard[i], rmap), hard[i+N/2]);
 		return vshuf(lmap, rmap);
@@ -195,7 +209,7 @@ struct PACListTree<TYPE, 3>
 	typedef typename PH::MAP MAP;
 	static const int M = 3;
 	static const int N = 1 << M;
-	static MAP decode(PATH *metric, TYPE *message, MAP *maps, int *count, TYPE *hard, TYPE *soft, uint32_t frozen)
+	static MAP decode(PATH *metric, TYPE *message, MAP *maps, int *count, int *state, TYPE *hard, TYPE *soft, uint32_t frozen)
 	{
 		for (int i = 0; i < N/2; ++i)
 			soft[i+N/2] = PH::prod(soft[i+N], soft[i+N/2+N]);
@@ -203,13 +217,13 @@ struct PACListTree<TYPE, 3>
 		if ((frozen & ((1<<(1<<(M-1)))-1)) == ((1<<(1<<(M-1)))-1))
 			lmap = PACListNode<TYPE, M-1>::rate0(metric, hard, soft);
 		else
-			lmap = PACListTree<TYPE, M-1>::decode(metric, message, maps, count, hard, soft, frozen & ((1<<(1<<(M-1)))-1));
+			lmap = PACListTree<TYPE, M-1>::decode(metric, message, maps, count, state, hard, soft, frozen & ((1<<(1<<(M-1)))-1));
 		for (int i = 0; i < N/2; ++i)
 			soft[i+N/2] = PH::madd(hard[i], vshuf(soft[i+N], lmap), vshuf(soft[i+N/2+N], lmap));
 		if (frozen >> (N/2) == ((1<<(1<<(M-1)))-1))
 			rmap = PACListNode<TYPE, M-1>::rate0(metric, hard+N/2, soft);
 		else
-			rmap = PACListTree<TYPE, M-1>::decode(metric, message, maps, count, hard+N/2, soft, frozen >> (N/2));
+			rmap = PACListTree<TYPE, M-1>::decode(metric, message, maps, count, state, hard+N/2, soft, frozen >> (N/2));
 		for (int i = 0; i < N/2; ++i)
 			hard[i] = PH::qmul(vshuf(hard[i], rmap), hard[i+N/2]);
 		return vshuf(lmap, rmap);
@@ -224,7 +238,7 @@ struct PACListTree<TYPE, 2>
 	typedef typename PH::MAP MAP;
 	static const int M = 2;
 	static const int N = 1 << M;
-	static MAP decode(PATH *metric, TYPE *message, MAP *maps, int *count, TYPE *hard, TYPE *soft, uint32_t frozen)
+	static MAP decode(PATH *metric, TYPE *message, MAP *maps, int *count, int *state, TYPE *hard, TYPE *soft, uint32_t frozen)
 	{
 		for (int i = 0; i < N/2; ++i)
 			soft[i+N/2] = PH::prod(soft[i+N], soft[i+N/2+N]);
@@ -232,13 +246,13 @@ struct PACListTree<TYPE, 2>
 		if ((frozen & ((1<<(1<<(M-1)))-1)) == ((1<<(1<<(M-1)))-1))
 			lmap = PACListNode<TYPE, M-1>::rate0(metric, hard, soft);
 		else
-			lmap = PACListTree<TYPE, M-1>::decode(metric, message, maps, count, hard, soft, frozen & ((1<<(1<<(M-1)))-1));
+			lmap = PACListTree<TYPE, M-1>::decode(metric, message, maps, count, state, hard, soft, frozen & ((1<<(1<<(M-1)))-1));
 		for (int i = 0; i < N/2; ++i)
 			soft[i+N/2] = PH::madd(hard[i], vshuf(soft[i+N], lmap), vshuf(soft[i+N/2+N], lmap));
 		if (frozen >> (N/2) == ((1<<(1<<(M-1)))-1))
 			rmap = PACListNode<TYPE, M-1>::rate0(metric, hard+N/2, soft);
 		else
-			rmap = PACListTree<TYPE, M-1>::decode(metric, message, maps, count, hard+N/2, soft, frozen >> (N/2));
+			rmap = PACListTree<TYPE, M-1>::decode(metric, message, maps, count, state, hard+N/2, soft, frozen >> (N/2));
 		for (int i = 0; i < N/2; ++i)
 			hard[i] = PH::qmul(vshuf(hard[i], rmap), hard[i+N/2]);
 		return vshuf(lmap, rmap);
@@ -251,19 +265,19 @@ struct PACListTree<TYPE, 1>
 	typedef PolarHelper<TYPE> PH;
 	typedef typename PH::PATH PATH;
 	typedef typename PH::MAP MAP;
-	static MAP decode(PATH *metric, TYPE *message, MAP *maps, int *count, TYPE *hard, TYPE *soft, uint32_t frozen)
+	static MAP decode(PATH *metric, TYPE *message, MAP *maps, int *count, int *state, TYPE *hard, TYPE *soft, uint32_t frozen)
 	{
 		soft[1] = PH::prod(soft[2], soft[3]);
 		MAP lmap, rmap;
 		if (frozen & 1)
 			lmap = PACListNode<TYPE, 0>::rate0(metric, hard, soft);
 		else
-			lmap = PACListNode<TYPE, 0>::rate1(metric, message, maps, count, hard, soft);
+			lmap = PACListNode<TYPE, 0>::rate1(metric, message, maps, count, state, hard, soft);
 		soft[1] = PH::madd(hard[0], vshuf(soft[2], lmap), vshuf(soft[3], lmap));
 		if (frozen >> 1)
 			rmap = PACListNode<TYPE, 0>::rate0(metric, hard+1, soft);
 		else
-			rmap = PACListNode<TYPE, 0>::rate1(metric, message, maps, count, hard+1, soft);
+			rmap = PACListNode<TYPE, 0>::rate1(metric, message, maps, count, state, hard+1, soft);
 		hard[0] = PH::qmul(vshuf(hard[0], rmap), hard[1]);
 		return vshuf(lmap, rmap);
 	}
@@ -293,20 +307,23 @@ public:
 		int length = 1 << level;
 		for (int i = 0; i < length; ++i)
 			soft[length+i] = vdup<TYPE>(codeword[i]);
+		int state[TYPE::SIZE];
+		for (int i = 0; i < TYPE::SIZE; ++i)
+			state[i] = 0;
 
 		switch (level) {
-		case 5: PACListTree<TYPE, 5>::decode(metric, message, maps, &count, hard, soft, *frozen); break;
-		case 6: PACListTree<TYPE, 6>::decode(metric, message, maps, &count, hard, soft, frozen); break;
-		case 7: PACListTree<TYPE, 7>::decode(metric, message, maps, &count, hard, soft, frozen); break;
-		case 8: PACListTree<TYPE, 8>::decode(metric, message, maps, &count, hard, soft, frozen); break;
-		case 9: PACListTree<TYPE, 9>::decode(metric, message, maps, &count, hard, soft, frozen); break;
-		case 10: PACListTree<TYPE, 10>::decode(metric, message, maps, &count, hard, soft, frozen); break;
-		case 11: PACListTree<TYPE, 11>::decode(metric, message, maps, &count, hard, soft, frozen); break;
-		case 12: PACListTree<TYPE, 12>::decode(metric, message, maps, &count, hard, soft, frozen); break;
-		case 13: PACListTree<TYPE, 13>::decode(metric, message, maps, &count, hard, soft, frozen); break;
-		case 14: PACListTree<TYPE, 14>::decode(metric, message, maps, &count, hard, soft, frozen); break;
-		case 15: PACListTree<TYPE, 15>::decode(metric, message, maps, &count, hard, soft, frozen); break;
-		case 16: PACListTree<TYPE, 16>::decode(metric, message, maps, &count, hard, soft, frozen); break;
+		case 5: PACListTree<TYPE, 5>::decode(metric, message, maps, &count, state, hard, soft, *frozen); break;
+		case 6: PACListTree<TYPE, 6>::decode(metric, message, maps, &count, state, hard, soft, frozen); break;
+		case 7: PACListTree<TYPE, 7>::decode(metric, message, maps, &count, state, hard, soft, frozen); break;
+		case 8: PACListTree<TYPE, 8>::decode(metric, message, maps, &count, state, hard, soft, frozen); break;
+		case 9: PACListTree<TYPE, 9>::decode(metric, message, maps, &count, state, hard, soft, frozen); break;
+		case 10: PACListTree<TYPE, 10>::decode(metric, message, maps, &count, state, hard, soft, frozen); break;
+		case 11: PACListTree<TYPE, 11>::decode(metric, message, maps, &count, state, hard, soft, frozen); break;
+		case 12: PACListTree<TYPE, 12>::decode(metric, message, maps, &count, state, hard, soft, frozen); break;
+		case 13: PACListTree<TYPE, 13>::decode(metric, message, maps, &count, state, hard, soft, frozen); break;
+		case 14: PACListTree<TYPE, 14>::decode(metric, message, maps, &count, state, hard, soft, frozen); break;
+		case 15: PACListTree<TYPE, 15>::decode(metric, message, maps, &count, state, hard, soft, frozen); break;
+		case 16: PACListTree<TYPE, 16>::decode(metric, message, maps, &count, state, hard, soft, frozen); break;
 		default: assert(false);
 		}
 

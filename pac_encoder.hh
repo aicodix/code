@@ -18,13 +18,22 @@ class PACEncoder
 	{
 		return (bits[idx/32] >> (idx%32)) & 1;
 	}
+	static bool conv(int *state, bool input)
+	{
+		bool s1 = *state & 1;
+		bool s2 = *state & 2;
+		bool output = input ^ s1 ^ s2;
+		*state = (s1 << 1) | output;
+		return output;
+	}
 public:
 	void operator()(TYPE *codeword, const TYPE *message, const uint32_t *frozen, int level)
 	{
 		int length = 1 << level;
+		int state = 0;
 		for (int i = 0; i < length; i += 2) {
-			TYPE msg0 = get(frozen, i) ? PH::one() : *message++;
-			TYPE msg1 = get(frozen, i+1) ? PH::one() : *message++;
+			TYPE msg0 = get(frozen, i) ? PH::one() : 1 - 2 * conv(&state, *message++ < 0);
+			TYPE msg1 = get(frozen, i+1) ? PH::one() : 1 - 2 * conv(&state, *message++ < 0);
 			codeword[i] = PH::qmul(msg0, msg1);
 			codeword[i+1] = msg1;
 		}
