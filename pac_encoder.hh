@@ -34,8 +34,10 @@ public:
 		int length = 1 << level;
 		int state = 0;
 		for (int i = 0; i < length; i += 2) {
-			TYPE msg0 = get(frozen, i) ? PH::one() : 1 - 2 * conv(&state, *message++ < 0);
-			TYPE msg1 = get(frozen, i+1) ? PH::one() : 1 - 2 * conv(&state, *message++ < 0);
+			TYPE msg0 = get(frozen, i) ? PH::one() : *message++;
+			TYPE msg1 = get(frozen, i+1) ? PH::one() : *message++;
+			msg0 = 1 - 2 * conv(&state, msg0 < 0);
+			msg1 = 1 - 2 * conv(&state, msg1 < 0);
 			codeword[i] = PH::qmul(msg0, msg1);
 			codeword[i+1] = msg1;
 		}
