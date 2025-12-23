@@ -21,18 +21,21 @@ class PACEncoder
 	static bool conv(int *state, bool input)
 	{
 #if 0
+		// 1011011
 		bool b1 = (*state >> 1) & 1;
 		bool b3 = (*state >> 3) & 1;
 		bool b4 = (*state >> 4) & 1;
 		bool b6 = (*state >> 6) & 1;
 		bool output = input ^ b1 ^ b3 ^ b4 ^ b6;
-		*state = ((*state & 126) << 1) | (input ? 2 : 0) | (output ? 1 : 0);
 #else
-		bool s1 = *state & 1;
-		bool s2 = *state & 2;
-		bool output = input ^ s1 ^ s2;
-		*state = (s1 << 1) | output;
+		// 1101101
+		bool b2 = (*state >> 2) & 1;
+		bool b3 = (*state >> 3) & 1;
+		bool b5 = (*state >> 5) & 1;
+		bool b6 = (*state >> 6) & 1;
+		bool output = input ^ b2 ^ b3 ^ b5 ^ b6;
 #endif
+		*state = ((*state & 126) << 1) | (input ? 2 : 0) | (output ? 1 : 0);
 		return output;
 	}
 public:
