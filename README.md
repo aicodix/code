@@ -116,6 +116,10 @@ List size depends on used SIMD type. Decoding performance of the fixed-point imp
 Parity check aided successive cancellation [list decoding](https://en.wikipedia.org/wiki/List_decoding) of [polar codes](https://en.wikipedia.org/wiki/Polar_code_(coding_theory)).
 ![Polar decoder comparisons](polar_ber.png)
 
+### [pac_list_decoder.hh](pac_list_decoder.hh)
+
+Successive cancellation [list decoding](https://en.wikipedia.org/wiki/List_decoding) of [Polarization-Adjusted Convolutional codes](https://en.wikipedia.org/wiki/Polar_code_(coding_theory)#PAC_codes).
+
 ### [osd.hh](osd.hh)
 
 Ordered statistics decoding allows the practical [soft-decision decoding](https://en.wikipedia.org/wiki/Soft-decision_decoder) of short to medium sized [linear codes](https://en.wikipedia.org/wiki/Linear_code).
