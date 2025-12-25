@@ -25,10 +25,10 @@ void bch_test(ENC *encode, DEC *decode, int trials)
 		int data_len = rnd_len();
 		auto rnd_pos = std::bind(distribution(0, data_len + ENC::NP - 1), generator);
 		int D = (data_len + 7) / 8;
-		uint8_t data[D], orig_data[D];
+		uint8_t data[ENC::K], orig_data[ENC::K];
 		for (int i = 0; i < D; ++i)
 			data[i] = orig_data[i] = rnd_val();
-		int P = (ENC::NP + 7) / 8;
+		const int P = (ENC::NP + 7) / 8;
 		uint8_t parity[P];
 		(*encode)(data, parity, data_len);
 		for (int i = 0; i < D; ++i)
@@ -53,7 +53,7 @@ void bch_test(ENC *encode, DEC *decode, int trials)
 				CODE::xor_be_bit(parity, pos-data_len, 1);
 		}
 		int erasures_count = DEC::NR - 2 * error_count;
-		typename DEC::value_type erasures[erasures_count];
+		typename DEC::value_type erasures[DEC::NR];
 		for (int i = 0; i < erasures_count; ++i) {
 			int pos = rnd_pos();
 			for (int j = 0; j < error_count + i; ++j) {
@@ -90,7 +90,7 @@ void bch_reference_test(ENC *encode, DEC *decode, int trials)
 	while (--trials) {
 		int data_len = rnd_len();
 		auto rnd_pos = std::bind(distribution(0, data_len + ENC::NP - 1), generator);
-		typename ENC::value_type data[data_len], orig_data[data_len];
+		typename ENC::value_type data[ENC::K], orig_data[ENC::K];
 		for (int i = 0; i < data_len; ++i)
 			data[i] = orig_data[i] = rnd_val();
 		typename ENC::value_type parity[ENC::NP];
@@ -117,7 +117,7 @@ void bch_reference_test(ENC *encode, DEC *decode, int trials)
 				parity[pos-data_len] ^= 1;
 		}
 		int erasures_count = ENC::NR - 2 * error_count;
-		typename ENC::value_type erasures[erasures_count];
+		typename ENC::value_type erasures[ENC::NR];
 		for (int i = 0; i < erasures_count; ++i) {
 			int pos = rnd_pos();
 			for (int j = 0; j < error_count + i; ++j) {

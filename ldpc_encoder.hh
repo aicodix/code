@@ -41,7 +41,7 @@ public:
 		}
 		for (int i = 0; i < q; ++i) {
 			int cnt = cnc[i];
-			int offset[cnt], shift[cnt];
+			int offset[CNC], shift[CNC];
 			for (int c = 0; c < cnt; ++c) {
 				shift[c] = pos[CNC*i+c] % M;
 				offset[c] = pos[CNC*i+c] - shift[c];

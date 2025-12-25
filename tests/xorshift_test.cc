@@ -4,6 +4,7 @@ Test for xorshift
 Copyright 2025 Ahmet Inan <inan@aicodix.de>
 */
 
+#include <cstdint>
 #include <cassert>
 #include <iostream>
 #include "xorshift.hh"

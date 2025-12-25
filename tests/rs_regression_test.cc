@@ -24,7 +24,7 @@ void rs_test(ENC *encode, DEC *decode, int trials)
 	while (--trials) {
 		int data_len = rnd_len();
 		auto rnd_pos = std::bind(distribution(0, data_len + ENC::NP - 1), generator);
-		typename ENC::value_type data[data_len], orig_data[data_len];
+		typename ENC::value_type data[ENC::K], orig_data[ENC::K];
 		for (int i = 0; i < data_len; ++i)
 			data[i] = orig_data[i] = rnd_val();
 		typename ENC::value_type parity[ENC::NP];
@@ -51,7 +51,7 @@ void rs_test(ENC *encode, DEC *decode, int trials)
 				parity[pos-data_len] = rnd_val();
 		}
 		int erasures_count = ENC::NR - 2 * error_count;
-		typename ENC::value_type erasures[erasures_count];
+		typename ENC::value_type erasures[ENC::NR];
 		for (int i = 0; i < erasures_count; ++i) {
 			int pos = rnd_pos();
 			for (int j = 0; j < error_count + i; ++j) {

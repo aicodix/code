@@ -32,7 +32,7 @@ struct PACListLeaf
 	{
 		TYPE sft = soft[1];
 		for (int k = 0; k < TYPE::SIZE; ++k)
-			if (conv(state+k, 0) != sft.v[k] < 0)
+			if (conv(state+k, 0) != (sft.v[k] < 0))
 				metric[k] += std::abs(sft.v[k]);
 		TYPE hrd;
 		for (int k = 0; k < TYPE::SIZE; ++k)
@@ -53,7 +53,7 @@ struct PACListLeaf
 		for (int k = 0; k < TYPE::SIZE; ++k)
 			sfork[2*k] = sfork[2*k+1] = state[k];
 		for (int k = 0; k < 2*TYPE::SIZE; ++k)
-			if (conv(sfork+k, k&1) != sft.v[k>>1] < 0)
+			if (conv(sfork+k, k&1) != (sft.v[k>>1] < 0))
 				mfork[k] += std::abs(sft.v[k>>1]);
 		int perm[2*TYPE::SIZE];
 		CODE::insertion_sort(perm, mfork, 2*TYPE::SIZE);

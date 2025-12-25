@@ -117,7 +117,7 @@ class LDPCDecoder
 			int cnt = cnc[i];
 			int deg = cnt + 2;
 			for (int j = 0; j < W; ++j) {
-				TYPE mags[deg], inps[deg];
+				TYPE mags[CNC+2], inps[CNC+2];
 				TYPE min0 = vdup<TYPE>(127);
 				TYPE min1 = vdup<TYPE>(127);
 				TYPE signs = vdup<TYPE>(127);
@@ -236,7 +236,7 @@ public:
 		Loc *lo = loc;
 		for (int i = 0; i < q; ++i) {
 			int cnt = cnc[i];
-			int offset[cnt], shift[cnt];
+			int offset[CNC], shift[CNC];
 			for (int c = 0; c < cnt; ++c) {
 				shift[c] = pos[CNC*i+c] % M;
 				offset[c] = pos[CNC*i+c] - shift[c];

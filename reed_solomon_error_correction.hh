@@ -16,7 +16,7 @@ struct Chien
 	typedef typename GF::IndexType IndexType;
 	static int search(const ValueType *locator, int locator_degree, IndexType *locations)
 	{
-		ValueType tmp[locator_degree+1];
+		ValueType tmp[NR+1];
 		for (int i = 0; i <= locator_degree; ++i)
 			tmp[i] = locator[i];
 		int count = 0;
