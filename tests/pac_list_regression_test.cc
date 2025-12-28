@@ -54,8 +54,8 @@ int main()
 	double design_SNR = 10 * std::log10(-std::log(erasure_probability));
 	std::cerr << "design SNR: " << design_SNR << std::endl;
 	if (1) {
-		auto construct = new CODE::PolarSeqConst0<M>;
-		std::cerr << "sizeof(PolarSeqConst0<M>) = " << sizeof(CODE::PolarSeqConst0<M>) << std::endl;
+		auto construct = new CODE::BhattacharyyaSequence<M>;
+		std::cerr << "sizeof(BhattacharyyaSequence<M>) = " << sizeof(CODE::BhattacharyyaSequence<M>) << std::endl;
 		double better_SNR = design_SNR + 1.59175;
 		std::cerr << "better SNR: " << better_SNR << std::endl;
 		double probability = std::exp(-pow(10.0, better_SNR / 10));

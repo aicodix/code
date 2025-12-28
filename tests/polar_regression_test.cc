@@ -56,8 +56,8 @@ int main()
 		delete freeze;
 	} else {
 		auto sequence = new int[N];
-		auto construct = new CODE::PolarSeqConst0<M>;
-		std::cerr << "sizeof(PolarSeqConst0<M>) = " << sizeof(CODE::PolarSeqConst0<M>) << std::endl;
+		auto construct = new CODE::BhattacharyyaSequence<M>;
+		std::cerr << "sizeof(BhattacharyyaSequence<M>) = " << sizeof(CODE::BhattacharyyaSequence<M>) << std::endl;
 		(*construct)(sequence, M, probability);
 		delete construct;
 		for (int i = 0; i < N / 32; ++i)

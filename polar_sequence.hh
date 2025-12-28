@@ -6,12 +6,12 @@ Copyright 2023 Ahmet Inan <inan@aicodix.de>
 
 #pragma once
 
-#include <algorithm>
+#include "sort.hh"
 
 namespace CODE {
 
 template <int MAX_M>
-class PolarSeqConst0
+class BhattacharyyaSequence
 {
 	void compute(double pe, int i, int h)
 	{
@@ -23,7 +23,7 @@ class PolarSeqConst0
 		}
 	}
 	double prob[1<<MAX_M];
-	int index[1<<MAX_M];
+	MergeSort<int, 1<<MAX_M> sort;
 public:
 	void operator()(int *sequence, int level, double erasure_probability = std::exp(-1.))
 	{
@@ -32,7 +32,7 @@ public:
 		compute(erasure_probability, 0, length / 2);
 		for (int i = 0; i < length; ++i)
 			sequence[i] = i;
-		std::sort(sequence, sequence+length, [this](int a, int b){ return prob[a] > prob[b]; });
+		sort(sequence, length, [this](int a, int b){ return prob[a] > prob[b]; });
 	}
 };
 
