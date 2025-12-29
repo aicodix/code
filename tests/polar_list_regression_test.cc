@@ -86,7 +86,7 @@ int main()
 	double high_SNR = std::ceil(design_SNR+5);
 	double min_SNR = high_SNR, max_mbs = 0;
 	int count = 0;
-	std::cerr << "SNR BER Mbit/s Eb/N0" << std::endl;
+	std::cerr << "SNR FER BER Mbit/s Eb/N0" << std::endl;
 	for (double SNR = low_SNR; count <= 3 && SNR <= high_SNR; SNR += 0.1, ++count) {
 		//double mean_signal = 0;
 		double sigma_signal = 1;
