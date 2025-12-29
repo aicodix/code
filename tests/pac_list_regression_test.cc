@@ -26,13 +26,13 @@ bool get_bit(const uint32_t *bits, int idx)
 
 int main()
 {
-	const int M = 10;
+	const int M = 7;
 	const int N = 1 << M;
-	const bool crc_aided = true;
+	const bool crc_aided = false;
 	CODE::CRC<uint32_t> crc(0xD419CC15);
 	const int C = 32;
 #if 1
-	const int L = 32;
+	const int L = 64;
 	typedef int8_t code_type;
 #else
 	const int L = 8;
@@ -49,11 +49,19 @@ int main()
 	auto codeword = new code_type[N];
 
 	const int *reliability_sequence;
-	double erasure_probability = 0.3;
+	double erasure_probability = 0.5;
 	int K = (1 - erasure_probability) * N;
 	double design_SNR = 10 * std::log10(-std::log(erasure_probability));
 	std::cerr << "design SNR: " << design_SNR << std::endl;
 	if (1) {
+		auto construct = new CODE::ReedMullerSequence<M>;
+		std::cerr << "sizeof(ReedMullerSequence<M>) = " << sizeof(CODE::ReedMullerSequence<M>) << std::endl;
+		auto rel_seq = new int[N];
+		(*construct)(rel_seq, M);
+		delete construct;
+		reliability_sequence = rel_seq;
+	}
+	if (0) {
 		auto construct = new CODE::BhattacharyyaSequence<M>;
 		std::cerr << "sizeof(BhattacharyyaSequence<M>) = " << sizeof(CODE::BhattacharyyaSequence<M>) << std::endl;
 		double better_SNR = design_SNR + 1.59175;
@@ -64,7 +72,8 @@ int main()
 		(*construct)(rel_seq, M, probability);
 		delete construct;
 		reliability_sequence = rel_seq;
-	} else {
+	}
+	if (0) {
 		reliability_sequence = sequence;
 	}
 	for (int i = 0; i < N / 32; ++i)
