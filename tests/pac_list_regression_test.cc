@@ -199,7 +199,7 @@ int main()
 			count = 0;
 
 		int MOD_BITS = 1; // BPSK
-		double code_rate = (double)K / (double)N;
+		double code_rate = (double)(K - crc_aided * C) / (double)N;
 		double spectral_efficiency = code_rate * MOD_BITS;
 		double EbN0 = 10 * std::log10(sigma_signal * sigma_signal / (spectral_efficiency * 2 * sigma_noise * sigma_noise));
 
