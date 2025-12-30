@@ -119,6 +119,7 @@ Parity check aided successive cancellation [list decoding](https://en.wikipedia.
 ### [pac_list_decoder.hh](pac_list_decoder.hh)
 
 Successive cancellation [list decoding](https://en.wikipedia.org/wiki/List_decoding) of [Polarization-Adjusted Convolutional codes](https://en.wikipedia.org/wiki/Polar_code_(coding_theory)#PAC_codes).
+![OSD, PAC and CRC](osd_pac_crc.png)
 
 ### [osd.hh](osd.hh)
 
