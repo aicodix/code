@@ -5,6 +5,7 @@ Copyright 2020 Ahmet Inan <inan@aicodix.de>
 */
 
 #include <random>
+#include <chrono>
 #include <cassert>
 #include <iostream>
 #include <functional>
@@ -77,6 +78,7 @@ int main()
 		typedef std::normal_distribution<double> normal;
 		auto awgn = std::bind(normal(mean_noise, sigma_noise), generator(rd()));
 
+		double avg_mbs = 0;
 		int awgn_errors = 0;
 		int quantization_erasures = 0;
 		int uncorrected_errors = 0;
@@ -113,7 +115,12 @@ int main()
 			for (int i = 0; i < N; ++i)
 				noisy[i] = std::min<double>(std::max<double>(std::nearbyint(fact * symb[i]), -127), 127);
 
+			auto start = std::chrono::system_clock::now();
 			bool unique = osddec(decoded, noisy, genmat);
+			auto end = std::chrono::system_clock::now();
+			auto usec = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+			double mbs = (double)K / usec.count();
+			avg_mbs += mbs;
 
 			for (int i = 0; i < N; ++i)
 				awgn_errors += noisy[i] * orig[i] < 0;
@@ -148,6 +155,8 @@ int main()
 				bchdec_errors += CODE::get_be_bit(parity, i-K) != CODE::get_be_bit(codeword, i);
 		}
 
+		avg_mbs /= loops;
+
 		double frame_error_rate = (double)frame_errors / (double)loops;
 		double bit_error_rate = (double)uncorrected_errors / (double)(N * loops);
 		if (!uncorrected_errors && !ambiguity_erasures)
@@ -169,9 +178,10 @@ int main()
 			std::cerr << ambiguity_erasures << " ambiguity erasures." << std::endl;
 			std::cerr << frame_error_rate << " frame error rate." << std::endl;
 			std::cerr << bit_error_rate << " bit error rate." << std::endl;
+			std::cerr << avg_mbs << " megabit per second." << std::endl;
 			std::cerr << bchdec_ber << " BCH decoder bit error rate." << std::endl;
 		} else {
-			std::cout << SNR << " " << frame_error_rate << " " << bit_error_rate << " " << bchdec_ber << " " << EbN0 << std::endl;
+			std::cout << SNR << " " << frame_error_rate << " " << bit_error_rate << " " << avg_mbs << " " << bchdec_ber << " " << EbN0 << std::endl;
 		}
 	}
 	std::cerr << "QEF at: " << min_SNR << " SNR" << std::endl;
