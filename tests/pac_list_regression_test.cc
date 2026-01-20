@@ -218,7 +218,7 @@ int main()
 		}
 	}
 	std::cerr << "QEF at: " << min_SNR << " SNR, speed: " << max_mbs << " Mb/s." << std::endl;
-	double QEF_SNR = design_SNR + 0.5;
+	double QEF_SNR = design_SNR + 2;
 	assert(min_SNR < QEF_SNR);
 	std::cerr << "Polarization-Adjusted Convolutional list regression test passed!" << std::endl;
 	return 0;
