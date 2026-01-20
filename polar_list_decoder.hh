@@ -18,7 +18,7 @@ struct PolarListNode
 	typedef typename PH::PATH PATH;
 	typedef typename PH::MAP MAP;
 	static const int N = 1 << M;
-	static MAP rate0(PATH *metric, TYPE *hard, TYPE *soft)
+	static void rate0(PATH *metric, TYPE *hard, TYPE *soft)
 	{
 		for (int i = 0; i < N; ++i)
 			hard[i] = PH::one();
@@ -26,10 +26,6 @@ struct PolarListNode
 			for (int k = 0; k < TYPE::SIZE; ++k)
 				if (soft[i+N].v[k] < 0)
 					metric[k] -= soft[i+N].v[k];
-		MAP map;
-		for (int k = 0; k < TYPE::SIZE; ++k)
-			map.v[k] = k;
-		return map;
 	}
 };
 
@@ -39,16 +35,12 @@ struct PolarListNode<TYPE, 0>
 	typedef PolarHelper<TYPE> PH;
 	typedef typename PH::PATH PATH;
 	typedef typename PH::MAP MAP;
-	static MAP rate0(PATH *metric, TYPE *hard, TYPE *soft)
+	static void rate0(PATH *metric, TYPE *hard, TYPE *soft)
 	{
 		*hard = PH::one();
 		for (int k = 0; k < TYPE::SIZE; ++k)
 			if (soft[1].v[k] < 0)
 				metric[k] -= soft[1].v[k];
-		MAP map;
-		for (int k = 0; k < TYPE::SIZE; ++k)
-			map.v[k] = k;
-		return map;
 	}
 	static MAP rate1(PATH *metric, TYPE *message, MAP *maps, int *count, TYPE *hard, TYPE *soft)
 	{
@@ -112,19 +104,30 @@ struct PolarListTree<TYPE, 6>
 	{
 		for (int i = 0; i < N/2; ++i)
 			soft[i+N/2] = PH::prod(soft[i+N], soft[i+N/2+N]);
-		MAP lmap, rmap;
-		if (frozen[0] == 0xffffffff)
-			lmap = PolarListNode<TYPE, M-1>::rate0(metric, hard, soft);
-		else
+		MAP lmap;
+		if (frozen[0] == 0xffffffff) {
+			PolarListNode<TYPE, M-1>::rate0(metric, hard, soft);
+			for (int i = 0; i < N/2; ++i)
+				soft[i+N/2] = PH::madd(hard[i], soft[i+N], soft[i+N/2+N]);
+			for (int k = 0; k < TYPE::SIZE; ++k)
+				lmap.v[k] = k;
+		} else {
 			lmap = PolarListTree<TYPE, M-1>::decode(metric, message, maps, count, hard, soft, frozen[0]);
-		for (int i = 0; i < N/2; ++i)
-			soft[i+N/2] = PH::madd(hard[i], vshuf(soft[i+N], lmap), vshuf(soft[i+N/2+N], lmap));
-		if (frozen[1] == 0xffffffff)
-			rmap = PolarListNode<TYPE, M-1>::rate0(metric, hard+N/2, soft);
-		else
+			for (int i = 0; i < N/2; ++i)
+				soft[i+N/2] = PH::madd(hard[i], vshuf(soft[i+N], lmap), vshuf(soft[i+N/2+N], lmap));
+		}
+		MAP rmap;
+		if (frozen[1] == 0xffffffff) {
+			PolarListNode<TYPE, M-1>::rate0(metric, hard+N/2, soft);
+			for (int i = 0; i < N/2; ++i)
+				hard[i] = PH::qmul(hard[i], hard[i+N/2]);
+			for (int k = 0; k < TYPE::SIZE; ++k)
+				rmap.v[k] = k;
+		} else {
 			rmap = PolarListTree<TYPE, M-1>::decode(metric, message, maps, count, hard+N/2, soft, frozen[1]);
-		for (int i = 0; i < N/2; ++i)
-			hard[i] = PH::qmul(vshuf(hard[i], rmap), hard[i+N/2]);
+			for (int i = 0; i < N/2; ++i)
+				hard[i] = PH::qmul(vshuf(hard[i], rmap), hard[i+N/2]);
+		}
 		return vshuf(lmap, rmap);
 	}
 };
@@ -141,19 +144,30 @@ struct PolarListTree<TYPE, 5>
 	{
 		for (int i = 0; i < N/2; ++i)
 			soft[i+N/2] = PH::prod(soft[i+N], soft[i+N/2+N]);
-		MAP lmap, rmap;
-		if ((frozen & ((1<<(1<<(M-1)))-1)) == ((1<<(1<<(M-1)))-1))
-			lmap = PolarListNode<TYPE, M-1>::rate0(metric, hard, soft);
-		else
+		MAP lmap;
+		if ((frozen & ((1<<(1<<(M-1)))-1)) == ((1<<(1<<(M-1)))-1)) {
+			PolarListNode<TYPE, M-1>::rate0(metric, hard, soft);
+			for (int i = 0; i < N/2; ++i)
+				soft[i+N/2] = PH::madd(hard[i], soft[i+N], soft[i+N/2+N]);
+			for (int k = 0; k < TYPE::SIZE; ++k)
+				lmap.v[k] = k;
+		} else {
 			lmap = PolarListTree<TYPE, M-1>::decode(metric, message, maps, count, hard, soft, frozen & ((1<<(1<<(M-1)))-1));
-		for (int i = 0; i < N/2; ++i)
-			soft[i+N/2] = PH::madd(hard[i], vshuf(soft[i+N], lmap), vshuf(soft[i+N/2+N], lmap));
-		if (frozen >> (N/2) == ((1<<(1<<(M-1)))-1))
-			rmap = PolarListNode<TYPE, M-1>::rate0(metric, hard+N/2, soft);
-		else
+			for (int i = 0; i < N/2; ++i)
+				soft[i+N/2] = PH::madd(hard[i], vshuf(soft[i+N], lmap), vshuf(soft[i+N/2+N], lmap));
+		}
+		MAP rmap;
+		if (frozen >> (N/2) == ((1<<(1<<(M-1)))-1)) {
+			PolarListNode<TYPE, M-1>::rate0(metric, hard+N/2, soft);
+			for (int i = 0; i < N/2; ++i)
+				hard[i] = PH::qmul(hard[i], hard[i+N/2]);
+			for (int k = 0; k < TYPE::SIZE; ++k)
+				rmap.v[k] = k;
+		} else {
 			rmap = PolarListTree<TYPE, M-1>::decode(metric, message, maps, count, hard+N/2, soft, frozen >> (N/2));
-		for (int i = 0; i < N/2; ++i)
-			hard[i] = PH::qmul(vshuf(hard[i], rmap), hard[i+N/2]);
+			for (int i = 0; i < N/2; ++i)
+				hard[i] = PH::qmul(vshuf(hard[i], rmap), hard[i+N/2]);
+		}
 		return vshuf(lmap, rmap);
 	}
 };
@@ -170,19 +184,30 @@ struct PolarListTree<TYPE, 4>
 	{
 		for (int i = 0; i < N/2; ++i)
 			soft[i+N/2] = PH::prod(soft[i+N], soft[i+N/2+N]);
-		MAP lmap, rmap;
-		if ((frozen & ((1<<(1<<(M-1)))-1)) == ((1<<(1<<(M-1)))-1))
-			lmap = PolarListNode<TYPE, M-1>::rate0(metric, hard, soft);
-		else
+		MAP lmap;
+		if ((frozen & ((1<<(1<<(M-1)))-1)) == ((1<<(1<<(M-1)))-1)) {
+			PolarListNode<TYPE, M-1>::rate0(metric, hard, soft);
+			for (int i = 0; i < N/2; ++i)
+				soft[i+N/2] = PH::madd(hard[i], soft[i+N], soft[i+N/2+N]);
+			for (int k = 0; k < TYPE::SIZE; ++k)
+				lmap.v[k] = k;
+		} else {
 			lmap = PolarListTree<TYPE, M-1>::decode(metric, message, maps, count, hard, soft, frozen & ((1<<(1<<(M-1)))-1));
-		for (int i = 0; i < N/2; ++i)
-			soft[i+N/2] = PH::madd(hard[i], vshuf(soft[i+N], lmap), vshuf(soft[i+N/2+N], lmap));
-		if (frozen >> (N/2) == ((1<<(1<<(M-1)))-1))
-			rmap = PolarListNode<TYPE, M-1>::rate0(metric, hard+N/2, soft);
-		else
+			for (int i = 0; i < N/2; ++i)
+				soft[i+N/2] = PH::madd(hard[i], vshuf(soft[i+N], lmap), vshuf(soft[i+N/2+N], lmap));
+		}
+		MAP rmap;
+		if (frozen >> (N/2) == ((1<<(1<<(M-1)))-1)) {
+			PolarListNode<TYPE, M-1>::rate0(metric, hard+N/2, soft);
+			for (int i = 0; i < N/2; ++i)
+				hard[i] = PH::qmul(hard[i], hard[i+N/2]);
+			for (int k = 0; k < TYPE::SIZE; ++k)
+				rmap.v[k] = k;
+		} else {
 			rmap = PolarListTree<TYPE, M-1>::decode(metric, message, maps, count, hard+N/2, soft, frozen >> (N/2));
-		for (int i = 0; i < N/2; ++i)
-			hard[i] = PH::qmul(vshuf(hard[i], rmap), hard[i+N/2]);
+			for (int i = 0; i < N/2; ++i)
+				hard[i] = PH::qmul(vshuf(hard[i], rmap), hard[i+N/2]);
+		}
 		return vshuf(lmap, rmap);
 	}
 };
@@ -199,19 +224,30 @@ struct PolarListTree<TYPE, 3>
 	{
 		for (int i = 0; i < N/2; ++i)
 			soft[i+N/2] = PH::prod(soft[i+N], soft[i+N/2+N]);
-		MAP lmap, rmap;
-		if ((frozen & ((1<<(1<<(M-1)))-1)) == ((1<<(1<<(M-1)))-1))
-			lmap = PolarListNode<TYPE, M-1>::rate0(metric, hard, soft);
-		else
+		MAP lmap;
+		if ((frozen & ((1<<(1<<(M-1)))-1)) == ((1<<(1<<(M-1)))-1)) {
+			PolarListNode<TYPE, M-1>::rate0(metric, hard, soft);
+			for (int i = 0; i < N/2; ++i)
+				soft[i+N/2] = PH::madd(hard[i], soft[i+N], soft[i+N/2+N]);
+			for (int k = 0; k < TYPE::SIZE; ++k)
+				lmap.v[k] = k;
+		} else {
 			lmap = PolarListTree<TYPE, M-1>::decode(metric, message, maps, count, hard, soft, frozen & ((1<<(1<<(M-1)))-1));
-		for (int i = 0; i < N/2; ++i)
-			soft[i+N/2] = PH::madd(hard[i], vshuf(soft[i+N], lmap), vshuf(soft[i+N/2+N], lmap));
-		if (frozen >> (N/2) == ((1<<(1<<(M-1)))-1))
-			rmap = PolarListNode<TYPE, M-1>::rate0(metric, hard+N/2, soft);
-		else
+			for (int i = 0; i < N/2; ++i)
+				soft[i+N/2] = PH::madd(hard[i], vshuf(soft[i+N], lmap), vshuf(soft[i+N/2+N], lmap));
+		}
+		MAP rmap;
+		if (frozen >> (N/2) == ((1<<(1<<(M-1)))-1)) {
+			PolarListNode<TYPE, M-1>::rate0(metric, hard+N/2, soft);
+			for (int i = 0; i < N/2; ++i)
+				hard[i] = PH::qmul(hard[i], hard[i+N/2]);
+			for (int k = 0; k < TYPE::SIZE; ++k)
+				rmap.v[k] = k;
+		} else {
 			rmap = PolarListTree<TYPE, M-1>::decode(metric, message, maps, count, hard+N/2, soft, frozen >> (N/2));
-		for (int i = 0; i < N/2; ++i)
-			hard[i] = PH::qmul(vshuf(hard[i], rmap), hard[i+N/2]);
+			for (int i = 0; i < N/2; ++i)
+				hard[i] = PH::qmul(vshuf(hard[i], rmap), hard[i+N/2]);
+		}
 		return vshuf(lmap, rmap);
 	}
 };
@@ -228,19 +264,30 @@ struct PolarListTree<TYPE, 2>
 	{
 		for (int i = 0; i < N/2; ++i)
 			soft[i+N/2] = PH::prod(soft[i+N], soft[i+N/2+N]);
-		MAP lmap, rmap;
-		if ((frozen & ((1<<(1<<(M-1)))-1)) == ((1<<(1<<(M-1)))-1))
-			lmap = PolarListNode<TYPE, M-1>::rate0(metric, hard, soft);
-		else
+		MAP lmap;
+		if ((frozen & ((1<<(1<<(M-1)))-1)) == ((1<<(1<<(M-1)))-1)) {
+			PolarListNode<TYPE, M-1>::rate0(metric, hard, soft);
+			for (int i = 0; i < N/2; ++i)
+				soft[i+N/2] = PH::madd(hard[i], soft[i+N], soft[i+N/2+N]);
+			for (int k = 0; k < TYPE::SIZE; ++k)
+				lmap.v[k] = k;
+		} else {
 			lmap = PolarListTree<TYPE, M-1>::decode(metric, message, maps, count, hard, soft, frozen & ((1<<(1<<(M-1)))-1));
-		for (int i = 0; i < N/2; ++i)
-			soft[i+N/2] = PH::madd(hard[i], vshuf(soft[i+N], lmap), vshuf(soft[i+N/2+N], lmap));
-		if (frozen >> (N/2) == ((1<<(1<<(M-1)))-1))
-			rmap = PolarListNode<TYPE, M-1>::rate0(metric, hard+N/2, soft);
-		else
+			for (int i = 0; i < N/2; ++i)
+				soft[i+N/2] = PH::madd(hard[i], vshuf(soft[i+N], lmap), vshuf(soft[i+N/2+N], lmap));
+		}
+		MAP rmap;
+		if (frozen >> (N/2) == ((1<<(1<<(M-1)))-1)) {
+			PolarListNode<TYPE, M-1>::rate0(metric, hard+N/2, soft);
+			for (int i = 0; i < N/2; ++i)
+				hard[i] = PH::qmul(hard[i], hard[i+N/2]);
+			for (int k = 0; k < TYPE::SIZE; ++k)
+				rmap.v[k] = k;
+		} else {
 			rmap = PolarListTree<TYPE, M-1>::decode(metric, message, maps, count, hard+N/2, soft, frozen >> (N/2));
-		for (int i = 0; i < N/2; ++i)
-			hard[i] = PH::qmul(vshuf(hard[i], rmap), hard[i+N/2]);
+			for (int i = 0; i < N/2; ++i)
+				hard[i] = PH::qmul(vshuf(hard[i], rmap), hard[i+N/2]);
+		}
 		return vshuf(lmap, rmap);
 	}
 };
@@ -254,17 +301,26 @@ struct PolarListTree<TYPE, 1>
 	static MAP decode(PATH *metric, TYPE *message, MAP *maps, int *count, TYPE *hard, TYPE *soft, uint32_t frozen)
 	{
 		soft[1] = PH::prod(soft[2], soft[3]);
-		MAP lmap, rmap;
-		if (frozen & 1)
-			lmap = PolarListNode<TYPE, 0>::rate0(metric, hard, soft);
-		else
+		MAP lmap;
+		if (frozen & 1) {
+			PolarListNode<TYPE, 0>::rate0(metric, hard, soft);
+			soft[1] = PH::madd(hard[0], soft[2], soft[3]);
+			for (int k = 0; k < TYPE::SIZE; ++k)
+				lmap.v[k] = k;
+		} else {
 			lmap = PolarListNode<TYPE, 0>::rate1(metric, message, maps, count, hard, soft);
-		soft[1] = PH::madd(hard[0], vshuf(soft[2], lmap), vshuf(soft[3], lmap));
-		if (frozen >> 1)
-			rmap = PolarListNode<TYPE, 0>::rate0(metric, hard+1, soft);
-		else
+			soft[1] = PH::madd(hard[0], vshuf(soft[2], lmap), vshuf(soft[3], lmap));
+		}
+		MAP rmap;
+		if (frozen >> 1) {
+			PolarListNode<TYPE, 0>::rate0(metric, hard+1, soft);
+			hard[0] = PH::qmul(hard[0], hard[1]);
+			for (int k = 0; k < TYPE::SIZE; ++k)
+				rmap.v[k] = k;
+		} else {
 			rmap = PolarListNode<TYPE, 0>::rate1(metric, message, maps, count, hard+1, soft);
-		hard[0] = PH::qmul(vshuf(hard[0], rmap), hard[1]);
+			hard[0] = PH::qmul(vshuf(hard[0], rmap), hard[1]);
+		}
 		return vshuf(lmap, rmap);
 	}
 };
