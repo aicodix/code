@@ -108,7 +108,7 @@ struct PolarListTree<TYPE, 6>
 		if (frozen[0] == 0xffffffff) {
 			PolarListNode<TYPE, M-1>::rate0(metric, hard, soft);
 			for (int i = 0; i < N/2; ++i)
-				soft[i+N/2] = PH::madd(hard[i], soft[i+N], soft[i+N/2+N]);
+				soft[i+N/2] = PH::qadd(soft[i+N], soft[i+N/2+N]);
 			for (int k = 0; k < TYPE::SIZE; ++k)
 				lmap.v[k] = k;
 		} else {
@@ -119,8 +119,6 @@ struct PolarListTree<TYPE, 6>
 		MAP rmap;
 		if (frozen[1] == 0xffffffff) {
 			PolarListNode<TYPE, M-1>::rate0(metric, hard+N/2, soft);
-			for (int i = 0; i < N/2; ++i)
-				hard[i] = PH::qmul(hard[i], hard[i+N/2]);
 			for (int k = 0; k < TYPE::SIZE; ++k)
 				rmap.v[k] = k;
 		} else {
@@ -148,7 +146,7 @@ struct PolarListTree<TYPE, 5>
 		if ((frozen & ((1<<(1<<(M-1)))-1)) == ((1<<(1<<(M-1)))-1)) {
 			PolarListNode<TYPE, M-1>::rate0(metric, hard, soft);
 			for (int i = 0; i < N/2; ++i)
-				soft[i+N/2] = PH::madd(hard[i], soft[i+N], soft[i+N/2+N]);
+				soft[i+N/2] = PH::qadd(soft[i+N], soft[i+N/2+N]);
 			for (int k = 0; k < TYPE::SIZE; ++k)
 				lmap.v[k] = k;
 		} else {
@@ -159,8 +157,6 @@ struct PolarListTree<TYPE, 5>
 		MAP rmap;
 		if (frozen >> (N/2) == ((1<<(1<<(M-1)))-1)) {
 			PolarListNode<TYPE, M-1>::rate0(metric, hard+N/2, soft);
-			for (int i = 0; i < N/2; ++i)
-				hard[i] = PH::qmul(hard[i], hard[i+N/2]);
 			for (int k = 0; k < TYPE::SIZE; ++k)
 				rmap.v[k] = k;
 		} else {
@@ -188,7 +184,7 @@ struct PolarListTree<TYPE, 4>
 		if ((frozen & ((1<<(1<<(M-1)))-1)) == ((1<<(1<<(M-1)))-1)) {
 			PolarListNode<TYPE, M-1>::rate0(metric, hard, soft);
 			for (int i = 0; i < N/2; ++i)
-				soft[i+N/2] = PH::madd(hard[i], soft[i+N], soft[i+N/2+N]);
+				soft[i+N/2] = PH::qadd(soft[i+N], soft[i+N/2+N]);
 			for (int k = 0; k < TYPE::SIZE; ++k)
 				lmap.v[k] = k;
 		} else {
@@ -199,8 +195,6 @@ struct PolarListTree<TYPE, 4>
 		MAP rmap;
 		if (frozen >> (N/2) == ((1<<(1<<(M-1)))-1)) {
 			PolarListNode<TYPE, M-1>::rate0(metric, hard+N/2, soft);
-			for (int i = 0; i < N/2; ++i)
-				hard[i] = PH::qmul(hard[i], hard[i+N/2]);
 			for (int k = 0; k < TYPE::SIZE; ++k)
 				rmap.v[k] = k;
 		} else {
@@ -228,7 +222,7 @@ struct PolarListTree<TYPE, 3>
 		if ((frozen & ((1<<(1<<(M-1)))-1)) == ((1<<(1<<(M-1)))-1)) {
 			PolarListNode<TYPE, M-1>::rate0(metric, hard, soft);
 			for (int i = 0; i < N/2; ++i)
-				soft[i+N/2] = PH::madd(hard[i], soft[i+N], soft[i+N/2+N]);
+				soft[i+N/2] = PH::qadd(soft[i+N], soft[i+N/2+N]);
 			for (int k = 0; k < TYPE::SIZE; ++k)
 				lmap.v[k] = k;
 		} else {
@@ -239,8 +233,6 @@ struct PolarListTree<TYPE, 3>
 		MAP rmap;
 		if (frozen >> (N/2) == ((1<<(1<<(M-1)))-1)) {
 			PolarListNode<TYPE, M-1>::rate0(metric, hard+N/2, soft);
-			for (int i = 0; i < N/2; ++i)
-				hard[i] = PH::qmul(hard[i], hard[i+N/2]);
 			for (int k = 0; k < TYPE::SIZE; ++k)
 				rmap.v[k] = k;
 		} else {
@@ -268,7 +260,7 @@ struct PolarListTree<TYPE, 2>
 		if ((frozen & ((1<<(1<<(M-1)))-1)) == ((1<<(1<<(M-1)))-1)) {
 			PolarListNode<TYPE, M-1>::rate0(metric, hard, soft);
 			for (int i = 0; i < N/2; ++i)
-				soft[i+N/2] = PH::madd(hard[i], soft[i+N], soft[i+N/2+N]);
+				soft[i+N/2] = PH::qadd(soft[i+N], soft[i+N/2+N]);
 			for (int k = 0; k < TYPE::SIZE; ++k)
 				lmap.v[k] = k;
 		} else {
@@ -279,8 +271,6 @@ struct PolarListTree<TYPE, 2>
 		MAP rmap;
 		if (frozen >> (N/2) == ((1<<(1<<(M-1)))-1)) {
 			PolarListNode<TYPE, M-1>::rate0(metric, hard+N/2, soft);
-			for (int i = 0; i < N/2; ++i)
-				hard[i] = PH::qmul(hard[i], hard[i+N/2]);
 			for (int k = 0; k < TYPE::SIZE; ++k)
 				rmap.v[k] = k;
 		} else {
@@ -304,7 +294,7 @@ struct PolarListTree<TYPE, 1>
 		MAP lmap;
 		if (frozen & 1) {
 			PolarListNode<TYPE, 0>::rate0(metric, hard, soft);
-			soft[1] = PH::madd(hard[0], soft[2], soft[3]);
+			soft[1] = PH::qadd(soft[2], soft[3]);
 			for (int k = 0; k < TYPE::SIZE; ++k)
 				lmap.v[k] = k;
 		} else {
@@ -314,7 +304,6 @@ struct PolarListTree<TYPE, 1>
 		MAP rmap;
 		if (frozen >> 1) {
 			PolarListNode<TYPE, 0>::rate0(metric, hard+1, soft);
-			hard[0] = PH::qmul(hard[0], hard[1]);
 			for (int k = 0; k < TYPE::SIZE; ++k)
 				rmap.v[k] = k;
 		} else {
