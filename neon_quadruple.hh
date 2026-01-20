@@ -1058,10 +1058,7 @@ inline SIMD<uint8_t, 64> vshuf(SIMD<uint8_t, 64> a, SIMD<uint8_t, 64> b)
 {
 	SIMD<uint8_t, 64> tmp;
 	for (int i = 0; i < 4; ++i)
-		tmp.m.val[i] = vorrq_u8(vorrq_u8(vorrq_u8(vqtbl1q_u8(a.m.val[0], b.m.val[i]),
-			vqtbl1q_u8(a.m.val[1], vsubq_u8(b.m.val[i], vdupq_n_u8(16)))),
-			vqtbl1q_u8(a.m.val[2], vsubq_u8(b.m.val[i], vdupq_n_u8(32)))),
-			vqtbl1q_u8(a.m.val[3], vsubq_u8(b.m.val[i], vdupq_n_u8(48))));
+		tmp.m.val[i] = vqtbl4q_u8(a.m, b.m.val[i]);
 	return tmp;
 }
 
@@ -1070,10 +1067,7 @@ inline SIMD<int8_t, 64> vshuf(SIMD<int8_t, 64> a, SIMD<uint8_t, 64> b)
 {
 	SIMD<int8_t, 64> tmp;
 	for (int i = 0; i < 4; ++i)
-		tmp.m.val[i] = vorrq_s8(vorrq_s8(vorrq_s8(vqtbl1q_s8(a.m.val[0], b.m.val[i]),
-			vqtbl1q_s8(a.m.val[1], vsubq_u8(b.m.val[i], vdupq_n_u8(16)))),
-			vqtbl1q_s8(a.m.val[2], vsubq_u8(b.m.val[i], vdupq_n_u8(32)))),
-			vqtbl1q_s8(a.m.val[3], vsubq_u8(b.m.val[i], vdupq_n_u8(48))));
+		tmp.m.val[i] = vqtbl4q_s8(a.m, b.m.val[i]);
 	return tmp;
 }
 #endif
