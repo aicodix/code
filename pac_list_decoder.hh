@@ -28,7 +28,7 @@ struct PACListLeaf
 		*state = ((*state & 126) << 1) | (input ? 2 : 0) | (output ? 1 : 0);
 		return output;
 	}
-	static MAP rate0(PATH *metric, int *state, TYPE *hard, TYPE *soft)
+	static void rate0(PATH *metric, int *state, TYPE *hard, TYPE *soft)
 	{
 		TYPE sft = soft[1];
 		for (int k = 0; k < TYPE::SIZE; ++k)
@@ -38,10 +38,6 @@ struct PACListLeaf
 		for (int k = 0; k < TYPE::SIZE; ++k)
 			hrd.v[k] = 1 - 2 * (state[k] & 1);
 		*hard = hrd;
-		MAP map;
-		for (int k = 0; k < TYPE::SIZE; ++k)
-			map.v[k] = k;
-		return map;
 	}
 	static MAP rate1(PATH *metric, TYPE *message, MAP *maps, int *count, int *state, TYPE *hard, TYPE *soft)
 	{
@@ -218,18 +214,31 @@ struct PACListTree<TYPE, 1>
 	static MAP decode(PATH *metric, TYPE *message, MAP *maps, int *count, int *state, TYPE *hard, TYPE *soft, uint32_t frozen)
 	{
 		soft[1] = PH::prod(soft[2], soft[3]);
-		MAP lmap, rmap;
-		if (frozen & 1)
-			lmap = PACListLeaf<TYPE>::rate0(metric, state, hard, soft);
-		else
-			lmap = PACListLeaf<TYPE>::rate1(metric, message, maps, count, state, hard, soft);
-		soft[1] = PH::madd(hard[0], vshuf(soft[2], lmap), vshuf(soft[3], lmap));
-		if (frozen >> 1)
-			rmap = PACListLeaf<TYPE>::rate0(metric, state, hard+1, soft);
-		else
-			rmap = PACListLeaf<TYPE>::rate1(metric, message, maps, count, state, hard+1, soft);
-		hard[0] = PH::qmul(vshuf(hard[0], rmap), hard[1]);
-		return vshuf(lmap, rmap);
+		MAP map;
+		bool left_frozen = frozen & 1;
+		if (left_frozen) {
+			PACListLeaf<TYPE>::rate0(metric, state, hard, soft);
+			soft[1] = PH::madd(hard[0], soft[2], soft[3]);
+		} else {
+			map = PACListLeaf<TYPE>::rate1(metric, message, maps, count, state, hard, soft);
+			soft[1] = PH::madd(hard[0], vshuf(soft[2], map), vshuf(soft[3], map));
+		}
+		bool right_frozen = frozen >> 1;
+		if (right_frozen) {
+			PACListLeaf<TYPE>::rate0(metric, state, hard+1, soft);
+			hard[0] = PH::qmul(hard[0], hard[1]);
+			if (left_frozen)
+				for (int k = 0; k < TYPE::SIZE; ++k)
+					map.v[k] = k;
+		} else {
+			MAP rmap = PACListLeaf<TYPE>::rate1(metric, message, maps, count, state, hard+1, soft);
+			hard[0] = PH::qmul(vshuf(hard[0], rmap), hard[1]);
+			if (left_frozen)
+				map = rmap;
+			else
+				map = vshuf(map, rmap);
+		}
+		return map;
 	}
 };
 
