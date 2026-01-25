@@ -11,8 +11,26 @@ Copyright 2025 Ahmet Inan <inan@aicodix.de>
 
 namespace CODE {
 
+template <typename TYPE, int M>
+struct PACListNode
+{
+	typedef PolarHelper<TYPE> PH;
+	typedef typename PH::PATH PATH;
+	typedef typename PH::MAP MAP;
+	static const int N = 1 << M;
+	static void rate0(PATH *metric, TYPE *hard, TYPE *soft)
+	{
+		for (int i = 0; i < N; ++i)
+			hard[i] = PH::one();
+		for (int i = 0; i < N; ++i)
+			for (int k = 0; k < TYPE::SIZE; ++k)
+				if (soft[i+N].v[k] < 0)
+					metric[k] -= soft[i+N].v[k];
+	}
+};
+
 template <typename TYPE>
-struct PACListLeaf
+struct PACListNode<TYPE, 0>
 {
 	typedef PolarHelper<TYPE> PH;
 	typedef typename PH::PATH PATH;
@@ -107,13 +125,33 @@ struct PACListTree<TYPE, 6>
 	{
 		for (int i = 0; i < N/2; ++i)
 			soft[i+N/2] = PH::prod(soft[i+N], soft[i+N/2+N]);
-		MAP lmap = PACListTree<TYPE, M-1>::decode(metric, message, maps, count, state, hard, soft, frozen[0]);
-		for (int i = 0; i < N/2; ++i)
-			soft[i+N/2] = PH::madd(hard[i], vshuf(soft[i+N], lmap), vshuf(soft[i+N/2+N], lmap));
-		MAP rmap = PACListTree<TYPE, M-1>::decode(metric, message, maps, count, state, hard+N/2, soft, frozen[1]);
-		for (int i = 0; i < N/2; ++i)
-			hard[i] = PH::qmul(vshuf(hard[i], rmap), hard[i+N/2]);
-		return vshuf(lmap, rmap);
+		MAP map;
+		bool left_frozen = frozen[0] == 0xffffffff && !*count;
+		if (left_frozen) {
+			PACListNode<TYPE, M-1>::rate0(metric, hard, soft);
+			for (int i = 0; i < N/2; ++i)
+				soft[i+N/2] = PH::qadd(soft[i+N], soft[i+N/2+N]);
+		} else {
+			map = PACListTree<TYPE, M-1>::decode(metric, message, maps, count, state, hard, soft, frozen[0]);
+			for (int i = 0; i < N/2; ++i)
+				soft[i+N/2] = PH::madd(hard[i], vshuf(soft[i+N], map), vshuf(soft[i+N/2+N], map));
+		}
+		bool right_frozen = frozen[1] == 0xffffffff && !*count;
+		if (right_frozen) {
+			PACListNode<TYPE, M-1>::rate0(metric, hard+N/2, soft);
+			if (left_frozen)
+				for (int k = 0; k < TYPE::SIZE; ++k)
+					map.v[k] = k;
+		} else {
+			MAP rmap = PACListTree<TYPE, M-1>::decode(metric, message, maps, count, state, hard+N/2, soft, frozen[1]);
+			for (int i = 0; i < N/2; ++i)
+				hard[i] = PH::qmul(vshuf(hard[i], rmap), hard[i+N/2]);
+			if (left_frozen)
+				map = rmap;
+			else
+				map = vshuf(map, rmap);
+		}
+		return map;
 	}
 };
 
@@ -129,13 +167,33 @@ struct PACListTree<TYPE, 5>
 	{
 		for (int i = 0; i < N/2; ++i)
 			soft[i+N/2] = PH::prod(soft[i+N], soft[i+N/2+N]);
-		MAP lmap = PACListTree<TYPE, M-1>::decode(metric, message, maps, count, state, hard, soft, frozen & ((1<<(1<<(M-1)))-1));
-		for (int i = 0; i < N/2; ++i)
-			soft[i+N/2] = PH::madd(hard[i], vshuf(soft[i+N], lmap), vshuf(soft[i+N/2+N], lmap));
-		MAP rmap = PACListTree<TYPE, M-1>::decode(metric, message, maps, count, state, hard+N/2, soft, frozen >> (N/2));
-		for (int i = 0; i < N/2; ++i)
-			hard[i] = PH::qmul(vshuf(hard[i], rmap), hard[i+N/2]);
-		return vshuf(lmap, rmap);
+		MAP map;
+		bool left_frozen = (frozen & ((1<<(1<<(M-1)))-1)) == ((1<<(1<<(M-1)))-1) && !*count;
+		if (left_frozen) {
+			PACListNode<TYPE, M-1>::rate0(metric, hard, soft);
+			for (int i = 0; i < N/2; ++i)
+				soft[i+N/2] = PH::qadd(soft[i+N], soft[i+N/2+N]);
+		} else {
+			map = PACListTree<TYPE, M-1>::decode(metric, message, maps, count, state, hard, soft, frozen & ((1<<(1<<(M-1)))-1));
+			for (int i = 0; i < N/2; ++i)
+				soft[i+N/2] = PH::madd(hard[i], vshuf(soft[i+N], map), vshuf(soft[i+N/2+N], map));
+		}
+		bool right_frozen = frozen >> (N/2) == ((1<<(1<<(M-1)))-1) && !*count;
+		if (right_frozen) {
+			PACListNode<TYPE, M-1>::rate0(metric, hard+N/2, soft);
+			if (left_frozen)
+				for (int k = 0; k < TYPE::SIZE; ++k)
+					map.v[k] = k;
+		} else {
+			MAP rmap = PACListTree<TYPE, M-1>::decode(metric, message, maps, count, state, hard+N/2, soft, frozen >> (N/2));
+			for (int i = 0; i < N/2; ++i)
+				hard[i] = PH::qmul(vshuf(hard[i], rmap), hard[i+N/2]);
+			if (left_frozen)
+				map = rmap;
+			else
+				map = vshuf(map, rmap);
+		}
+		return map;
 	}
 };
 
@@ -151,13 +209,33 @@ struct PACListTree<TYPE, 4>
 	{
 		for (int i = 0; i < N/2; ++i)
 			soft[i+N/2] = PH::prod(soft[i+N], soft[i+N/2+N]);
-		MAP lmap = PACListTree<TYPE, M-1>::decode(metric, message, maps, count, state, hard, soft, frozen & ((1<<(1<<(M-1)))-1));
-		for (int i = 0; i < N/2; ++i)
-			soft[i+N/2] = PH::madd(hard[i], vshuf(soft[i+N], lmap), vshuf(soft[i+N/2+N], lmap));
-		MAP rmap = PACListTree<TYPE, M-1>::decode(metric, message, maps, count, state, hard+N/2, soft, frozen >> (N/2));
-		for (int i = 0; i < N/2; ++i)
-			hard[i] = PH::qmul(vshuf(hard[i], rmap), hard[i+N/2]);
-		return vshuf(lmap, rmap);
+		MAP map;
+		bool left_frozen = (frozen & ((1<<(1<<(M-1)))-1)) == ((1<<(1<<(M-1)))-1) && !*count;
+		if (left_frozen) {
+			PACListNode<TYPE, M-1>::rate0(metric, hard, soft);
+			for (int i = 0; i < N/2; ++i)
+				soft[i+N/2] = PH::qadd(soft[i+N], soft[i+N/2+N]);
+		} else {
+			map = PACListTree<TYPE, M-1>::decode(metric, message, maps, count, state, hard, soft, frozen & ((1<<(1<<(M-1)))-1));
+			for (int i = 0; i < N/2; ++i)
+				soft[i+N/2] = PH::madd(hard[i], vshuf(soft[i+N], map), vshuf(soft[i+N/2+N], map));
+		}
+		bool right_frozen = frozen >> (N/2) == ((1<<(1<<(M-1)))-1) && !*count;
+		if (right_frozen) {
+			PACListNode<TYPE, M-1>::rate0(metric, hard+N/2, soft);
+			if (left_frozen)
+				for (int k = 0; k < TYPE::SIZE; ++k)
+					map.v[k] = k;
+		} else {
+			MAP rmap = PACListTree<TYPE, M-1>::decode(metric, message, maps, count, state, hard+N/2, soft, frozen >> (N/2));
+			for (int i = 0; i < N/2; ++i)
+				hard[i] = PH::qmul(vshuf(hard[i], rmap), hard[i+N/2]);
+			if (left_frozen)
+				map = rmap;
+			else
+				map = vshuf(map, rmap);
+		}
+		return map;
 	}
 };
 
@@ -173,13 +251,33 @@ struct PACListTree<TYPE, 3>
 	{
 		for (int i = 0; i < N/2; ++i)
 			soft[i+N/2] = PH::prod(soft[i+N], soft[i+N/2+N]);
-		MAP lmap = PACListTree<TYPE, M-1>::decode(metric, message, maps, count, state, hard, soft, frozen & ((1<<(1<<(M-1)))-1));
-		for (int i = 0; i < N/2; ++i)
-			soft[i+N/2] = PH::madd(hard[i], vshuf(soft[i+N], lmap), vshuf(soft[i+N/2+N], lmap));
-		MAP rmap = PACListTree<TYPE, M-1>::decode(metric, message, maps, count, state, hard+N/2, soft, frozen >> (N/2));
-		for (int i = 0; i < N/2; ++i)
-			hard[i] = PH::qmul(vshuf(hard[i], rmap), hard[i+N/2]);
-		return vshuf(lmap, rmap);
+		MAP map;
+		bool left_frozen = (frozen & ((1<<(1<<(M-1)))-1)) == ((1<<(1<<(M-1)))-1) && !*count;
+		if (left_frozen) {
+			PACListNode<TYPE, M-1>::rate0(metric, hard, soft);
+			for (int i = 0; i < N/2; ++i)
+				soft[i+N/2] = PH::qadd(soft[i+N], soft[i+N/2+N]);
+		} else {
+			map = PACListTree<TYPE, M-1>::decode(metric, message, maps, count, state, hard, soft, frozen & ((1<<(1<<(M-1)))-1));
+			for (int i = 0; i < N/2; ++i)
+				soft[i+N/2] = PH::madd(hard[i], vshuf(soft[i+N], map), vshuf(soft[i+N/2+N], map));
+		}
+		bool right_frozen = frozen >> (N/2) == ((1<<(1<<(M-1)))-1) && !*count;
+		if (right_frozen) {
+			PACListNode<TYPE, M-1>::rate0(metric, hard+N/2, soft);
+			if (left_frozen)
+				for (int k = 0; k < TYPE::SIZE; ++k)
+					map.v[k] = k;
+		} else {
+			MAP rmap = PACListTree<TYPE, M-1>::decode(metric, message, maps, count, state, hard+N/2, soft, frozen >> (N/2));
+			for (int i = 0; i < N/2; ++i)
+				hard[i] = PH::qmul(vshuf(hard[i], rmap), hard[i+N/2]);
+			if (left_frozen)
+				map = rmap;
+			else
+				map = vshuf(map, rmap);
+		}
+		return map;
 	}
 };
 
@@ -195,13 +293,33 @@ struct PACListTree<TYPE, 2>
 	{
 		for (int i = 0; i < N/2; ++i)
 			soft[i+N/2] = PH::prod(soft[i+N], soft[i+N/2+N]);
-		MAP lmap = PACListTree<TYPE, M-1>::decode(metric, message, maps, count, state, hard, soft, frozen & ((1<<(1<<(M-1)))-1));
-		for (int i = 0; i < N/2; ++i)
-			soft[i+N/2] = PH::madd(hard[i], vshuf(soft[i+N], lmap), vshuf(soft[i+N/2+N], lmap));
-		MAP rmap = PACListTree<TYPE, M-1>::decode(metric, message, maps, count, state, hard+N/2, soft, frozen >> (N/2));
-		for (int i = 0; i < N/2; ++i)
-			hard[i] = PH::qmul(vshuf(hard[i], rmap), hard[i+N/2]);
-		return vshuf(lmap, rmap);
+		MAP map;
+		bool left_frozen = (frozen & ((1<<(1<<(M-1)))-1)) == ((1<<(1<<(M-1)))-1) && !*count;
+		if (left_frozen) {
+			PACListNode<TYPE, M-1>::rate0(metric, hard, soft);
+			for (int i = 0; i < N/2; ++i)
+				soft[i+N/2] = PH::qadd(soft[i+N], soft[i+N/2+N]);
+		} else {
+			map = PACListTree<TYPE, M-1>::decode(metric, message, maps, count, state, hard, soft, frozen & ((1<<(1<<(M-1)))-1));
+			for (int i = 0; i < N/2; ++i)
+				soft[i+N/2] = PH::madd(hard[i], vshuf(soft[i+N], map), vshuf(soft[i+N/2+N], map));
+		}
+		bool right_frozen = frozen >> (N/2) == ((1<<(1<<(M-1)))-1) && !*count;
+		if (right_frozen) {
+			PACListNode<TYPE, M-1>::rate0(metric, hard+N/2, soft);
+			if (left_frozen)
+				for (int k = 0; k < TYPE::SIZE; ++k)
+					map.v[k] = k;
+		} else {
+			MAP rmap = PACListTree<TYPE, M-1>::decode(metric, message, maps, count, state, hard+N/2, soft, frozen >> (N/2));
+			for (int i = 0; i < N/2; ++i)
+				hard[i] = PH::qmul(vshuf(hard[i], rmap), hard[i+N/2]);
+			if (left_frozen)
+				map = rmap;
+			else
+				map = vshuf(map, rmap);
+		}
+		return map;
 	}
 };
 
@@ -217,21 +335,21 @@ struct PACListTree<TYPE, 1>
 		MAP map;
 		bool left_frozen = frozen & 1;
 		if (left_frozen) {
-			PACListLeaf<TYPE>::rate0(metric, state, hard, soft);
+			PACListNode<TYPE, 0>::rate0(metric, state, hard, soft);
 			soft[1] = PH::madd(hard[0], soft[2], soft[3]);
 		} else {
-			map = PACListLeaf<TYPE>::rate1(metric, message, maps, count, state, hard, soft);
+			map = PACListNode<TYPE, 0>::rate1(metric, message, maps, count, state, hard, soft);
 			soft[1] = PH::madd(hard[0], vshuf(soft[2], map), vshuf(soft[3], map));
 		}
 		bool right_frozen = frozen >> 1;
 		if (right_frozen) {
-			PACListLeaf<TYPE>::rate0(metric, state, hard+1, soft);
+			PACListNode<TYPE, 0>::rate0(metric, state, hard+1, soft);
 			hard[0] = PH::qmul(hard[0], hard[1]);
 			if (left_frozen)
 				for (int k = 0; k < TYPE::SIZE; ++k)
 					map.v[k] = k;
 		} else {
-			MAP rmap = PACListLeaf<TYPE>::rate1(metric, message, maps, count, state, hard+1, soft);
+			MAP rmap = PACListNode<TYPE, 0>::rate1(metric, message, maps, count, state, hard+1, soft);
 			hard[0] = PH::qmul(vshuf(hard[0], rmap), hard[1]);
 			if (left_frozen)
 				map = rmap;
