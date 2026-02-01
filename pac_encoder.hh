@@ -14,10 +14,6 @@ template <typename TYPE>
 class PACEncoder
 {
 	typedef PolarHelper<TYPE> PH;
-	static bool get(const uint32_t *bits, int idx)
-	{
-		return (bits[idx/32] >> (idx%32)) & 1;
-	}
 	static bool conv(int *state, bool input)
 	{
 		// 1011011
@@ -30,13 +26,14 @@ class PACEncoder
 		return output;
 	}
 public:
-	void operator()(TYPE *codeword, const TYPE *message, const uint32_t *frozen, int level)
+	void operator()(TYPE *codeword, const TYPE *message, const int *rank_map, int mesg_bits, int level)
 	{
 		int length = 1 << level;
 		int state = 0;
+		int frozen = length - mesg_bits;
 		for (int i = 0; i < length; i += 2) {
-			TYPE msg0 = get(frozen, i) ? PH::one() : *message++;
-			TYPE msg1 = get(frozen, i+1) ? PH::one() : *message++;
+			TYPE msg0 = rank_map[i] < frozen ? PH::one() : *message++;
+			TYPE msg1 = rank_map[i+1] < frozen ? PH::one() : *message++;
 			msg0 = 1 - 2 * conv(&state, msg0 < 0);
 			msg1 = 1 - 2 * conv(&state, msg1 < 0);
 			codeword[i] = PH::qmul(msg0, msg1);

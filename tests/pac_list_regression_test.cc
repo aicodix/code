@@ -46,15 +46,12 @@ int main()
 	typedef std::default_random_engine generator;
 	typedef std::uniform_int_distribution<int> distribution;
 	auto data = std::bind(distribution(0, 1), generator(rd()));
-	auto frozen = new uint32_t[N/32];
 	auto codeword = new code_type[N];
 
 	double erasure_probability = 0.5;
 	int K = (1 - erasure_probability) * N;
 	double design_SNR = 10 * std::log10(-std::log(erasure_probability));
 	std::cerr << "design SNR: " << design_SNR << std::endl;
-	for (int i = 0; i < N / 32; ++i)
-		frozen[i] = 0;
 	const int *reliability_sequence;
 	if (1) {
 		auto construct = new CODE::ReedMullerSequence<10>;
@@ -66,12 +63,11 @@ int main()
 	} else {
 		reliability_sequence = sequence;
 	}
-	for (int i = 0, j = 0; i < 1024 && j < N - K; ++i) {
+	auto rank_map = new int[N];
+	for (int i = 0, j = 0; i < 1024 && j < N; ++i) {
 		int index = reliability_sequence[i];
-		if (index < N) {
-			frozen[index/32] |= 1 << (index%32);
-			++j;
-		}
+		if (index < N)
+			rank_map[index] = j++;
 	}
 	std::cerr << "Polar(" << N << ", " << K << ")" << std::endl;
 	auto message = new code_type[K];
@@ -121,7 +117,7 @@ int main()
 			}
 
 			CODE::PACEncoder<code_type> encode;
-			encode(codeword, message, frozen, M);
+			encode(codeword, message, rank_map, K, M);
 
 			for (int i = 0; i < N; ++i)
 				orig[i] = codeword[i];
@@ -144,7 +140,7 @@ int main()
 
 			int rank[L];
 			auto start = std::chrono::system_clock::now();
-			(*decode)(rank, decoded, codeword, frozen, M);
+			(*decode)(rank, decoded, codeword, rank_map, K, M);
 			auto end = std::chrono::system_clock::now();
 			auto usec = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
 			double mbs = (double)K / usec.count();
