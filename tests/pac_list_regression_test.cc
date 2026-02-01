@@ -27,6 +27,7 @@ bool get_bit(const uint32_t *bits, int idx)
 int main()
 {
 	const int M = 7;
+	assert(M <= 10);
 	const int N = 1 << M;
 	const bool crc_aided = false;
 	CODE::CRC<uint32_t> crc(0xD419CC15);
@@ -48,42 +49,34 @@ int main()
 	auto frozen = new uint32_t[N/32];
 	auto codeword = new code_type[N];
 
-	const int *reliability_sequence;
 	double erasure_probability = 0.5;
 	int K = (1 - erasure_probability) * N;
 	double design_SNR = 10 * std::log10(-std::log(erasure_probability));
 	std::cerr << "design SNR: " << design_SNR << std::endl;
-	if (1) {
-		auto construct = new CODE::ReedMullerSequence<M>;
-		std::cerr << "sizeof(ReedMullerSequence<M>) = " << sizeof(CODE::ReedMullerSequence<M>) << std::endl;
-		auto rel_seq = new int[N];
-		(*construct)(rel_seq, M);
-		delete construct;
-		reliability_sequence = rel_seq;
-	}
-	if (0) {
-		auto construct = new CODE::BhattacharyyaSequence<M>;
-		std::cerr << "sizeof(BhattacharyyaSequence<M>) = " << sizeof(CODE::BhattacharyyaSequence<M>) << std::endl;
-		double better_SNR = design_SNR + 1.59175;
-		std::cerr << "better SNR: " << better_SNR << std::endl;
-		double probability = std::exp(-pow(10.0, better_SNR / 10));
-		std::cerr << "prob: " << probability << std::endl;
-		auto rel_seq = new int[N];
-		(*construct)(rel_seq, M, probability);
-		delete construct;
-		reliability_sequence = rel_seq;
-	}
-	if (0) {
-		reliability_sequence = sequence;
-	}
 	for (int i = 0; i < N / 32; ++i)
 		frozen[i] = 0;
-	for (int i = 0; i < N - K; ++i)
-		frozen[reliability_sequence[i]/32] |= 1 << (reliability_sequence[i]%32);
+	const int *reliability_sequence;
+	if (1) {
+		auto construct = new CODE::ReedMullerSequence<10>;
+		std::cerr << "sizeof(ReedMullerSequence<M>) = " << sizeof(CODE::ReedMullerSequence<M>) << std::endl;
+		auto rel_seq = new int[1024];
+		(*construct)(rel_seq, 10);
+		delete construct;
+		reliability_sequence = rel_seq;
+	} else {
+		reliability_sequence = sequence;
+	}
+	for (int i = 0, j = 0; i < 1024 && j < N - K; ++i) {
+		int index = reliability_sequence[i];
+		if (index < N) {
+			frozen[index/32] |= 1 << (index%32);
+			++j;
+		}
+	}
 	std::cerr << "Polar(" << N << ", " << K << ")" << std::endl;
 	auto message = new code_type[K];
 	auto decoded = new simd_type[K];
-	std::cerr << "sizeof(PACDecoder<simd_type, M>) = " << sizeof(CODE::PACListDecoder<simd_type, M>) << std::endl;
+	std::cerr << "sizeof(PACListDecoder<simd_type, M>) = " << sizeof(CODE::PACListDecoder<simd_type, M>) << std::endl;
 	auto decode = new CODE::PACListDecoder<simd_type, M>;
 
 	auto orig = new code_type[N];

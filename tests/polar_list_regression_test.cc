@@ -50,11 +50,12 @@ int main()
 	auto codeword = new code_type[N];
 	auto temp = new simd_type[N];
 
-	const int *reliability_sequence;
 	double erasure_probability = 0.3;
 	int K = (1 - erasure_probability) * N;
 	double design_SNR = 10 * std::log10(-std::log(erasure_probability));
 	std::cerr << "design SNR: " << design_SNR << std::endl;
+	for (int i = 0; i < N / 32; ++i)
+		frozen[i] = 0;
 	if (1) {
 		auto construct = new CODE::BhattacharyyaSequence<M>;
 		std::cerr << "sizeof(BhattacharyyaSequence<M>) = " << sizeof(CODE::BhattacharyyaSequence<M>) << std::endl;
@@ -65,14 +66,18 @@ int main()
 		auto rel_seq = new int[N];
 		(*construct)(rel_seq, M, probability);
 		delete construct;
-		reliability_sequence = rel_seq;
+		for (int i = 0; i < N - K; ++i)
+			frozen[rel_seq[i]/32] |= 1 << (rel_seq[i]%32);
 	} else {
-		reliability_sequence = sequence;
+		assert(M <= 10);
+		for (int i = 0, j = 0; i < 1024 && j < N - K; ++i) {
+			int index = sequence[i];
+			if (index < N) {
+				frozen[index/32] |= 1 << (index%32);
+				++j;
+			}
+		}
 	}
-	for (int i = 0; i < N / 32; ++i)
-		frozen[i] = 0;
-	for (int i = 0; i < N - K; ++i)
-		frozen[reliability_sequence[i]/32] |= 1 << (reliability_sequence[i]%32);
 	std::cerr << "Polar(" << N << ", " << K << ")" << std::endl;
 	auto message = new code_type[K];
 	auto decoded = new simd_type[K];
