@@ -17,17 +17,12 @@ Copyright 2025 Ahmet Inan <inan@aicodix.de>
 #include "pac_encoder.hh"
 #include "polar_sequence.hh"
 #include "crc.hh"
-#include "sequence.h"
-
-bool get_bit(const uint32_t *bits, int idx)
-{
-	return (bits[idx/32] >> (idx%32)) & 1;
-}
 
 int main()
 {
+	const int MAX_M = 10;
+	const int MAX_N = 1 << MAX_M;
 	const int M = 7;
-	assert(M <= 10);
 	const int N = 1 << M;
 	const bool crc_aided = false;
 	CODE::CRC<uint32_t> crc(0xD419CC15);
@@ -52,28 +47,22 @@ int main()
 	int K = (1 - erasure_probability) * N;
 	double design_SNR = 10 * std::log10(-std::log(erasure_probability));
 	std::cerr << "design SNR: " << design_SNR << std::endl;
-	const int *reliability_sequence;
-	if (1) {
-		auto construct = new CODE::ReedMullerSequence<10>;
-		std::cerr << "sizeof(ReedMullerSequence<M>) = " << sizeof(CODE::ReedMullerSequence<M>) << std::endl;
-		auto rel_seq = new int[1024];
-		(*construct)(rel_seq, 10);
-		delete construct;
-		reliability_sequence = rel_seq;
-	} else {
-		reliability_sequence = sequence;
-	}
+	auto construct = new CODE::ReedMullerSequence<MAX_M>;
+	std::cerr << "sizeof(ReedMullerSequence<MAX_M>) = " << sizeof(CODE::ReedMullerSequence<MAX_M>) << std::endl;
+	auto rel_seq = new int[MAX_N];
+	(*construct)(rel_seq, MAX_M);
+	delete construct;
 	auto rank_map = new int[N];
-	for (int i = 0, j = 0; i < 1024 && j < N; ++i) {
-		int index = reliability_sequence[i];
+	for (int i = 0, j = 0; i < MAX_N && j < N; ++i) {
+		int index = rel_seq[i];
 		if (index < N)
 			rank_map[index] = j++;
 	}
 	std::cerr << "Polar(" << N << ", " << K << ")" << std::endl;
 	auto message = new code_type[K];
 	auto decoded = new simd_type[K];
-	std::cerr << "sizeof(PACListDecoder<simd_type, M>) = " << sizeof(CODE::PACListDecoder<simd_type, M>) << std::endl;
-	auto decode = new CODE::PACListDecoder<simd_type, M>;
+	std::cerr << "sizeof(PACListDecoder<simd_type, MAX_M>) = " << sizeof(CODE::PACListDecoder<simd_type, MAX_M>) << std::endl;
+	auto decode = new CODE::PACListDecoder<simd_type, MAX_M>;
 
 	auto orig = new code_type[N];
 	auto noisy = new code_type[N];
