@@ -51,7 +51,7 @@ int main()
 	auto temp = new simd_type[N];
 
 	double erasure_probability = 0.3;
-	int K = (1 - erasure_probability) * N;
+	int K = (1 - erasure_probability) * N + crc_aided * C;
 	double design_SNR = 10 * std::log10(-std::log(erasure_probability));
 	std::cerr << "design SNR: " << design_SNR << std::endl;
 	for (int i = 0; i < N / 32; ++i)
