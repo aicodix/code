@@ -58,7 +58,7 @@ int main()
 		if (index < N)
 			rank_map[index] = j++;
 	}
-	std::cerr << "Polar(" << N << ", " << K << ")" << std::endl;
+	std::cerr << "PAC(" << N << ", " << K << ")" << std::endl;
 	auto message = new code_type[K];
 	auto decoded = new simd_type[K];
 	std::cerr << "sizeof(PACListDecoder<simd_type, MAX_M>) = " << sizeof(CODE::PACListDecoder<simd_type, MAX_M>) << std::endl;
