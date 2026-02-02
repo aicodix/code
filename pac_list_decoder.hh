@@ -18,7 +18,7 @@ struct PACListTree
 	typedef typename PH::PATH PATH;
 	typedef typename PH::MAP MAP;
 	static const int N = 1 << M;
-	static MAP decode(PATH *metric, TYPE *message, MAP *maps, int *count, int *state, TYPE *hard, TYPE *soft, const int *rank, int frozen)
+	static MAP decode(PATH *metric, TYPE *message, MAP *maps, int *count, int *state, TYPE *hard, TYPE *soft, const uint8_t *rank, int frozen)
 	{
 		for (int i = 0; i < N/2; ++i)
 			soft[i+N/2] = PH::prod(soft[i+N], soft[i+N/2+N]);
@@ -97,7 +97,7 @@ struct PACListTree<TYPE, 1>
 		*hard = hrd;
 		return map;
 	}
-	static MAP decode(PATH *metric, TYPE *message, MAP *maps, int *count, int *state, TYPE *hard, TYPE *soft, const int *rank, int frozen)
+	static MAP decode(PATH *metric, TYPE *message, MAP *maps, int *count, int *state, TYPE *hard, TYPE *soft, const uint8_t *rank, int frozen)
 	{
 		soft[1] = PH::prod(soft[2], soft[3]);
 		MAP lmap, rmap;
@@ -118,7 +118,7 @@ struct PACListTree<TYPE, 1>
 template <typename TYPE, int MAX_M>
 class PACListDecoder
 {
-	static_assert(MAX_M >= 5 && MAX_M <= 16);
+	static_assert(MAX_M >= 5 && MAX_M <= 8);
 	typedef PolarHelper<TYPE> PH;
 	typedef typename TYPE::value_type VALUE;
 	typedef typename PH::PATH PATH;
@@ -128,7 +128,7 @@ class PACListDecoder
 	TYPE hard[MAX_N];
 	MAP maps[MAX_N];
 public:
-	void operator()(int *rank, TYPE *message, const VALUE *codeword, const int *rank_map, int mesg_bits, int level)
+	void operator()(int *rank, TYPE *message, const VALUE *codeword, const uint8_t *rank_map, int mesg_bits, int level)
 	{
 		assert(level <= MAX_M);
 		PATH metric[TYPE::SIZE];
@@ -149,14 +149,6 @@ public:
 		case 6: PACListTree<TYPE, 6>::decode(metric, message, maps, &count, state, hard, soft, rank_map, frozen); break;
 		case 7: PACListTree<TYPE, 7>::decode(metric, message, maps, &count, state, hard, soft, rank_map, frozen); break;
 		case 8: PACListTree<TYPE, 8>::decode(metric, message, maps, &count, state, hard, soft, rank_map, frozen); break;
-		case 9: PACListTree<TYPE, 9>::decode(metric, message, maps, &count, state, hard, soft, rank_map, frozen); break;
-		case 10: PACListTree<TYPE, 10>::decode(metric, message, maps, &count, state, hard, soft, rank_map, frozen); break;
-		case 11: PACListTree<TYPE, 11>::decode(metric, message, maps, &count, state, hard, soft, rank_map, frozen); break;
-		case 12: PACListTree<TYPE, 12>::decode(metric, message, maps, &count, state, hard, soft, rank_map, frozen); break;
-		case 13: PACListTree<TYPE, 13>::decode(metric, message, maps, &count, state, hard, soft, rank_map, frozen); break;
-		case 14: PACListTree<TYPE, 14>::decode(metric, message, maps, &count, state, hard, soft, rank_map, frozen); break;
-		case 15: PACListTree<TYPE, 15>::decode(metric, message, maps, &count, state, hard, soft, rank_map, frozen); break;
-		case 16: PACListTree<TYPE, 16>::decode(metric, message, maps, &count, state, hard, soft, rank_map, frozen); break;
 		default: assert(false);
 		}
 

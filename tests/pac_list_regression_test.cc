@@ -20,7 +20,7 @@ Copyright 2025 Ahmet Inan <inan@aicodix.de>
 
 int main()
 {
-	const int MAX_M = 10;
+	const int MAX_M = 8;
 	const int MAX_N = 1 << MAX_M;
 	const int M = 7;
 	const int N = 1 << M;
@@ -52,7 +52,7 @@ int main()
 	auto rel_seq = new int[MAX_N];
 	(*construct)(rel_seq, MAX_M);
 	delete construct;
-	auto rank_map = new int[N];
+	auto rank_map = new uint8_t[N];
 	for (int i = 0, j = 0; i < MAX_N && j < N; ++i) {
 		int index = rel_seq[i];
 		if (index < N)

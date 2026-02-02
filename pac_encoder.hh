@@ -26,7 +26,7 @@ class PACEncoder
 		return output;
 	}
 public:
-	void operator()(TYPE *codeword, const TYPE *message, const int *rank_map, int mesg_bits, int level)
+	void operator()(TYPE *codeword, const TYPE *message, const uint8_t *rank_map, int mesg_bits, int level)
 	{
 		int length = 1 << level;
 		int state = 0;
