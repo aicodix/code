@@ -25,13 +25,13 @@ int main()
 	const int M = 7;
 	const int N = 1 << M;
 	const bool crc_aided = false;
-	CODE::CRC<uint32_t> crc(0xD419CC15);
-	const int C = 32;
+	CODE::CRC<uint8_t> crc(0xD9);
+	const int C = 8;
 #if 1
 	const int L = 64;
 	typedef int8_t code_type;
 #else
-	const int L = 8;
+	const int L = 16;
 	typedef float code_type;
 #endif
 
