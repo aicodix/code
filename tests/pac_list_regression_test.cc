@@ -24,7 +24,7 @@ int main()
 	const int MAX_N = 1 << MAX_M;
 	const int M = 7;
 	const int N = 1 << M;
-	const bool crc_aided = false;
+	const bool crc_aided = true;
 	CODE::CRC<uint8_t> crc(0xD9);
 	const int C = 8;
 #if 1
@@ -44,7 +44,7 @@ int main()
 	auto codeword = new code_type[N];
 
 	double erasure_probability = 0.5;
-	int K = (1 - erasure_probability) * N;
+	int K = (1 - erasure_probability) * N + crc_aided * C;
 	double design_SNR = 10 * std::log10(-std::log(erasure_probability));
 	std::cerr << "design SNR: " << design_SNR << std::endl;
 	auto construct = new CODE::ReedMullerSequence<MAX_M>;
