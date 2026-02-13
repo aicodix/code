@@ -89,7 +89,7 @@ Encoder for [augmented Hadamard codes](https://en.wikipedia.org/wiki/Hadamard_co
 Bit freezers for the construction of [polar codes](https://en.wikipedia.org/wiki/Polar_code_(coding_theory)).
 
 * PolarFreezer: Constructs code for a given erasure probability without the need for storing nor sorting of erasure probabilities for the virtual channels.
-* PolarCodeConst0: Constructs code by choosing the K best virtual channels computed from a given erasure probability.
+* BhattacharyyaFreezer: Constructs code by choosing the K best virtual channels computed from a given erasure probability.
 
 ### [polar_sequence.hh](polar_sequence.hh)
 

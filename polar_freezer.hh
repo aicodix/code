@@ -43,7 +43,7 @@ public:
 };
 
 template <int MAX_M>
-class PolarCodeConst0
+class BhattacharyyaFreezer
 {
 	static void inform_bit(uint32_t *bits, int idx)
 	{

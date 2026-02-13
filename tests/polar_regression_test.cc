@@ -50,8 +50,8 @@ int main()
 	std::cerr << "better SNR: " << better_SNR << std::endl;
 	double probability = std::exp(-pow(10.0, better_SNR / 10));
 	if (1) {
-		auto freeze = new CODE::PolarCodeConst0<M>;
-		std::cerr << "sizeof(PolarCodeConst0<M>) = " << sizeof(CODE::PolarCodeConst0<M>) << std::endl;
+		auto freeze = new CODE::BhattacharyyaFreezer<M>;
+		std::cerr << "sizeof(BhattacharyyaFreezer<M>) = " << sizeof(CODE::BhattacharyyaFreezer<M>) << std::endl;
 		(*freeze)(frozen, M, K, probability);
 		delete freeze;
 	} else {
