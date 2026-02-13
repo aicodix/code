@@ -20,6 +20,7 @@ Copyright 2025 Ahmet Inan <inan@aicodix.de>
 
 int main()
 {
+	double R = 0.5;
 	const int MAX_M = 8;
 	const int MAX_N = 1 << MAX_M;
 	const int M = 7;
@@ -27,6 +28,7 @@ int main()
 	const bool crc_aided = true;
 	CODE::CRC<uint8_t> crc(0xD9);
 	const int C = 8;
+	int K = R * N + crc_aided * C;
 #if 1
 	const int L = 64;
 	typedef int8_t code_type;
@@ -43,8 +45,7 @@ int main()
 	auto data = std::bind(distribution(0, 1), generator(rd()));
 	auto codeword = new code_type[N];
 
-	double erasure_probability = 0.5;
-	int K = (1 - erasure_probability) * N + crc_aided * C;
+	double erasure_probability = 1 - R;
 	double design_SNR = 10 * std::log10(-std::log(erasure_probability));
 	std::cerr << "design SNR: " << design_SNR << std::endl;
 	auto construct = new CODE::ReedMullerSequence<MAX_M>;
@@ -177,13 +178,12 @@ int main()
 			count = 0;
 
 		int MOD_BITS = 1; // BPSK
-		double code_rate = (double)(K - crc_aided * C) / (double)N;
-		double spectral_efficiency = code_rate * MOD_BITS;
+		double spectral_efficiency = R * MOD_BITS;
 		double EbN0 = 10 * std::log10(sigma_signal * sigma_signal / (spectral_efficiency * 2 * sigma_noise * sigma_noise));
 
 		if (0) {
 			std::cerr << SNR << " Es/N0 => AWGN with standard deviation of " << sigma_noise << " and mean " << mean_noise << std::endl;
-			std::cerr << EbN0 << " Eb/N0, using spectral efficiency of " << spectral_efficiency << " from " << code_rate << " code rate and " << MOD_BITS << " bits per symbol." << std::endl;
+			std::cerr << EbN0 << " Eb/N0, using spectral efficiency of " << spectral_efficiency << " from " << R << " code rate and " << MOD_BITS << " bits per symbol." << std::endl;
 			std::cerr << awgn_errors << " errors caused by AWGN." << std::endl;
 			std::cerr << quantization_erasures << " erasures caused by quantization." << std::endl;
 			std::cerr << uncorrected_errors << " errors uncorrected." << std::endl;
