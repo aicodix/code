@@ -50,6 +50,7 @@ int main()
 	double better_SNR = design_SNR + 0.5;//1.59175;
 	std::cerr << "better SNR: " << better_SNR << std::endl;
 	double probability = std::exp(-pow(10.0, better_SNR / 10));
+	std::cerr << "prob: " << probability << std::endl;
 	if (1) {
 		auto freeze = new CODE::BhattacharyyaFreezer<M>;
 		std::cerr << "sizeof(BhattacharyyaFreezer<M>) = " << sizeof(CODE::BhattacharyyaFreezer<M>) << std::endl;
