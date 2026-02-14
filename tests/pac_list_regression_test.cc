@@ -26,8 +26,8 @@ int main()
 	const int M = 7;
 	const int N = 1 << M;
 	const bool crc_aided = true;
-	CODE::CRC<uint8_t> crc(0xD9);
-	const int C = 8;
+	CODE::CRC<uint16_t> crc(0xA8F4);
+	const int C = 16;
 	int K = R * N + crc_aided * C;
 #if 1
 	const int L = 64;
