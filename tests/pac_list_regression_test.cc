@@ -25,7 +25,7 @@ int main()
 	const int MAX_N = 1 << MAX_M;
 	const int M = 7;
 	const int N = 1 << M;
-	const bool crc_aided = true;
+	const bool crc_aided = false;
 	CODE::CRC<uint16_t> crc(0xA8F4);
 	const int C = 16;
 	int K = R * N + crc_aided * C;
