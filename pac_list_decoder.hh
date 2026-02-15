@@ -154,7 +154,7 @@ public:
 
 		for (int i = 0; i < TYPE::SIZE; ++i)
 			if (((state[i] & 8064) >> 7) != ((state[i] & 126) >> 1))
-				metric[i] += 1000000;
+				metric[i] = 1000000;
 		int perm[TYPE::SIZE];
 		CODE::insertion_sort(perm, metric, TYPE::SIZE);
 		for (int i = 0, r = 0; rank != nullptr && i < TYPE::SIZE; ++i) {
