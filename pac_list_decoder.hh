@@ -123,7 +123,7 @@ template <typename TYPE, int MAX_M>
 class PACListDecoder
 {
 	static_assert(MAX_M >= 5 && MAX_M <= 8);
-	static_assert(TYPE::SIZE == 64);
+	static_assert(TYPE::SIZE >= 64);
 	typedef PolarHelper<TYPE> PH;
 	typedef typename TYPE::value_type VALUE;
 	typedef typename PH::PATH PATH;
@@ -138,14 +138,18 @@ public:
 		assert(level <= MAX_M);
 		PATH metric[TYPE::SIZE];
 		int count = 0;
-		for (int k = 0; k < TYPE::SIZE; ++k)
+		for (int k = 0; k < 64; ++k)
 			metric[k] = 0;
+		for (int k = 64; k < TYPE::SIZE; ++k)
+			metric[k] = 1000000;
 		int length = 1 << level;
 		for (int i = 0; i < length; ++i)
 			soft[length+i] = vdup<TYPE>(codeword[i]);
 		int state[TYPE::SIZE];
-		for (int i = 0; i < TYPE::SIZE; ++i)
+		for (int i = 0; i < 64; ++i)
 			state[i] = (i << 7) | (i << 1);
+		for (int i = 64; i < TYPE::SIZE; ++i)
+			state[i] = 0;
 		int frozen = length - mesg_bits;
 
 		switch (level) {
