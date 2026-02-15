@@ -46,7 +46,7 @@ struct PACListTree<TYPE, 1>
 		bool b4 = (*state >> 4) & 1;
 		bool b6 = (*state >> 6) & 1;
 		bool output = input ^ b1 ^ b3 ^ b4 ^ b6;
-		*state = ((*state & 62) << 1) | (input ? 2 : 0) | (output ? 1 : 0);
+		*state = (*state & 8064) | ((*state & 62) << 1) | (input ? 2 : 0) | (output ? 1 : 0);
 		return output;
 	}
 	static MAP rate0(PATH *metric, int *state, TYPE *hard, TYPE *soft)
@@ -119,6 +119,7 @@ template <typename TYPE, int MAX_M>
 class PACListDecoder
 {
 	static_assert(MAX_M >= 5 && MAX_M <= 8);
+	static_assert(TYPE::SIZE == 64);
 	typedef PolarHelper<TYPE> PH;
 	typedef typename TYPE::value_type VALUE;
 	typedef typename PH::PATH PATH;
@@ -133,15 +134,14 @@ public:
 		assert(level <= MAX_M);
 		PATH metric[TYPE::SIZE];
 		int count = 0;
-		metric[0] = 0;
-		for (int k = 1; k < TYPE::SIZE; ++k)
-			metric[k] = 1000000;
+		for (int k = 0; k < TYPE::SIZE; ++k)
+			metric[k] = 0;
 		int length = 1 << level;
 		for (int i = 0; i < length; ++i)
 			soft[length+i] = vdup<TYPE>(codeword[i]);
 		int state[TYPE::SIZE];
 		for (int i = 0; i < TYPE::SIZE; ++i)
-			state[i] = 0;
+			state[i] = (i << 7) | (i << 1);
 		int frozen = length - mesg_bits;
 
 		switch (level) {

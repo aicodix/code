@@ -22,7 +22,7 @@ class PACEncoder
 		bool b4 = (*state >> 4) & 1;
 		bool b6 = (*state >> 6) & 1;
 		bool output = input ^ b1 ^ b3 ^ b4 ^ b6;
-		*state = ((*state & 62) << 1) | (input ? 2 : 0) | (output ? 1 : 0);
+		*state = (*state & 8064) | ((*state & 62) << 1) | (input ? 2 : 0) | (output ? 1 : 0);
 		return output;
 	}
 public:
@@ -31,6 +31,13 @@ public:
 		int length = 1 << level;
 		int state = 0;
 		int frozen = length - mesg_bits;
+		for (int i = 0, j = 0; i < length; i += 2) {
+			TYPE msg0 = rank_map[i] < frozen ? PH::one() : message[j++];
+			TYPE msg1 = rank_map[i+1] < frozen ? PH::one() : message[j++];
+			conv(&state, msg0 < 0);
+			conv(&state, msg1 < 0);
+		}
+		state |= (state & 126) << 7;
 		for (int i = 0; i < length; i += 2) {
 			TYPE msg0 = rank_map[i] < frozen ? PH::one() : *message++;
 			TYPE msg1 = rank_map[i+1] < frozen ? PH::one() : *message++;
