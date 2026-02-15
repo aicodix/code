@@ -46,7 +46,7 @@ struct PACListTree<TYPE, 1>
 		bool b4 = (*state >> 4) & 1;
 		bool b6 = (*state >> 6) & 1;
 		bool output = input ^ b1 ^ b3 ^ b4 ^ b6;
-		*state = ((*state & 126) << 1) | (input ? 2 : 0) | (output ? 1 : 0);
+		*state = ((*state & 62) << 1) | (input ? 2 : 0) | (output ? 1 : 0);
 		return output;
 	}
 	static MAP rate0(PATH *metric, int *state, TYPE *hard, TYPE *soft)
