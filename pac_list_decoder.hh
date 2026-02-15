@@ -61,9 +61,6 @@ struct PACListTree<TYPE, 1>
 				hrd.v[k] = 1 - 2 * (state[k] & 1);
 			*hard = hrd;
 		} else {
-			for (int k = 0; k < TYPE::SIZE; ++k)
-				if (sft.v[k] < 0)
-					metric[k] -= sft.v[k];
 			*hard = PH::one();
 		}
 		MAP map;
