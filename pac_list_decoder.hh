@@ -152,12 +152,21 @@ public:
 		default: assert(false);
 		}
 
+		for (int i = 0; i < TYPE::SIZE; ++i)
+			if (((state[i] & 8064) >> 7) != ((state[i] & 126) >> 1))
+				metric[i] += 1000000;
+		int perm[TYPE::SIZE];
+		CODE::insertion_sort(perm, metric, TYPE::SIZE);
 		for (int i = 0, r = 0; rank != nullptr && i < TYPE::SIZE; ++i) {
 			if (i > 0 && metric[i-1] != metric[i])
 				++r;
 			rank[i] = r;
 		}
-		MAP acc = maps[count-1];
+		MAP acc;
+		for (int k = 0; k < TYPE::SIZE; ++k)
+			acc.v[k] = perm[k];
+		message[count-1] = vshuf(message[count-1], acc);
+		acc = vshuf(maps[count-1], acc);
 		for (int i = count-2; i >= 0; --i) {
 			message[i] = vshuf(message[i], acc);
 			acc = vshuf(maps[i], acc);
