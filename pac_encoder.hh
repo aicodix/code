@@ -33,16 +33,20 @@ public:
 		int frozen = length - mesg_bits;
 		for (int i = 0, j = 0; i < length; i += 2) {
 			TYPE msg0 = rank_map[i] < frozen ? PH::one() : message[j++];
+			if (j)
+				conv(&state, msg0 < 0);
 			TYPE msg1 = rank_map[i+1] < frozen ? PH::one() : message[j++];
-			conv(&state, msg0 < 0);
-			conv(&state, msg1 < 0);
+			if (j)
+				conv(&state, msg1 < 0);
 		}
 		state |= (state & 126) << 7;
-		for (int i = 0; i < length; i += 2) {
-			TYPE msg0 = rank_map[i] < frozen ? PH::one() : *message++;
-			TYPE msg1 = rank_map[i+1] < frozen ? PH::one() : *message++;
-			msg0 = 1 - 2 * conv(&state, msg0 < 0);
-			msg1 = 1 - 2 * conv(&state, msg1 < 0);
+		for (int i = 0, j = 0; i < length; i += 2) {
+			TYPE msg0 = rank_map[i] < frozen ? PH::one() : message[j++];
+			if (j)
+				msg0 = 1 - 2 * conv(&state, msg0 < 0);
+			TYPE msg1 = rank_map[i+1] < frozen ? PH::one() : message[j++];
+			if (j)
+				msg1 = 1 - 2 * conv(&state, msg1 < 0);
 			codeword[i] = PH::qmul(msg0, msg1);
 			codeword[i+1] = msg1;
 		}

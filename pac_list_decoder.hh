@@ -49,16 +49,23 @@ struct PACListTree<TYPE, 1>
 		*state = (*state & 8064) | ((*state & 62) << 1) | (input ? 2 : 0) | (output ? 1 : 0);
 		return output;
 	}
-	static MAP rate0(PATH *metric, int *state, TYPE *hard, TYPE *soft)
+	static MAP rate0(PATH *metric, int *count, int *state, TYPE *hard, TYPE *soft)
 	{
 		TYPE sft = soft[1];
-		for (int k = 0; k < TYPE::SIZE; ++k)
-			if (conv(state+k, 0) != (sft.v[k] < 0))
-				metric[k] += std::abs(sft.v[k]);
-		TYPE hrd;
-		for (int k = 0; k < TYPE::SIZE; ++k)
-			hrd.v[k] = 1 - 2 * (state[k] & 1);
-		*hard = hrd;
+		if (*count) {
+			for (int k = 0; k < TYPE::SIZE; ++k)
+				if (conv(state+k, 0) != (sft.v[k] < 0))
+					metric[k] += std::abs(sft.v[k]);
+			TYPE hrd;
+			for (int k = 0; k < TYPE::SIZE; ++k)
+				hrd.v[k] = 1 - 2 * (state[k] & 1);
+			*hard = hrd;
+		} else {
+			for (int k = 0; k < TYPE::SIZE; ++k)
+				if (sft.v[k] < 0)
+					metric[k] -= sft.v[k];
+			*hard = PH::one();
+		}
 		MAP map;
 		for (int k = 0; k < TYPE::SIZE; ++k)
 			map.v[k] = k;
@@ -102,12 +109,12 @@ struct PACListTree<TYPE, 1>
 		soft[1] = PH::prod(soft[2], soft[3]);
 		MAP lmap, rmap;
 		if (rank[0] < frozen)
-			lmap = rate0(metric, state, hard, soft);
+			lmap = rate0(metric, count, state, hard, soft);
 		else
 			lmap = rate1(metric, message, maps, count, state, hard, soft);
 		soft[1] = PH::madd(hard[0], vshuf(soft[2], lmap), vshuf(soft[3], lmap));
 		if (rank[1] < frozen)
-			rmap = rate0(metric, state, hard+1, soft);
+			rmap = rate0(metric, count, state, hard+1, soft);
 		else
 			rmap = rate1(metric, message, maps, count, state, hard+1, soft);
 		hard[0] = PH::qmul(vshuf(hard[0], rmap), hard[1]);
