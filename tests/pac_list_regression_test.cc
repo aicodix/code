@@ -30,10 +30,10 @@ int main()
 	const int C = 16;
 	int K = R * N + crc_aided * C;
 #if 1
-	const int L = 64;
+	const int L = 16;
 	typedef int8_t code_type;
 #else
-	const int L = 16;
+	const int L = 4;
 	typedef float code_type;
 #endif
 

@@ -46,7 +46,7 @@ struct PACListTree<TYPE, 1>
 		bool b4 = (*state >> 4) & 1;
 		bool b6 = (*state >> 6) & 1;
 		bool output = input ^ b1 ^ b3 ^ b4 ^ b6;
-		*state = (*state & 8064) | ((*state & 62) << 1) | (input ? 2 : 0) | (output ? 1 : 0);
+		*state = ((*state & 62) << 1) | (input ? 2 : 0) | (output ? 1 : 0);
 		return output;
 	}
 	static MAP rate0(PATH *metric, int *count, int *state, TYPE *hard, TYPE *soft)
@@ -123,7 +123,6 @@ template <typename TYPE, int MAX_M>
 class PACListDecoder
 {
 	static_assert(MAX_M >= 5 && MAX_M <= 8);
-	static_assert(TYPE::SIZE >= 64);
 	typedef PolarHelper<TYPE> PH;
 	typedef typename TYPE::value_type VALUE;
 	typedef typename PH::PATH PATH;
@@ -137,20 +136,49 @@ public:
 	{
 		assert(level <= MAX_M);
 		PATH metric[TYPE::SIZE];
-		int count = 0;
-		for (int k = 0; k < 64; ++k)
-			metric[k] = 0;
-		for (int k = 64; k < TYPE::SIZE; ++k)
-			metric[k] = 1000000;
+		int state[TYPE::SIZE];
+		int count;
 		int length = 1 << level;
+		int frozen = length - mesg_bits;
+		int best_metric = 1000000;
+		int best_round = 0;
+
+		for (int round = 0; round < 64; ++round) {
+			count = 0;
+			metric[0] = 0;
+			for (int k = 1; k < TYPE::SIZE; ++k)
+				metric[k] = 1000000;
+			for (int i = 0; i < length; ++i)
+				soft[length+i] = vdup<TYPE>(codeword[i]);
+			state[0] = round << 1;
+			for (int i = 1; i < TYPE::SIZE; ++i)
+				state[i] = 0;
+
+			switch (level) {
+			case 5: PACListTree<TYPE, 5>::decode(metric, message, maps, &count, state, hard, soft, rank_map, frozen); break;
+			case 6: PACListTree<TYPE, 6>::decode(metric, message, maps, &count, state, hard, soft, rank_map, frozen); break;
+			case 7: PACListTree<TYPE, 7>::decode(metric, message, maps, &count, state, hard, soft, rank_map, frozen); break;
+			case 8: PACListTree<TYPE, 8>::decode(metric, message, maps, &count, state, hard, soft, rank_map, frozen); break;
+			default: assert(false);
+			}
+
+			for (int i = 0; i < TYPE::SIZE; ++i) {
+				if (round == ((state[i] & 126) >> 1) && metric[i] < best_metric) {
+					best_metric = metric[i];
+					best_round = round;
+				}
+			}
+		}
+
+		count = 0;
+		metric[0] = 0;
+		for (int k = 1; k < TYPE::SIZE; ++k)
+			metric[k] = 1000000;
 		for (int i = 0; i < length; ++i)
 			soft[length+i] = vdup<TYPE>(codeword[i]);
-		int state[TYPE::SIZE];
-		for (int i = 0; i < 64; ++i)
-			state[i] = (i << 7) | (i << 1);
-		for (int i = 64; i < TYPE::SIZE; ++i)
+		state[0] = best_round << 1;
+		for (int i = 1; i < TYPE::SIZE; ++i)
 			state[i] = 0;
-		int frozen = length - mesg_bits;
 
 		switch (level) {
 		case 5: PACListTree<TYPE, 5>::decode(metric, message, maps, &count, state, hard, soft, rank_map, frozen); break;
@@ -159,9 +187,8 @@ public:
 		case 8: PACListTree<TYPE, 8>::decode(metric, message, maps, &count, state, hard, soft, rank_map, frozen); break;
 		default: assert(false);
 		}
-
 		for (int i = 0; i < TYPE::SIZE; ++i)
-			if (((state[i] & 8064) >> 7) != ((state[i] & 126) >> 1))
+			if (best_round != ((state[i] & 126) >> 1))
 				metric[i] = 1000000;
 		int perm[TYPE::SIZE];
 		CODE::insertion_sort(perm, metric, TYPE::SIZE);
