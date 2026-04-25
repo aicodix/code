@@ -15,7 +15,7 @@ struct CauchyPrimeFieldErasureCoding
 	PF temp[MAX_LEN];
 	typedef unsigned used_word;
 	static constexpr int used_width = 8 * sizeof(used_word);
-	static constexpr int used_length = (PF::P + used_width - 1) / used_width;
+	static constexpr int used_length = (MAX_LEN + used_width - 1) / used_width;
 	used_word used_values[used_length];
 	PF row_num, row_den;
 	// $a_{ij} = \frac{1}{x_i + y_j}$
@@ -112,9 +112,10 @@ struct CauchyPrimeFieldErasureCoding
 		for (int i = 0; i < used_length; ++i)
 			used_values[i] = 0;
 		for (int i = 0; i < block_len; ++i)
-			used_values[temp[i]()/used_width] |= 1 << temp[i]()%used_width;
+			if (temp[i]()/used_width < used_length)
+				used_values[temp[i]()/used_width] |= 1 << temp[i]()%used_width;
 		int s = 0;
-		while (used_values[s/used_width] & 1 << s%used_width)
+		while (s/used_width < used_length && used_values[s/used_width] & 1 << s%used_width)
 			++s;
 		return s;
 	}
