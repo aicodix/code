@@ -52,12 +52,12 @@ Mersenne31 reduce(Mersenne31 a)
 
 bool operator == (Mersenne31 a, Mersenne31 b)
 {
-	return a.v == b.v;
+	return a() == b();
 }
 
 bool operator != (Mersenne31 a, Mersenne31 b)
 {
-	return a.v != b.v;
+	return a() != b();
 }
 
 Mersenne31 add(Mersenne31 a, Mersenne31 b)
