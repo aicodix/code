@@ -77,12 +77,12 @@ Mersenne31 neg(Mersenne31 a)
 
 Mersenne31 operator - (Mersenne31 a)
 {
-	return reduce(neg(a));
+	return neg(a);
 }
 
 Mersenne31 sub(Mersenne31 a, Mersenne31 b)
 {
-	return add(a, -b);
+	return add(a, neg(b));
 }
 
 Mersenne31 operator - (Mersenne31 a, Mersenne31 b)
