@@ -114,7 +114,11 @@ Mersenne31 pow(Mersenne31 a, uint32_t m)
 
 Mersenne31 rcp(Mersenne31 a)
 {
-	return pow(a, a.P - 2);
+	Mersenne31 t = a;
+	a *= a;
+	for (int i = 0; i < 29; ++i)
+		t *= a *= a;
+	return t;
 }
 
 Mersenne31 div(Mersenne31 a, Mersenne31 b)

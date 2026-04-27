@@ -12,9 +12,10 @@ Copyright 2026 Ahmet Inan <inan@aicodix.de>
 #include <functional>
 #include "mersenne_31.hh"
 
+typedef CODE::Mersenne31 M31;
+
 void random_test(uint32_t count)
 {
-	typedef CODE::Mersenne31 M31;
 	std::random_device rd;
 	typedef std::default_random_engine generator;
 	typedef std::uniform_int_distribution<int> distribution;
@@ -27,7 +28,7 @@ void random_test(uint32_t count)
 			assert((M31(a) * M31(b))() == uint32_t((uint64_t(a) * b) % M31::P));
 		}
 	}
-	for (uint32_t i = 0; i < count; ++i) {
+	for (uint32_t i = 0; i < count * count; ++i) {
 		uint32_t a = rand1();
 		assert(rcp(M31(a)) * M31(a) == M31(1));
 	}
@@ -47,8 +48,15 @@ void random_test(uint32_t count)
 	}
 }
 
+void exhaustive_test()
+{
+	for (uint32_t a = 1; a < M31::P; ++a)
+		assert(rcp(M31(a)) * M31(a) == M31(1));
+}
+
 int main()
 {
+	//exhaustive_test();
 	random_test(10000);
 	std::cerr << "Mersenne 2^31-1 prime field arithmetic test passed!" << std::endl;
 	return 0;
