@@ -14,14 +14,15 @@ template <int MAX_LEN>
 struct CauchyMersenneErasureCoding
 {
 	typedef Mersenne31 M31;
-	M31 row_vec[MAX_LEN];
+	M31 row_vec[MAX_LEN], temp[MAX_LEN];
 	// $a_{ij} = \frac{1}{x_i + y_j}$
 	void cauchy_matrix_row(M31 *row_i, int i, int n)
 	{
 		for (int j = 0; j < n; j++) {
 			M31 row(i), col(j);
-			row_i[j] = rcp(row + col);
+			row_i[j] = row + col;
 		}
+		montgomery_batch_invert(row_i, temp, n);
 	}
 	// $b_{ij} = \frac{\prod_{k=1}^{n}{(x_j + y_k)(x_k + y_i)}}{(x_j + y_i)\prod_{k \ne j}^{n}{(x_j - x_k)}\prod_{k \ne i}^{n}{(y_i - y_k)}}$
 	void inverse_cauchy_matrix_row(M31 *row_i, const int *rows, int i, int n)
@@ -35,16 +36,36 @@ struct CauchyMersenneErasureCoding
 				row_den *= col_i - col_k;
 		}
 		for (int j = 0; j < n; j++) {
-			M31 row_j(rows[j]);
-			M31 num(row_num), den(row_den);
+			M31 row_j(rows[j]), den(row_den);
 			for (int k = 0; k < n; k++) {
-				M31 row_k(rows[k]), col_k(k);
-				num *= row_j + col_k;
+				M31 row_k(rows[k]);
 				if (k != j)
 					den *= row_j - row_k;
 			}
-			row_i[j] = num / ((row_j + col_i) * den);
+			row_i[j] = (row_j + col_i) * den;
 		}
+		montgomery_batch_invert(row_i, temp, n);
+		for (int j = 0; j < n; j++) {
+			M31 row_j(rows[j]), num(row_num);
+			for (int k = 0; k < n; k++) {
+				M31 col_k(k);
+				num *= row_j + col_k;
+			}
+			row_i[j] *= num;
+		}
+	}
+	void montgomery_batch_invert(M31 *v, M31 *t, int n)
+	{
+		t[0] = v[0];
+		for (int i = 1; i < n; i++)
+			t[i] = t[i-1] * v[i];
+		M31 inv = rcp(t[n-1]);
+		for (int i = n - 1; i; i--) {
+			M31 val = v[i];
+			v[i] = inv * t[i-1];
+			inv *= val;
+		}
+		v[0] = inv;
 	}
 	void mac(M31 *c, const M31 *a, M31 b, int len, bool init)
 	{
