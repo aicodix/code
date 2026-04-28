@@ -109,13 +109,14 @@ struct CauchyPrimeFieldErasureCoding
 	}
 	int find_unused(int block_len)
 	{
-		for (int i = 0; i < used_length; ++i)
+		int limit = (block_len + used_width - 1) / used_width;
+		for (int i = 0; i < limit; ++i)
 			used_values[i] = 0;
 		for (int i = 0; i < block_len; ++i)
-			if (temp[i]()/used_width < used_length)
-				used_values[temp[i]()/used_width] |= 1 << temp[i]()%used_width;
+			if (int(temp[i]())/used_width < limit)
+				used_values[int(temp[i]())/used_width] |= 1 << int(temp[i]())%used_width;
 		int s = 0;
-		while (s/used_width < used_length && used_values[s/used_width] & 1 << s%used_width)
+		while (s/used_width < limit && used_values[s/used_width] & 1 << s%used_width)
 			++s;
 		return s;
 	}
