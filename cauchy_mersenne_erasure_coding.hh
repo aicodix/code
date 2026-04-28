@@ -23,19 +23,6 @@ struct CauchyMersenneErasureCoding
 	// $b_{ij} = \frac{\prod_{k=1}^{n}{(x_j + y_k)(x_k + y_i)}}{(x_j + y_i)\prod_{k \ne j}^{n}{(x_j - x_k)}\prod_{k \ne i}^{n}{(y_i - y_k)}}$
 	M31 inverse_cauchy_matrix(const int *rows, int i, int j, int n)
 	{
-#if 0
-		M31 row_j(rows[j]), col_i(i);
-		M31 prod_xy(1), prod_x(1), prod_y(1);
-		for (int k = 0; k < n; k++) {
-			M31 row_k(rows[k]), col_k(k);
-			prod_xy *= (row_j + col_k) * (row_k + col_i);
-			if (k != j)
-				prod_x *= (row_j - row_k);
-			if (k != i)
-				prod_y *= (col_i - col_k);
-		}
-		return prod_xy / ((row_j + col_i) * prod_x * prod_y);
-#else
 		M31 row_j(rows[j]), col_i(i);
 		if (j == 0) {
 			M31 num(1), den(1);
@@ -56,7 +43,6 @@ struct CauchyMersenneErasureCoding
 				den *= row_j - row_k;
 		}
 		return num / ((row_j + col_i) * den);
-#endif
 	}
 	void mac(M31 *c, const M31 *a, M31 b, int len, bool init)
 	{
