@@ -10,53 +10,41 @@ Copyright 2026 Ahmet Inan <inan@aicodix.de>
 
 namespace CODE {
 
+template <int MAX_LEN>
 struct CauchyMersenneErasureCoding
 {
 	typedef Mersenne31 M31;
-	M31 row_num, row_den;
+	M31 row_vec[MAX_LEN];
 	// $a_{ij} = \frac{1}{x_i + y_j}$
-	M31 cauchy_matrix(int i, int j)
+	void cauchy_matrix_row(M31 *row_i, int i, int n)
 	{
-		M31 row(i), col(j);
-		return rcp(row + col);
+		for (int j = 0; j < n; j++) {
+			M31 row(i), col(j);
+			row_i[j] = rcp(row + col);
+		}
 	}
 	// $b_{ij} = \frac{\prod_{k=1}^{n}{(x_j + y_k)(x_k + y_i)}}{(x_j + y_i)\prod_{k \ne j}^{n}{(x_j - x_k)}\prod_{k \ne i}^{n}{(y_i - y_k)}}$
-	M31 inverse_cauchy_matrix(const int *rows, int i, int j, int n)
+	void inverse_cauchy_matrix_row(M31 *row_i, const int *rows, int i, int n)
 	{
-#if 0
-		M31 row_j(rows[j]), col_i(i);
-		M31 prod_xy(1), prod_x(1), prod_y(1);
+		M31 col_i(i);
+		M31 row_num(1), row_den(1);
 		for (int k = 0; k < n; k++) {
 			M31 row_k(rows[k]), col_k(k);
-			prod_xy *= (row_j + col_k) * (row_k + col_i);
-			if (k != j)
-				prod_x *= (row_j - row_k);
+			row_num *= row_k + col_i;
 			if (k != i)
-				prod_y *= (col_i - col_k);
+				row_den *= col_i - col_k;
 		}
-		return prod_xy / ((row_j + col_i) * prod_x * prod_y);
-#else
-		M31 row_j(rows[j]), col_i(i);
-		if (j == 0) {
-			M31 num(1), den(1);
+		for (int j = 0; j < n; j++) {
+			M31 row_j(rows[j]);
+			M31 num(row_num), den(row_den);
 			for (int k = 0; k < n; k++) {
 				M31 row_k(rows[k]), col_k(k);
-				num *= row_k + col_i;
-				if (k != i)
-					den *= col_i - col_k;
+				num *= row_j + col_k;
+				if (k != j)
+					den *= row_j - row_k;
 			}
-			row_num = num;
-			row_den = den;
+			row_i[j] = num / ((row_j + col_i) * den);
 		}
-		M31 num(row_num), den(row_den);
-		for (int k = 0; k < n; k++) {
-			M31 row_k(rows[k]), col_k(k);
-			num *= row_j + col_k;
-			if (k != j)
-				den *= row_j - row_k;
-		}
-		return num / ((row_j + col_i) * den);
-#endif
 	}
 	void mac(M31 *c, const M31 *a, M31 b, int len, bool init)
 	{
@@ -71,17 +59,17 @@ struct CauchyMersenneErasureCoding
 	void encode(const M31 *data, M31 *block, int block_id, int block_len, int block_cnt)
 	{
 		assert(block_id >= block_cnt && block_id < int(M31::P) / 2);
-		for (int k = 0; k < block_cnt; k++) {
-			M31 a_ik = cauchy_matrix(block_id, k);
-			mac(block, data + block_len * k, a_ik, block_len, !k);
-		}
+		assert(block_len <= MAX_LEN);
+		cauchy_matrix_row(row_vec, block_id, block_cnt);
+		for (int k = 0; k < block_cnt; k++)
+			mac(block, data + block_len * k, row_vec[k], block_len, !k);
 	}
-	void decode(M31 *data, const M31 *blocks, const int *block_ids, int block_idx, int block_len, int block_cnt)
+	void decode(M31 *data, const M31 *blocks, const int *block_ids, int block_id, int block_len, int block_cnt)
 	{
-		for (int k = 0; k < block_cnt; k++) {
-			M31 b_ik = inverse_cauchy_matrix(block_ids, block_idx, k, block_cnt);
-			mac(data, blocks + block_len * k, b_ik, block_len, !k);
-		}
+		assert(block_len <= MAX_LEN);
+		inverse_cauchy_matrix_row(row_vec, block_ids, block_id, block_cnt);
+		for (int k = 0; k < block_cnt; k++)
+			mac(data, blocks + block_len * k, row_vec[k], block_len, !k);
 	}
 };
 

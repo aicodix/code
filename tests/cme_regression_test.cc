@@ -19,7 +19,7 @@ void cme_test(int trials)
 	int value_bytes = sizeof(M31);
 	//int value_bits = value_bytes * 8;
 	const int MAX_LEN = 1024;
-	CODE::CauchyMersenneErasureCoding cme;
+	CODE::CauchyMersenneErasureCoding<MAX_LEN> cme;
 	std::random_device rd;
 	std::default_random_engine generator(rd());
 	typedef std::uniform_int_distribution<int> distribution;
