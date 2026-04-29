@@ -16,24 +16,22 @@ Copyright 2026 Ahmet Inan <inan@aicodix.de>
 void cme_test(int trials)
 {
 	typedef CODE::Mersenne31 M31;
-	int value_bytes = sizeof(M31);
-	//int value_bits = value_bytes * 8;
-	const int MAX_LEN = 1024;
 	CODE::CauchyMersenneErasureCoding cme;
 	std::random_device rd;
 	std::default_random_engine generator(rd());
 	typedef std::uniform_int_distribution<int> distribution;
 	auto rnd_cnt = std::bind(distribution(1, 256), generator);
-	auto rnd_len = std::bind(distribution(1, MAX_LEN), generator);
+	auto rnd_len = std::bind(distribution(1, 1024), generator);
 	auto rnd_dat = std::bind(distribution(0, M31::P-1), generator);
-	//auto rnd_dat = std::bind(distribution(0, (1 << value_bits) - 1), generator);
 	while (--trials) {
 		int block_count = rnd_cnt();
 		int idents_total = 1000000; // M31::P / 2 - block_count;
 		int block_values = rnd_len();
-		int block_bytes = block_values * value_bytes;
+		int block_bits = block_values * 31;
+		int block_bytes = block_bits / 8;
 		int data_values = block_count * block_values;
-		int data_bytes = data_values * value_bytes;
+		int data_bits = data_values * 31;
+		int data_bytes = data_bits / 8;
 		M31 *orig = new M31[data_values];
 		M31 *data = new M31[data_values];
 		M31 *blocks = new M31[data_values];

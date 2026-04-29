@@ -62,10 +62,10 @@ struct CauchyMersenneErasureCoding
 			mac(block, data + block_len * k, a_ik, block_len, !k);
 		}
 	}
-	void decode(M31 *data, const M31 *blocks, const int *block_ids, int block_idx, int block_len, int block_cnt)
+	void decode(M31 *data, const M31 *blocks, const int *block_ids, int block_id, int block_len, int block_cnt)
 	{
 		for (int k = 0; k < block_cnt; k++) {
-			M31 b_ik = inverse_cauchy_matrix(block_ids, block_idx, k, block_cnt);
+			M31 b_ik = inverse_cauchy_matrix(block_ids, block_id, k, block_cnt);
 			mac(data, blocks + block_len * k, b_ik, block_len, !k);
 		}
 	}
