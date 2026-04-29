@@ -39,7 +39,7 @@ struct Mersenne31
 	{
 		return *this = *this - a;
 	}
-	uint32_t operator () ()
+	uint32_t operator () () const
 	{
 		return v == P ? 0 : v;
 	}
