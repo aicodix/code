@@ -32,7 +32,7 @@ struct MersennePacking
 		for (int i = 0, j = 0, k = 0; i < count; i++) {
 			acc |= uint64_t(src[i]) << k;
 			k += 31;
-			while (k >= 8 && j < bytes) {
+			while ((k >= 8 || i == count - 1) && j < bytes) {
 				dst[j++] = acc & 255;
 				acc >>= 8;
 				k -= 8;
