@@ -47,7 +47,7 @@ struct MersennePacking
 			uint64_t val = sub == src[i] ? 0x7FFFFFFF : src[i]();
 			acc |= val << k;
 			k += 31;
-			while ((k >= 8 || i == count - 1) && j < bytes) {
+			while (k >= 8 && j < bytes) {
 				dst[j++] = acc & 255;
 				acc >>= 8;
 				k -= 8;
