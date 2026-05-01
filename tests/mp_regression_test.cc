@@ -25,8 +25,8 @@ void cme_test(int trials)
 	auto rnd_len = std::bind(distribution(0, bytes_max), generator);
 	auto rnd_m31 = std::bind(distribution(0, M31::P-1), generator);
 	auto rnd_dat = std::bind(distribution(0, 255), generator);
-	uint32_t *tmp0 = new uint32_t[count_max];
-	uint32_t *tmp1 = new uint32_t[count_max];
+	M31 *tmp0 = new M31[count_max];
+	M31 *tmp1 = new M31[count_max];
 	uint8_t *tmp2 = new uint8_t[bytes_max];
 	uint8_t *tmp3 = new uint8_t[bytes_max];
 	for (int j = 0; j < trials; ++j) {
@@ -34,7 +34,7 @@ void cme_test(int trials)
 		int bytes = (count * 31 + 7) / 8;
 		// M31 -> byte -> M31
 		for (int i = 0; i < count; ++i)
-			tmp0[i] = rnd_m31();
+			tmp0[i] = M31(rnd_m31());
 		mp.unpack(tmp2, tmp0, count, bytes);
 		mp.pack(tmp1, tmp2, count, bytes);
 		for (int i = 0; i < count; ++i)
