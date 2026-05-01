@@ -15,7 +15,7 @@ Copyright 2026 Ahmet Inan <inan@aicodix.de>
 void cme_test(int trials)
 {
 	typedef CODE::Mersenne31 M31;
-	CODE::MersennePacking mp;
+	typedef CODE::MersennePacking MP;
 	std::random_device rd;
 	std::default_random_engine generator(rd());
 	typedef std::uniform_int_distribution<int> distribution;
@@ -25,8 +25,9 @@ void cme_test(int trials)
 	auto rnd_len = std::bind(distribution(0, bytes_max), generator);
 	auto rnd_m31 = std::bind(distribution(0, M31::P-1), generator);
 	auto rnd_dat = std::bind(distribution(0, 255), generator);
-	M31 *tmp0 = new M31[count_max];
-	M31 *tmp1 = new M31[count_max];
+	auto remap = new CODE::MersenneRemapping<bytes_max>();
+	M31 *tmp0 = new M31[count_max+1];
+	M31 *tmp1 = new M31[count_max+1];
 	uint8_t *tmp2 = new uint8_t[bytes_max];
 	uint8_t *tmp3 = new uint8_t[bytes_max];
 	for (int j = 0; j < trials; ++j) {
@@ -35,8 +36,8 @@ void cme_test(int trials)
 		// M31 -> byte -> M31
 		for (int i = 0; i < count; ++i)
 			tmp0[i] = M31(rnd_m31());
-		mp.unpack(tmp2, tmp0, count, bytes);
-		mp.pack(tmp1, tmp2, count, bytes);
+		MP::unpack(tmp2, tmp0, count, bytes);
+		MP::pack(tmp1, tmp2, count, bytes);
 		for (int i = 0; i < count; ++i)
 			assert(tmp0[i] == tmp1[i]);
 	}
@@ -46,11 +47,24 @@ void cme_test(int trials)
 		// byte -> M31 -> byte
 		for (int i = 0; i < bytes; ++i)
 			tmp2[i] = rnd_dat();
-		mp.pack(tmp0, tmp2, count, bytes);
-		mp.unpack(tmp3, tmp0, count, bytes);
+		MP::pack(tmp0, tmp2, count, bytes);
+		MP::unpack(tmp3, tmp0, count, bytes);
 		for (int i = 0; i < bytes; ++i)
 			assert(tmp2[i] == tmp3[i]);
 	}
+	for (int j = 0; j < trials; ++j) {
+		int bytes = rnd_len();
+		// byte -> M31 -> byte
+		for (int i = 0; i < bytes; ++i)
+			tmp2[i] = rnd_dat();
+		remap->encode(tmp0, tmp2, bytes);
+		for (int i = 0; i < bytes; ++i)
+			assert(tmp0[i].v != M31::P);
+		MP::decode(tmp3, tmp0, bytes);
+		for (int i = 0; i < bytes; ++i)
+			assert(tmp2[i] == tmp3[i]);
+	}
+	delete remap;
 	delete[] tmp0;
 	delete[] tmp1;
 	delete[] tmp2;
