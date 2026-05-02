@@ -35,6 +35,11 @@ public:
 	{
 		return (x_ *= a_)();
 	}
+	Mersenne31 update(Mersenne31 in)
+	{
+		x_ *= a_;
+		return x_ += in;
+	}
 };
 
 }
