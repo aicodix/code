@@ -1,5 +1,5 @@
 /*
-Lehmer random number generator
+Simple Mersenne check
 
 Copyright 2026 Ahmet Inan <inan@aicodix.de>
 */
@@ -10,30 +10,26 @@ Copyright 2026 Ahmet Inan <inan@aicodix.de>
 
 namespace CODE {
 
-class LehmerRNG
+class MersenneCheck
 {
 	static const uint32_t X = 362436069;
 	static const uint32_t A = 48271;
 	Mersenne31 x_, a_;
 public:
-	typedef uint32_t result_type;
-	static constexpr result_type min()
-	{
-		return 1;
-	}
-	static constexpr result_type max()
-	{
-		return Mersenne31::P-1;
-	}
-	LehmerRNG(uint32_t x = X, uint32_t a = A) : x_(x), a_(a) {}
+	MersenneCheck(uint32_t x = X, uint32_t a = A) : x_(x), a_(a) {}
 	void reset(uint32_t x = X, uint32_t a = A)
 	{
 		x_ = Mersenne31(x);
 		a_ = Mersenne31(a);
 	}
-	uint32_t operator()()
+	Mersenne31 operator()(Mersenne31 in)
 	{
-		return (x_ *= a_)();
+		x_ *= a_;
+		return x_ += in;
+	}
+	Mersenne31 operator()()
+	{
+		return x_;
 	}
 };
 
