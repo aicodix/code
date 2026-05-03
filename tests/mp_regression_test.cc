@@ -54,11 +54,12 @@ void cme_test(int trials)
 	}
 	for (int j = 0; j < trials; ++j) {
 		int bytes = rnd_len();
+		int count = (bytes * 8 + 30) / 31 + 1;
 		// byte -> M31 -> byte
 		for (int i = 0; i < bytes; ++i)
 			tmp2[i] = rnd_dat();
 		remap->encode(tmp0, tmp2, bytes);
-		for (int i = 0; i < bytes; ++i)
+		for (int i = 0; i < count; ++i)
 			assert(tmp0[i].v != M31::P);
 		MP::decode(tmp3, tmp0, bytes);
 		for (int i = 0; i < bytes; ++i)
