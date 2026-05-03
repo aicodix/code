@@ -57,7 +57,7 @@ void cme_test(int trials)
 		int count = (bytes * 8 + 30) / 31 + 1;
 		// byte -> M31 -> byte
 		for (int i = 0; i < bytes; ++i)
-			tmp2[i] = rnd_dat();
+			tmp2[i] = i < bytes / 2 ? rnd_dat() : 255;
 		remap->encode(tmp0, tmp2, bytes);
 		for (int i = 0; i < count; ++i)
 			assert(tmp0[i].v != M31::P);
