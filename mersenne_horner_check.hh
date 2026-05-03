@@ -1,5 +1,5 @@
 /*
-Simple Mersenne check
+Simple Mersenne Horner's scheme based check
 
 Copyright 2026 Ahmet Inan <inan@aicodix.de>
 */
@@ -10,13 +10,13 @@ Copyright 2026 Ahmet Inan <inan@aicodix.de>
 
 namespace CODE {
 
-class MersenneCheck
+class MersenneHornerCheck
 {
 	static const uint32_t X = 362436069;
 	static const uint32_t A = 48271;
 	Mersenne31 x_, a_;
 public:
-	MersenneCheck(uint32_t x = X, uint32_t a = A) : x_(x), a_(a) {}
+	MersenneHornerCheck(uint32_t x = X, uint32_t a = A) : x_(x), a_(a) {}
 	void reset(uint32_t x = X, uint32_t a = A)
 	{
 		x_ = Mersenne31(x);
