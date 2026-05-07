@@ -1,5 +1,5 @@
 /*
-Cauchy Prime Field Erasure Coding
+Cauchy Fermat Prime Field Erasure Coding
 
 Copyright 2024 Ahmet Inan <inan@aicodix.de>
 */
@@ -9,7 +9,7 @@ Copyright 2024 Ahmet Inan <inan@aicodix.de>
 namespace CODE {
 
 template <typename PF, typename IO, int MAX_LEN>
-struct CauchyPrimeFieldErasureCoding
+struct CauchyFermatErasureCoding
 {
 	static_assert(MAX_LEN < int(PF::P-1), "Block length must be smaller than largest field value");
 	PF temp[MAX_LEN];

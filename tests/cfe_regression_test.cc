@@ -1,5 +1,5 @@
 /*
-Regression Test for the Cauchy Prime Field Encoder and Decoder
+Regression Test for the Cauchy Fermat Prime Field Encoder and Decoder
 
 Copyright 2024 Ahmet Inan <inan@aicodix.de>
 */
@@ -11,15 +11,15 @@ Copyright 2024 Ahmet Inan <inan@aicodix.de>
 #include <iostream>
 #include <functional>
 #include "prime_field.hh"
-#include "cauchy_prime_field_erasure_coding.hh"
+#include "cauchy_fermat_erasure_coding.hh"
 
 template <typename PF, typename IO>
-void cpf_test(int trials)
+void cfe_test(int trials)
 {
 	int value_bytes = sizeof(IO);
 	int value_bits = value_bytes * 8;
 	const int MAX_LEN = std::min<int>(PF::P - 2, 1024);
-	CODE::CauchyPrimeFieldErasureCoding<PF, IO, MAX_LEN> crs;
+	CODE::CauchyFermatErasureCoding<PF, IO, MAX_LEN> cfe;
 	std::random_device rd;
 	std::default_random_engine generator(rd());
 	typedef std::uniform_int_distribution<int> distribution;
@@ -48,13 +48,13 @@ void cpf_test(int trials)
 		}
 		auto enc_start = std::chrono::system_clock::now();
 		for (int i = 0; i < block_count; ++i)
-			subs[i] = crs.encode(orig, blocks + block_values * i, idents[i], block_values, block_count);
+			subs[i] = cfe.encode(orig, blocks + block_values * i, idents[i], block_values, block_count);
 		auto enc_end = std::chrono::system_clock::now();
 		auto enc_usec = std::chrono::duration_cast<std::chrono::microseconds>(enc_end - enc_start);
 		double enc_mbs = double(data_bytes) / enc_usec.count();
 		auto dec_start = std::chrono::system_clock::now();
 		for (int i = 0; i < block_count; ++i)
-			crs.decode(data + block_values * i, blocks, subs, idents, i, block_values, block_count);
+			cfe.decode(data + block_values * i, blocks, subs, idents, i, block_values, block_count);
 		auto dec_end = std::chrono::system_clock::now();
 		auto dec_usec = std::chrono::duration_cast<std::chrono::microseconds>(dec_end - dec_start);
 		double dec_mbs = double(data_bytes) / dec_usec.count();
@@ -72,12 +72,12 @@ void cpf_test(int trials)
 int main()
 {
 	if (1) {
-		cpf_test<CODE::PrimeField<uint32_t, 257>, uint8_t>(200);
+		cfe_test<CODE::PrimeField<uint32_t, 257>, uint8_t>(200);
 	}
 	if (1) {
-		cpf_test<CODE::PrimeField<uint64_t, 65537>, uint16_t>(100);
+		cfe_test<CODE::PrimeField<uint64_t, 65537>, uint16_t>(100);
 	}
-	std::cerr << "Cauchy prime field regression test passed!" << std::endl;
+	std::cerr << "Cauchy Fermat prime field regression test passed!" << std::endl;
 	return 0;
 }
 
