@@ -72,10 +72,10 @@ void cfe_test(int trials)
 int main()
 {
 	if (1) {
-		cfe_test<CODE::PrimeField<uint32_t, 257>, uint8_t>(200);
+		cfe_test<CODE::PrimeField<uint16_t, 257>, uint8_t>(200);
 	}
 	if (1) {
-		cfe_test<CODE::PrimeField<uint64_t, 65537>, uint16_t>(100);
+		cfe_test<CODE::PrimeField<uint32_t, 65537>, uint16_t>(100);
 	}
 	std::cerr << "Cauchy Fermat prime field regression test passed!" << std::endl;
 	return 0;

@@ -43,51 +43,33 @@ struct CauchyFermatErasureCoding
 		PF row_j(rows[j]), col_i(i);
 		if (j == 0) {
 			PF num(1), den(1);
-			for (int k = 0, r = 2; k < n; k++, --r) {
+			for (int k = 0; k < n; k++) {
 				PF row_k(rows[k]), col_k(k);
-				num = mul(num, add(row_k, col_i));
+				num *= row_k + col_i;
 				if (k != i)
-					den = mul(den, col_i - col_k);
-				if (!r) {
-					r = 3;
-					num = reduce(num);
-					den = reduce(den);
-				}
+					den *= col_i - col_k;
 			}
-			row_num = reduce(num);
-			row_den = reduce(den);
+			row_num = num;
+			row_den = den;
 		}
 		PF num(row_num), den(row_den);
-		for (int k = 0, r = 2; k < n; k++, --r) {
+		for (int k = 0; k < n; k++) {
 			PF row_k(rows[k]), col_k(k);
-			num = mul(num, add(row_j, col_k));
+			num *= row_j + col_k;
 			if (k != j)
-				den = mul(den, row_j - row_k);
-			if (!r) {
-				r = 3;
-				num = reduce(num);
-				den = reduce(den);
-			}
+				den *= row_j - row_k;
 		}
-		num = reduce(num);
-		den = reduce(den);
-		return num / (add(row_j, col_i) * den);
+		return num / ((row_j + col_i) * den);
 #endif
 	}
-	void mac(const IO *a, PF b, int len, bool first, bool last)
+	void mac(const IO *a, PF b, int len, bool first)
 	{
-		if (first && last) {
+		if (first) {
 			for (int i = 0; i < len; i++)
 				temp[i] = b * PF(a[i]);
-		} else if (first) {
-			for (int i = 0; i < len; i++)
-				temp[i] = mul(b, PF(a[i]));
-		} else if (last) {
-			for (int i = 0; i < len; i++)
-				temp[i] = reduce(add(temp[i], mul(b, PF(a[i]))));
 		} else {
 			for (int i = 0; i < len; i++)
-				temp[i] = add(temp[i], mul(b, PF(a[i])));
+				temp[i] += b * PF(a[i]);
 		}
 	}
 	void mac_sub(IO *c, const IO *a, PF b, IO s, int len, bool first, bool last)
@@ -98,13 +80,13 @@ struct CauchyFermatErasureCoding
 				c[i] = (b * PF(a[i] == s ? v : a[i]))();
 		} else if (first) {
 			for (int i = 0; i < len; i++)
-				temp[i] = mul(b, PF(a[i] == s ? v : a[i]));
+				temp[i] = b * PF(a[i] == s ? v : a[i]);
 		} else if (last) {
 			for (int i = 0; i < len; i++)
-				c[i] = reduce(add(temp[i], mul(b, PF(a[i] == s ? v : a[i]))))();
+				c[i] = ((temp[i] + b * PF(a[i] == s ? v : a[i])))();
 		} else {
 			for (int i = 0; i < len; i++)
-				temp[i] = add(temp[i], mul(b, PF(a[i] == s ? v : a[i])));
+				temp[i] += b * PF(a[i] == s ? v : a[i]);
 		}
 	}
 	int find_unused(int block_len)
@@ -126,7 +108,7 @@ struct CauchyFermatErasureCoding
 		assert(block_len <= MAX_LEN);
 		for (int k = 0; k < block_cnt; k++) {
 			PF a_ik = cauchy_matrix(block_id, k);
-			mac(data + block_len * k, a_ik, block_len, !k, k == block_cnt - 1);
+			mac(data + block_len * k, a_ik, block_len, !k);
 		}
 		int sub = find_unused(block_len);
 		for (int i = 0; i < block_len; ++i)
