@@ -45,6 +45,26 @@ PrimeField<TYPE, PRIME> reduce(PrimeField<TYPE, PRIME> a)
 	return PrimeField<TYPE, PRIME>(a.v % a.P);
 }
 
+template <>
+PrimeField<uint16_t, uint16_t(257)> reduce(PrimeField<uint16_t, uint16_t(257)> a)
+{
+	int16_t l = a.v & 255;
+	int16_t h = a.v >> 8;
+	int16_t r = l - h;
+	r += (r >> 15) & 257;
+	return PrimeField<uint16_t, uint16_t(257)>(r);
+}
+
+template <>
+PrimeField<uint32_t, uint32_t(65537)> reduce(PrimeField<uint32_t, uint32_t(65537)> a)
+{
+	int32_t l = a.v & 65535;
+	int32_t h = a.v >> 16;
+	int32_t r = l - h;
+	r += (r >> 31) & 65537;
+	return PrimeField<uint32_t, uint32_t(65537)>(r);
+}
+
 template <typename TYPE, TYPE PRIME>
 bool operator == (PrimeField<TYPE, PRIME> a, PrimeField<TYPE, PRIME> b)
 {
