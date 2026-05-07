@@ -6,13 +6,13 @@ Copyright 2026 Ahmet Inan <inan@aicodix.de>
 
 #pragma once
 
-#include "mersenne_31.hh"
+#include "prime_field.hh"
 
 namespace CODE {
 
 struct CauchyMersenneErasureCoding
 {
-	typedef Mersenne31 M31;
+	typedef PrimeField<uint32_t, 0x7FFFFFFF> M31;
 	M31 row_num, row_den;
 	// $a_{ij} = \frac{1}{x_i + y_j}$
 	M31 cauchy_matrix(int i, int j)

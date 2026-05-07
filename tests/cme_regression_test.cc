@@ -10,12 +10,12 @@ Copyright 2026 Ahmet Inan <inan@aicodix.de>
 #include <random>
 #include <iostream>
 #include <functional>
-#include "mersenne_31.hh"
+#include "prime_field.hh"
 #include "cauchy_mersenne_erasure_coding.hh"
 
 void cme_test(int trials)
 {
-	typedef CODE::Mersenne31 M31;
+	typedef CODE::PrimeField<uint32_t, 0x7FFFFFFF> M31;
 	CODE::CauchyMersenneErasureCoding cme;
 	std::random_device rd;
 	std::default_random_engine generator(rd());

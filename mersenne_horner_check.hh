@@ -6,28 +6,29 @@ Copyright 2026 Ahmet Inan <inan@aicodix.de>
 
 #pragma once
 
-#include "mersenne_31.hh"
+#include "prime_field.hh"
 
 namespace CODE {
 
 class MersenneHornerCheck
 {
+	typedef PrimeField<uint32_t, 0x7FFFFFFF> M31;
 	static const uint32_t X = 362436069;
 	static const uint32_t A = 48271;
-	Mersenne31 x_, a_;
+	M31 x_, a_;
 public:
 	MersenneHornerCheck(uint32_t x = X, uint32_t a = A) : x_(x), a_(a) {}
 	void reset(uint32_t x = X, uint32_t a = A)
 	{
-		x_ = Mersenne31(x);
-		a_ = Mersenne31(a);
+		x_ = M31(x);
+		a_ = M31(a);
 	}
-	Mersenne31 operator()(Mersenne31 in)
+	M31 operator()(M31 in)
 	{
 		x_ *= a_;
 		return x_ += in;
 	}
-	Mersenne31 operator()()
+	M31 operator()()
 	{
 		return x_;
 	}

@@ -135,6 +135,15 @@ PrimeField<uint32_t, uint32_t(65537)> mul(PrimeField<uint32_t, uint32_t(65537)> 
 	return PrimeField<uint32_t, uint32_t(65537)>(o | v);
 }
 
+template <>
+PrimeField<uint32_t, uint32_t(0x7FFFFFFF)> mul(PrimeField<uint32_t, uint32_t(0x7FFFFFFF)> a, PrimeField<uint32_t, uint32_t(0x7FFFFFFF)> b)
+{
+	uint64_t v = uint64_t(a.v) * uint64_t(b.v);
+	uint32_t l = v & 0x7FFFFFFF;
+	uint32_t h = v >> 31;
+	return PrimeField<uint32_t, uint32_t(0x7FFFFFFF)>(l + h);
+}
+
 template <typename TYPE, TYPE PRIME>
 PrimeField<TYPE, PRIME> operator * (PrimeField<TYPE, PRIME> a, PrimeField<TYPE, PRIME> b)
 {

@@ -12,7 +12,7 @@ Copyright 2026 Ahmet Inan <inan@aicodix.de>
 void test(uint32_t X, uint32_t A)
 {
 	CODE::LehmerRNG rng(X, A);
-	int length = CODE::Mersenne31::P-1;
+	int length = 0x7FFFFFFE;
 	for (int i = 1; i < length; ++i)
 		assert(rng() != X);
 	assert(rng() == X);

@@ -6,13 +6,14 @@ Copyright 2026 Ahmet Inan <inan@aicodix.de>
 
 #pragma once
 
-#include "mersenne_31.hh"
+#include "prime_field.hh"
 
 namespace CODE {
 
 struct MersennePacking
 {
-	static void pack(Mersenne31 *dst, const uint8_t *src, int count, int bytes)
+	typedef PrimeField<uint32_t, 0x7FFFFFFF> M31;
+	static void pack(M31 *dst, const uint8_t *src, int count, int bytes)
 	{
 		uint64_t acc = 0;
 		for (int i = 0, j = 0, k = 0; i < count; i++) {
@@ -20,12 +21,12 @@ struct MersennePacking
 				acc |= uint64_t(src[j++]) << k;
 				k += 8;
 			}
-			dst[i] = Mersenne31(acc & 0x7FFFFFFF);
+			dst[i] = M31(acc & 0x7FFFFFFF);
 			acc >>= 31;
 			k -= 31;
 		}
 	}
-	static void unpack(uint8_t *dst, const Mersenne31 *src, int count, int bytes)
+	static void unpack(uint8_t *dst, const M31 *src, int count, int bytes)
 	{
 		uint64_t acc = 0;
 		for (int i = 0, j = 0, k = 0; i < count; i++) {
@@ -38,10 +39,10 @@ struct MersennePacking
 			}
 		}
 	}
-	static void decode(uint8_t *dst, const Mersenne31 *src, int bytes)
+	static void decode(uint8_t *dst, const M31 *src, int bytes)
 	{
 		int count = (bytes * 8 + 30) / 31;
-		Mersenne31 sub = *src++;
+		M31 sub = *src++;
 		uint64_t acc = 0;
 		for (int i = 0, j = 0, k = 0; i < count; i++) {
 			uint64_t val = sub == src[i] ? 0x7FFFFFFF : src[i]();
@@ -59,12 +60,13 @@ struct MersennePacking
 template <int MAX_BYTES>
 struct MersenneRemapping
 {
+	typedef PrimeField<uint32_t, 0x7FFFFFFF> M31;
 	typedef unsigned used_word;
 	static constexpr int max_count = (MAX_BYTES * 8 + 30) / 31;
 	static constexpr int used_width = 8 * sizeof(used_word);
 	static constexpr int used_length = (max_count + used_width - 1) / used_width;
 	used_word used_values[used_length];
-	Mersenne31 find_unused(const Mersenne31 *dst, int count)
+	M31 find_unused(const M31 *dst, int count)
 	{
 		int limit = (count + used_width - 1) / used_width;
 		for (int i = 0; i < limit; ++i)
@@ -75,14 +77,14 @@ struct MersenneRemapping
 		int s = 0;
 		while (s/used_width < limit && used_values[s/used_width] & 1 << s%used_width)
 			++s;
-		return Mersenne31(s);
+		return M31(s);
 	}
-	void encode(Mersenne31 *dst, const uint8_t *src, int bytes)
+	void encode(M31 *dst, const uint8_t *src, int bytes)
 	{
 		assert(bytes <= MAX_BYTES);
 		int count = (bytes * 8 + 30) / 31;
 		MersennePacking::pack(dst+1, src, count, bytes);
-		Mersenne31 sub = find_unused(dst+1, count);
+		M31 sub = find_unused(dst+1, count);
 		*dst++ = sub;
 		for (int i = 0; i < count; ++i)
 			if (dst[i].v == 0x7FFFFFFF)
