@@ -35,9 +35,21 @@ struct PrimeField
 	}
 	TYPE operator () () const
 	{
-		return v;
+		return value(*this);
 	}
 };
+
+template <typename TYPE, TYPE PRIME>
+TYPE value(PrimeField<TYPE, PRIME> a)
+{
+	return a.v;
+}
+
+template <>
+uint32_t value(PrimeField<uint32_t, uint32_t(0x7FFFFFFF)> a)
+{
+	return a.v == a.P ? 0 : a.v;
+}
 
 template <typename TYPE, TYPE PRIME>
 PrimeField<TYPE, PRIME> reduce(PrimeField<TYPE, PRIME> a)
@@ -63,6 +75,12 @@ PrimeField<uint32_t, uint32_t(65537)> reduce(PrimeField<uint32_t, uint32_t(65537
 	int32_t r = l - h;
 	r += (r >> 31) & 65537;
 	return PrimeField<uint32_t, uint32_t(65537)>(r);
+}
+
+template <>
+PrimeField<uint32_t, uint32_t(0x7FFFFFFF)> reduce(PrimeField<uint32_t, uint32_t(0x7FFFFFFF)> a)
+{
+	return PrimeField<uint32_t, uint32_t(0x7FFFFFFF)>((a.v & 0x7FFFFFFF) + (a.v >> 31));
 }
 
 template <typename TYPE, TYPE PRIME>
