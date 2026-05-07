@@ -121,6 +121,24 @@ PrimeField<TYPE, PRIME> rcp(PrimeField<TYPE, PRIME> a)
 	return pow(a, a.P - 2);
 }
 
+template <typename TYPE>
+PrimeField<TYPE, TYPE(257)> rcp(PrimeField<TYPE, TYPE(257)> a)
+{
+	PrimeField<TYPE, TYPE(257)> t = a;
+	for (int i = 1; i < 8; ++i)
+		t *= a *= a;
+	return t;
+}
+
+template <typename TYPE>
+PrimeField<TYPE, TYPE(65537)> rcp(PrimeField<TYPE, TYPE(65537)> a)
+{
+	PrimeField<TYPE, TYPE(65537)> t = a;
+	for (int i = 1; i < 16; ++i)
+		t *= a *= a;
+	return t;
+}
+
 template <typename TYPE, TYPE PRIME>
 PrimeField<TYPE, PRIME> div(PrimeField<TYPE, PRIME> a, PrimeField<TYPE, PRIME> b)
 {
