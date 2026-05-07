@@ -99,6 +99,22 @@ PrimeField<TYPE, PRIME> mul(PrimeField<TYPE, PRIME> a, PrimeField<TYPE, PRIME> b
 	return PrimeField<TYPE, PRIME>(a.v * b.v);
 }
 
+template <>
+PrimeField<uint16_t, uint16_t(257)> mul(PrimeField<uint16_t, uint16_t(257)> a, PrimeField<uint16_t, uint16_t(257)> b)
+{
+	uint16_t o = (a.v & b.v) >> 8;
+	uint16_t v = a.v * b.v;
+	return PrimeField<uint16_t, uint16_t(257)>(o | v);
+}
+
+template <>
+PrimeField<uint32_t, uint32_t(65537)> mul(PrimeField<uint32_t, uint32_t(65537)> a, PrimeField<uint32_t, uint32_t(65537)> b)
+{
+	uint32_t o = (a.v & b.v) >> 16;
+	uint32_t v = a.v * b.v;
+	return PrimeField<uint32_t, uint32_t(65537)>(o | v);
+}
+
 template <typename TYPE, TYPE PRIME>
 PrimeField<TYPE, PRIME> operator * (PrimeField<TYPE, PRIME> a, PrimeField<TYPE, PRIME> b)
 {
