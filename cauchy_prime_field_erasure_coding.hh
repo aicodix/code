@@ -47,7 +47,7 @@ struct CauchyPrimeFieldErasureCoding
 				PF row_k(rows[k]), col_k(k);
 				num = mul(num, add(row_k, col_i));
 				if (k != i)
-					den = mul(den, sub(col_i, col_k));
+					den = mul(den, col_i - col_k);
 				if (!r) {
 					r = 3;
 					num = reduce(num);
@@ -62,7 +62,7 @@ struct CauchyPrimeFieldErasureCoding
 			PF row_k(rows[k]), col_k(k);
 			num = mul(num, add(row_j, col_k));
 			if (k != j)
-				den = mul(den, sub(row_j, row_k));
+				den = mul(den, row_j - row_k);
 			if (!r) {
 				r = 3;
 				num = reduce(num);

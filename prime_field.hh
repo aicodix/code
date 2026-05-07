@@ -48,13 +48,13 @@ PrimeField<TYPE, PRIME> reduce(PrimeField<TYPE, PRIME> a)
 template <typename TYPE, TYPE PRIME>
 bool operator == (PrimeField<TYPE, PRIME> a, PrimeField<TYPE, PRIME> b)
 {
-	return a.v == b.v;
+	return a() == b();
 }
 
 template <typename TYPE, TYPE PRIME>
 bool operator != (PrimeField<TYPE, PRIME> a, PrimeField<TYPE, PRIME> b)
 {
-	return a.v != b.v;
+	return a() != b();
 }
 
 template <typename TYPE, TYPE PRIME>
@@ -72,7 +72,7 @@ PrimeField<TYPE, PRIME> operator + (PrimeField<TYPE, PRIME> a, PrimeField<TYPE, 
 template <typename TYPE, TYPE PRIME>
 PrimeField<TYPE, PRIME> sub(PrimeField<TYPE, PRIME> a, PrimeField<TYPE, PRIME> b)
 {
-	return PrimeField<TYPE, PRIME>(a.v - b.v + (a.v < b.v ? a.P : 0));
+	return add(a, neg(b));
 }
 
 template <typename TYPE, TYPE PRIME>
