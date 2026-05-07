@@ -184,28 +184,28 @@ PrimeField<TYPE, PRIME> rcp(PrimeField<TYPE, PRIME> a)
 	return pow(a, a.P - 2);
 }
 
-template <typename TYPE>
-PrimeField<TYPE, TYPE(257)> rcp(PrimeField<TYPE, TYPE(257)> a)
+template <>
+PrimeField<uint16_t, uint16_t(257)> rcp(PrimeField<uint16_t, uint16_t(257)> a)
 {
-	PrimeField<TYPE, TYPE(257)> t = a;
+	PrimeField<uint16_t, uint16_t(257)> t = a;
 	for (int i = 1; i < 8; ++i)
 		t *= a *= a;
 	return t;
 }
 
-template <typename TYPE>
-PrimeField<TYPE, TYPE(65537)> rcp(PrimeField<TYPE, TYPE(65537)> a)
+template <>
+PrimeField<uint32_t, uint32_t(65537)> rcp(PrimeField<uint32_t, uint32_t(65537)> a)
 {
-	PrimeField<TYPE, TYPE(65537)> t = a;
+	PrimeField<uint32_t, uint32_t(65537)> t = a;
 	for (int i = 1; i < 16; ++i)
 		t *= a *= a;
 	return t;
 }
 
-template <typename TYPE>
-PrimeField<TYPE, TYPE(0x7FFFFFFF)> rcp(PrimeField<TYPE, TYPE(0x7FFFFFFF)> a)
+template <>
+PrimeField<uint32_t, uint32_t(0x7FFFFFFF)> rcp(PrimeField<uint32_t, uint32_t(0x7FFFFFFF)> a)
 {
-	PrimeField<TYPE, TYPE(0x7FFFFFFF)> t = a;
+	PrimeField<uint32_t, uint32_t(0x7FFFFFFF)> t = a;
 	a *= a;
 	for (int i = 0; i < 29; ++i)
 		t *= a *= a;
