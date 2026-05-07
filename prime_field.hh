@@ -33,7 +33,7 @@ struct PrimeField
 	{
 		return *this = *this - a;
 	}
-	TYPE operator () ()
+	TYPE operator () () const
 	{
 		return v;
 	}
