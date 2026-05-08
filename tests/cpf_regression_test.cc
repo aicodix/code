@@ -1,5 +1,5 @@
 /*
-Regression Test for the Cauchy Mersenne 2^31-1 Prime Field Encoder and Decoder
+Regression Test for the Cauchy Prime Field Encoder and Decoder
 
 Copyright 2026 Ahmet Inan <inan@aicodix.de>
 */
@@ -11,33 +11,34 @@ Copyright 2026 Ahmet Inan <inan@aicodix.de>
 #include <iostream>
 #include <functional>
 #include "prime_field.hh"
-#include "cauchy_mersenne_erasure_coding.hh"
+#include "cauchy_prime_field_erasure_coding.hh"
 
-void cme_test(int trials)
+template <typename PF, int BITS>
+void cpf_test(int trials)
 {
-	typedef CODE::PrimeField<uint32_t, 0x7FFFFFFF> M31;
-	CODE::CauchyMersenneErasureCoding cme;
+	const int MAX_LEN = std::min<int>(PF::P - 2, 1024);
+	CODE::CauchyPrimeFieldErasureCoding<PF> cpf;
 	std::random_device rd;
 	std::default_random_engine generator(rd());
 	typedef std::uniform_int_distribution<int> distribution;
-	auto rnd_cnt = std::bind(distribution(1, 256), generator);
-	auto rnd_len = std::bind(distribution(1, 1024), generator);
-	auto rnd_dat = std::bind(distribution(0, M31::P-1), generator);
+	auto rnd_cnt = std::bind(distribution(1, std::min<int>(PF::P / 4, 256)), generator);
+	auto rnd_len = std::bind(distribution(1, MAX_LEN), generator);
+	auto rnd_dat = std::bind(distribution(0, PF::P-1), generator);
 	while (--trials) {
 		int block_count = rnd_cnt();
-		int idents_total = 1000000; // M31::P / 2 - block_count;
+		int idents_total = std::min<int>(1000000, PF::P / 2 - block_count);
 		int block_values = rnd_len();
-		int block_bits = block_values * 31;
+		int block_bits = block_values * BITS;
 		int block_bytes = block_bits / 8;
 		int data_values = block_count * block_values;
-		int data_bits = data_values * 31;
+		int data_bits = data_values * BITS;
 		int data_bytes = data_bits / 8;
-		M31 *orig = new M31[data_values];
-		M31 *data = new M31[data_values];
-		M31 *blocks = new M31[data_values];
+		PF *orig = new PF[data_values];
+		PF *data = new PF[data_values];
+		PF *blocks = new PF[data_values];
 		int *idents = new int[idents_total];
 		for (int i = 0; i < data_values; ++i)
-			orig[i] = M31(rnd_dat());
+			orig[i] = PF(rnd_dat());
 		for (int i = 0; i < idents_total; ++i)
 			idents[i] = block_count + i;
 		for (int i = 0; i < block_count; i++) {
@@ -46,13 +47,13 @@ void cme_test(int trials)
 		}
 		auto enc_start = std::chrono::system_clock::now();
 		for (int i = 0; i < block_count; ++i)
-			cme.encode(orig, blocks + block_values * i, idents[i], block_values, block_count);
+			cpf.encode(orig, blocks + block_values * i, idents[i], block_values, block_count);
 		auto enc_end = std::chrono::system_clock::now();
 		auto enc_usec = std::chrono::duration_cast<std::chrono::microseconds>(enc_end - enc_start);
 		double enc_mbs = double(data_bytes) / enc_usec.count();
 		auto dec_start = std::chrono::system_clock::now();
 		for (int i = 0; i < block_count; ++i)
-			cme.decode(data + block_values * i, blocks, idents, i, block_values, block_count);
+			cpf.decode(data + block_values * i, blocks, idents, i, block_values, block_count);
 		auto dec_end = std::chrono::system_clock::now();
 		auto dec_usec = std::chrono::duration_cast<std::chrono::microseconds>(dec_end - dec_start);
 		double dec_mbs = double(data_bytes) / dec_usec.count();
@@ -68,8 +69,10 @@ void cme_test(int trials)
 
 int main()
 {
-	cme_test(100);
-	std::cerr << "Cauchy Mersenne 2^31-1 prime field regression test passed!" << std::endl;
+	cpf_test<CODE::PrimeField<uint16_t, 257>, 8>(100);
+	cpf_test<CODE::PrimeField<uint32_t, 65537>, 16>(100);
+	cpf_test<CODE::PrimeField<uint32_t, 0x7FFFFFFF>, 31>(100);
+	std::cerr << "Cauchy prime field erasure coding regression test passed!" << std::endl;
 	return 0;
 }
 
