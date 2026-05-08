@@ -17,11 +17,12 @@ template <typename PF, int BITS>
 void cpf_test(int trials)
 {
 	const int MAX_LEN = std::min<int>(PF::P - 2, 1024);
-	CODE::CauchyPrimeFieldErasureCoding<PF> cpf;
+	const int MAX_CNT = std::min<int>(PF::P / 4, 256);
+	CODE::CauchyPrimeFieldErasureCoding<PF, MAX_CNT> cpf;
 	std::random_device rd;
 	std::default_random_engine generator(rd());
 	typedef std::uniform_int_distribution<int> distribution;
-	auto rnd_cnt = std::bind(distribution(1, std::min<int>(PF::P / 4, 256)), generator);
+	auto rnd_cnt = std::bind(distribution(1, MAX_CNT), generator);
 	auto rnd_len = std::bind(distribution(1, MAX_LEN), generator);
 	auto rnd_dat = std::bind(distribution(0, PF::P-1), generator);
 	while (--trials) {
