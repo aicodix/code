@@ -13,7 +13,7 @@ namespace CODE {
 template <typename PF, int MAX_CNT>
 struct CauchyPrimeFieldErasureCoding
 {
-	PF A[MAX_CNT], B[MAX_CNT];
+	PF A[MAX_CNT], B[MAX_CNT], T[MAX_CNT];
 	// $a_{ij} = \frac{1}{x_i + y_j}$
 	PF cauchy_matrix(int i, int j)
 	{
@@ -25,31 +25,62 @@ struct CauchyPrimeFieldErasureCoding
 	{
 		for (int j = 0; j < n; j++) {
 			PF row_j(rows[j]);
-			PF num(1), den(1);
+			PF den(1);
 			for (int k = 0; k < n; k++) {
-				PF row_k(rows[k]), col_k(k);
-				num *= row_j + col_k;
+				PF row_k(rows[k]);
 				if (k != j)
 					den *= row_j - row_k;
 			}
-			A[j] = num / den;
+			A[j] = den;
 		}
+		montgomery_batch_invert(A, T, n);
+		for (int j = 0; j < n; j++) {
+			PF row_j(rows[j]);
+			PF num(1);
+			for (int k = 0; k < n; k++) {
+				PF col_k(k);
+				num *= row_j + col_k;
+			}
+			A[j] *= num;
+		}
+		for (int i = 0; i < n; i++) {
+			PF col_i(i);
+			PF den(1);
+			for (int k = 0; k < n; k++) {
+				PF col_k(k);
+				if (k != i)
+					den *= col_i - col_k;
+			}
+			B[i] = den;
+		}
+		montgomery_batch_invert(B, T, n);
 		for (int i = 0; i < n; i++) {
 			PF col_i(i);
 			PF num(1), den(1);
 			for (int k = 0; k < n; k++) {
-				PF row_k(rows[k]), col_k(k);
+				PF row_k(rows[k]);
 				num *= row_k + col_i;
-				if (k != i)
-					den *= col_i - col_k;
 			}
-			B[i] = num / den;
+			B[i] *= num;
 		}
 	}
 	PF inverse_cauchy_matrix(const int *rows, int i, int j)
 	{
 		PF row_j(rows[j]), col_i(i);
 		return (A[j] * B[i]) / (row_j + col_i);
+	}
+	void montgomery_batch_invert(PF *v, PF *t, int n)
+	{
+		t[0] = v[0];
+		for (int i = 1; i < n; i++)
+			t[i] = t[i-1] * v[i];
+		PF inv = rcp(t[n-1]);
+		for (int i = n - 1; i; i--) {
+			PF val = v[i];
+			v[i] = inv * t[i-1];
+			inv *= val;
+		}
+		v[0] = inv;
 	}
 	void mac(PF *c, const PF *a, PF b, int len, bool init)
 	{
