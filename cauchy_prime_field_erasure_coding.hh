@@ -20,21 +20,29 @@ struct CauchyPrimeFieldErasureCoding
 		PF row(i), col(j);
 		return rcp(row + col);
 	}
-	// $b_{ij} = \frac{\prod_{k=1}^{n}{(x_j + y_k)(x_k + y_i)}}{(x_j + y_i)\prod_{k \ne j}^{n}{(x_j - x_k)}\prod_{k \ne i}^{n}{(y_i - y_k)}}$
+	// $b_{ij} = \frac{\prod_{k=1}^{n}{(x_j + y_k)}\prod_{k=1}^{n}{(x_k + y_i)}}{(x_j + y_i)\prod_{k \ne j}^{n}{(x_j - x_k)}\prod_{k \ne i}^{n}{(y_i - y_k)}}$
 	PF inverse_cauchy_matrix(const int *rows, int i, int j, int n)
 	{
 #if 0
-		PF row_j(rows[j]), col_i(i);
-		PF prod_xy(1), prod_x(1), prod_y(1);
+		PF row_j(rows[j]);
+		PF num_x(1), den_x(1);
 		for (int k = 0; k < n; k++) {
 			PF row_k(rows[k]), col_k(k);
-			prod_xy *= (row_j + col_k) * (row_k + col_i);
+			num_x *= row_j + col_k;
 			if (k != j)
-				prod_x *= (row_j - row_k);
-			if (k != i)
-				prod_y *= (col_i - col_k);
+				den_x *= row_j - row_k;
 		}
-		return prod_xy / ((row_j + col_i) * prod_x * prod_y);
+		PF A_j = num_x / den_x;
+		PF col_i(i);
+		PF num_y(1), den_y(1);
+		for (int k = 0; k < n; k++) {
+			PF row_k(rows[k]), col_k(k);
+			num_y *= row_k + col_i;
+			if (k != i)
+				den_y *= col_i - col_k;
+		}
+		PF B_i = num_y / den_y;
+		return (A_j * B_i) / (row_j + col_i);
 #else
 		PF row_j(rows[j]), col_i(i);
 		if (j == 0) {
