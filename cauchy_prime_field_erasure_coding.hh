@@ -25,25 +25,25 @@ struct CauchyPrimeFieldErasureCoding
 	{
 		for (int j = 0; j < n; j++) {
 			PF row_j(rows[j]);
-			PF num_x(1), den_x(1);
+			PF num(1), den(1);
 			for (int k = 0; k < n; k++) {
 				PF row_k(rows[k]), col_k(k);
-				num_x *= row_j + col_k;
+				num *= row_j + col_k;
 				if (k != j)
-					den_x *= row_j - row_k;
+					den *= row_j - row_k;
 			}
-			A[j] = num_x / den_x;
+			A[j] = num / den;
 		}
 		for (int i = 0; i < n; i++) {
 			PF col_i(i);
-			PF num_y(1), den_y(1);
+			PF num(1), den(1);
 			for (int k = 0; k < n; k++) {
 				PF row_k(rows[k]), col_k(k);
-				num_y *= row_k + col_i;
+				num *= row_k + col_i;
 				if (k != i)
-					den_y *= col_i - col_k;
+					den *= col_i - col_k;
 			}
-			B[i] = num_y / den_y;
+			B[i] = num / den;
 		}
 	}
 	PF inverse_cauchy_matrix(const int *rows, int i, int j)
