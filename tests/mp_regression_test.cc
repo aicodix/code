@@ -19,7 +19,7 @@ void cme_test(int trials)
 	std::random_device rd;
 	std::default_random_engine generator(rd());
 	typedef std::uniform_int_distribution<int> distribution;
-	const int bytes_max = 1024;
+	const int64_t bytes_max = 1024;
 	const int count_max = (bytes_max * 8 + 30) / 31;
 	auto rnd_cnt = std::bind(distribution(0, count_max), generator);
 	auto rnd_len = std::bind(distribution(0, bytes_max), generator);
@@ -32,7 +32,7 @@ void cme_test(int trials)
 	uint8_t *tmp3 = new uint8_t[bytes_max];
 	for (int j = 0; j < trials; ++j) {
 		int count = rnd_cnt();
-		int bytes = (count * 31 + 7) / 8;
+		int64_t bytes = (count * 31LL + 7) / 8;
 		// M31 -> byte -> M31
 		for (int i = 0; i < count; ++i)
 			tmp0[i] = M31(rnd_m31());
@@ -42,27 +42,27 @@ void cme_test(int trials)
 			assert(tmp0[i] == tmp1[i]);
 	}
 	for (int j = 0; j < trials; ++j) {
-		int bytes = rnd_len();
+		int64_t bytes = rnd_len();
 		int count = (bytes * 8 + 30) / 31;
 		// byte -> M31 -> byte
-		for (int i = 0; i < bytes; ++i)
+		for (int64_t i = 0; i < bytes; ++i)
 			tmp2[i] = rnd_dat();
 		MP::pack(tmp0, tmp2, count, bytes);
 		MP::unpack(tmp3, tmp0, count, bytes);
-		for (int i = 0; i < bytes; ++i)
+		for (int64_t i = 0; i < bytes; ++i)
 			assert(tmp2[i] == tmp3[i]);
 	}
 	for (int j = 0; j < trials; ++j) {
-		int bytes = rnd_len();
+		int64_t bytes = rnd_len();
 		int count = (bytes * 8 + 30) / 31 + 1;
 		// byte -> M31 -> byte
-		for (int i = 0; i < bytes; ++i)
+		for (int64_t i = 0; i < bytes; ++i)
 			tmp2[i] = i < bytes / 2 ? rnd_dat() : 255;
 		remap->encode(tmp0, tmp2, bytes);
 		for (int i = 0; i < count; ++i)
 			assert(tmp0[i].v != M31::P);
 		MP::decode(tmp3, tmp0, bytes);
-		for (int i = 0; i < bytes; ++i)
+		for (int64_t i = 0; i < bytes; ++i)
 			assert(tmp2[i] == tmp3[i]);
 	}
 	delete remap;
