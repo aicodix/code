@@ -68,11 +68,11 @@ struct MersenneRemapping
 	static constexpr int max_count = (MAX_BYTES * 8 + 30) / 31;
 	static_assert(max_count < 0x7FFFFFFF, "Block length must be smaller than number of field values");
 	static constexpr int used_width = 8 * sizeof(used_word);
-	static constexpr int used_length = (max_count + used_width - 1) / used_width;
+	static constexpr int used_length = max_count / used_width + 1;
 	used_word used_values[used_length];
 	M31 find_unused(const M31 *dst, int count)
 	{
-		int limit = (count + used_width - 1) / used_width;
+		int limit = count / used_width + 1;
 		for (int i = 0; i < limit; ++i)
 			used_values[i] = 0;
 		for (int i = 0; i < count; ++i)
