@@ -72,7 +72,9 @@ public:
 		compute(erasure_probability, 0, length / 2);
 		for (int i = 0; i < length; ++i)
 			index[i] = i;
-		std::nth_element(index, index+K, index+length, [this](int a, int b){ return prob[a] < prob[b]; });
+		std::nth_element(index, index+K, index+length, [this](int a, int b){
+			return prob[a] != prob[b] ? prob[a] < prob[b] : a < b;
+		});
 		for (int i = 0; i < K; ++i)
 			inform_bit(frozen_bits, index[i]);
 		for (int i = K; i < length; ++i)
