@@ -126,11 +126,18 @@ public:
 		compute(complement(erasure_probability), 0, length / 2);
 		for (int i = 0; i < length; ++i)
 			index[i] = i;
+		// most reliable first, ties in the reverse order of ReedMullerSequence
 		std::nth_element(index, index+K, index+length, [this](int a, int b){
 			bool na = prob[a] < 0, nb = prob[b] < 0;
 			if (na != nb)
 				return nb;
-			return prob[a] != prob[b] ? prob[a] < prob[b] : a < b;
+			if (prob[a] != prob[b])
+				return prob[a] < prob[b];
+			int x = __builtin_popcount(a);
+			int y = __builtin_popcount(b);
+			if (x != y)
+				return x > y;
+			return a > b;
 		});
 		for (int i = 0; i < K; ++i)
 			inform_bit(frozen_bits, index[i]);

@@ -59,9 +59,18 @@ public:
 		compute(complement(erasure_probability), 0, length / 2);
 		for (int i = 0; i < length; ++i)
 			sequence[i] = i;
+		// least reliable first, ties in the same order as ReedMullerSequence
 		sort(sequence, length, [this](int a, int b){
 			bool na = prob[a] < 0, nb = prob[b] < 0;
-			return na != nb ? na : prob[a] > prob[b];
+			if (na != nb)
+				return na;
+			if (prob[a] != prob[b])
+				return prob[a] > prob[b];
+			int x = __builtin_popcount(a);
+			int y = __builtin_popcount(b);
+			if (x != y)
+				return x < y;
+			return a < b;
 		});
 	}
 };
