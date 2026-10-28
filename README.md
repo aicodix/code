@@ -96,6 +96,7 @@ Bit freezers for the construction of [polar codes](https://en.wikipedia.org/wiki
 Construction of reliability sequences for [polar codes](https://en.wikipedia.org/wiki/Polar_code_(coding_theory)).
 
 * BhattacharyyaSequence: Constructs a sequence by sorting virtual channel reliabilities computed from a given erasure probability.
+* PolarizationWeightSequence: Constructs a sequence by sorting virtual channels by their polarization weight, the sum of beta to the power of the positions of the set bits in their index.
 * ReedMullerSequence: Constructs a sequence by sorting virtual channels by the Hamming weight of their index first and then by their magnitude to resolve ties.
 
 ### [polar_encoder.hh](polar_encoder.hh)

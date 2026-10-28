@@ -76,6 +76,36 @@ public:
 };
 
 template <int MAX_M>
+class PolarizationWeightSequence
+{
+	double weight[1<<MAX_M];
+	MergeSort<int, 1<<MAX_M> sort;
+public:
+	void operator()(int *sequence, int level, double beta = std::pow(2., .25))
+	{
+		assert(level <= MAX_M);
+		int length = 1 << level;
+		weight[0] = 0;
+		double power = 1;
+		for (int h = 1; h < length; h *= 2, power *= beta)
+			for (int i = 0; i < h; ++i)
+				weight[i+h] = weight[i] + power;
+		for (int i = 0; i < length; ++i)
+			sequence[i] = i;
+		// least reliable first, ties in the same order as ReedMullerSequence
+		sort(sequence, length, [this](int a, int b){
+			if (weight[a] != weight[b])
+				return weight[a] < weight[b];
+			int x = __builtin_popcount(a);
+			int y = __builtin_popcount(b);
+			if (x != y)
+				return x < y;
+			return a < b;
+		});
+	}
+};
+
+template <int MAX_M>
 class ReedMullerSequence
 {
 	MergeSort<int, 1<<MAX_M> sort;
