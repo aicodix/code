@@ -6,12 +6,26 @@ Copyright 2020 Ahmet Inan <inan@aicodix.de>
 
 #pragma once
 
+#include <limits>
 #include <algorithm>
 
 namespace CODE {
 
+// erasure probabilities above one half are stored as their negated
+// complement, as values close to one would otherwise round to one.
+// squares are kept above zero, so the sign survives underflow and
+// doesn't depend on signed zeros, which -ffast-math ignores
 class PolarFreezer
 {
+	static double complement(double pe)
+	{
+		bool comp = pe > 0.5;
+		if (comp)
+			pe = 1 - pe;
+		if (pe < std::numeric_limits<double>::min())
+			pe = std::numeric_limits<double>::min();
+		return comp ? -pe : pe;
+	}
 	static bool get_bit(const uint32_t *bits, int idx)
 	{
 		return (bits[idx/32] >> (idx%32)) & 1;
@@ -24,17 +38,31 @@ class PolarFreezer
 	static void freeze(uint32_t *bits, double pe, double th, int i, int h)
 	{
 		if (h) {
-			freeze(bits, pe * (2-pe), th, i, h/2);
-			freeze(bits, pe * pe, th, i+h, h/2);
+			bool comp = pe < 0;
+			double x = comp ? -pe : pe;
+			double square = x * x;
+			if (square < std::numeric_limits<double>::min())
+				square = std::numeric_limits<double>::min();
+			double grow = x * (2-x);
+			bool flip = grow > 0.5;
+			if (flip)
+				grow = (1-x) * (1-x);
+			if (comp != flip)
+				grow = -grow;
+			if (comp)
+				square = -square;
+			freeze(bits, comp ? square : grow, th, i, h/2);
+			freeze(bits, comp ? grow : square, th, i+h, h/2);
 		} else {
-			set_bit(bits, i, pe > th);
+			// z > th, with z = 1 + pe for the negated complement
+			set_bit(bits, i, pe < 0 ? -pe < 1 - th : pe > th);
 		}
 	}
 public:
 	int operator()(uint32_t *frozen_bits, int level, double erasure_probability = 0.5, double freezing_threshold = 0.5)
 	{
 		int length = 1 << level;
-		freeze(frozen_bits, erasure_probability, freezing_threshold, 0, length / 2);
+		freeze(frozen_bits, complement(erasure_probability), freezing_threshold, 0, length / 2);
 		int K = length;
 		for (int i = 0; i < length; ++i)
 			K -= (frozen_bits[i/32] >> (i%32)) & 1;
@@ -42,9 +70,22 @@ public:
 	}
 };
 
+// erasure probabilities above one half are stored as their negated
+// complement, as values close to one would otherwise round to one.
+// squares are kept above zero, so the sign survives underflow and
+// doesn't depend on signed zeros, which -ffast-math ignores
 template <int MAX_M>
 class BhattacharyyaFreezer
 {
+	static double complement(double pe)
+	{
+		bool comp = pe > 0.5;
+		if (comp)
+			pe = 1 - pe;
+		if (pe < std::numeric_limits<double>::min())
+			pe = std::numeric_limits<double>::min();
+		return comp ? -pe : pe;
+	}
 	static void inform_bit(uint32_t *bits, int idx)
 	{
 		bits[idx/32] &= ~(1 << (idx%32));
@@ -56,8 +97,21 @@ class BhattacharyyaFreezer
 	void compute(double pe, int i, int h)
 	{
 		if (h) {
-			compute(pe * (2-pe), i, h/2);
-			compute(pe * pe, i+h, h/2);
+			bool comp = pe < 0;
+			double x = comp ? -pe : pe;
+			double square = x * x;
+			if (square < std::numeric_limits<double>::min())
+				square = std::numeric_limits<double>::min();
+			double grow = x * (2-x);
+			bool flip = grow > 0.5;
+			if (flip)
+				grow = (1-x) * (1-x);
+			if (comp != flip)
+				grow = -grow;
+			if (comp)
+				square = -square;
+			compute(comp ? square : grow, i, h/2);
+			compute(comp ? grow : square, i+h, h/2);
 		} else {
 			prob[i] = pe;
 		}
@@ -69,10 +123,13 @@ public:
 	{
 		assert(level <= MAX_M);
 		int length = 1 << level;
-		compute(erasure_probability, 0, length / 2);
+		compute(complement(erasure_probability), 0, length / 2);
 		for (int i = 0; i < length; ++i)
 			index[i] = i;
 		std::nth_element(index, index+K, index+length, [this](int a, int b){
+			bool na = prob[a] < 0, nb = prob[b] < 0;
+			if (na != nb)
+				return nb;
 			return prob[a] != prob[b] ? prob[a] < prob[b] : a < b;
 		});
 		for (int i = 0; i < K; ++i)
