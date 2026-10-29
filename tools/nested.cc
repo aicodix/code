@@ -5,8 +5,9 @@ For each K = STEP * j + EXTRA, the largest erasure probability is chosen
 for which the erasure probabilities of the K most reliable bits sum up to
 at most EPSILON, the union bound on the block error rate of SC decoding.
 EXTRA counts redundant bits like CRC, so the payload stays at STEP * j.
+With STEP = N / 256, the 255 rates j = 1 .. 255 fill all 256 values of a byte.
 If the resulting frozen sets are nested, a single table holds them all:
-bit i is frozen for a payload of STEP * j bits, if threshold[i] > j.
+bit i is frozen for a payload of STEP * j bits, if threshold[i] >= j.
 
 Copyright 2026 Ahmet Inan <inan@aicodix.de>
 */
@@ -20,7 +21,7 @@ Copyright 2026 Ahmet Inan <inan@aicodix.de>
 #include <algorithm>
 #include "polar_freezer.hh"
 
-const int M = 16, N = 1 << M, STEP = 1024, RATES = N / STEP - 1;
+const int M = 16, N = 1 << M, RATES = 255, STEP = N / (RATES + 1);
 
 // same recursion as the Bhattacharyya constructions in this library
 double complement(double pe)
@@ -91,7 +92,7 @@ int main(int argc, char **argv)
 	auto threshold = new uint8_t[N];
 	auto freeze = new CODE::BhattacharyyaFreezer<M>;
 	for (int i = 0; i < N; ++i)
-		threshold[i] = RATES + 1;
+		threshold[i] = RATES;
 	int violations = 0;
 	for (int j = 1; j <= RATES; ++j) {
 		int K = STEP * j + extra;
@@ -106,16 +107,16 @@ int main(int argc, char **argv)
 		(*freeze)(frozen, M, K, lower);
 		for (int i = 0; i < N; ++i) {
 			bool info = !((frozen[i/32] >> (i%32)) & 1);
-			if (info && threshold[i] > j)
-				threshold[i] = j;
+			if (info && threshold[i] >= j)
+				threshold[i] = j - 1;
 			// frozen now, but information bit at a lower rate already
-			violations += !info && threshold[i] < j;
+			violations += !info && threshold[i] < j - 1;
 		}
 		std::cerr << "K = " << K << " erasure probability = " << lower << std::endl;
 	}
 	std::cerr << (violations ? "NOT nested, violations: " : "nested, violations: ") << violations << std::endl;
 	std::cout << "// bit i is frozen for a payload of " << STEP << " * j bits";
-	std::cout << " plus " << extra << " extra bits, if threshold[i] > j" << std::endl;
+	std::cout << " plus " << extra << " extra bits, if threshold[i] >= j" << std::endl;
 	std::cout << "static const uint8_t threshold[" << N << "] = { ";
 	for (int i = 0; i < N; ++i)
 		std::cout << int(threshold[i]) << ", ";
