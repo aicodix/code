@@ -1,11 +1,12 @@
 /*
 Generate nested frozen bit tables for polar codes
 
-For each K, the largest erasure probability is chosen for which the
-erasure probabilities of the K most reliable bits sum up to at most
-EPSILON, the union bound on the block error rate of SC decoding.
+For each K = STEP * j + EXTRA, the largest erasure probability is chosen
+for which the erasure probabilities of the K most reliable bits sum up to
+at most EPSILON, the union bound on the block error rate of SC decoding.
+EXTRA counts redundant bits like CRC, so the payload stays at STEP * j.
 If the resulting frozen sets are nested, a single table holds them all:
-bit i is frozen for K = STEP * j, if threshold[i] > j.
+bit i is frozen for a payload of STEP * j bits, if threshold[i] > j.
 
 Copyright 2026 Ahmet Inan <inan@aicodix.de>
 */
@@ -67,13 +68,20 @@ double union_bound(double *prob, int K, double pe)
 
 int main(int argc, char **argv)
 {
-	if (argc > 2) {
-		std::cerr << "usage: " << argv[0] << " [EPSILON]" << std::endl;
+	if (argc > 3) {
+		std::cerr << "usage: " << argv[0] << " [EXTRA] [EPSILON]" << std::endl;
+		return 1;
+	}
+	int extra = 0;
+	if (argc >= 2)
+		extra = std::atoi(argv[1]);
+	if (extra < 0 || extra >= STEP) {
+		std::cerr << "EXTRA must be between 0 and " << STEP - 1 << std::endl;
 		return 1;
 	}
 	double epsilon = 1e-3;
-	if (argc == 2)
-		epsilon = std::atof(argv[1]);
+	if (argc == 3)
+		epsilon = std::atof(argv[2]);
 	if (!(epsilon > 0 && epsilon < 1)) {
 		std::cerr << "EPSILON must be between 0 and 1" << std::endl;
 		return 1;
@@ -86,7 +94,7 @@ int main(int argc, char **argv)
 		threshold[i] = RATES + 1;
 	int violations = 0;
 	for (int j = 1; j <= RATES; ++j) {
-		int K = STEP * j;
+		int K = STEP * j + extra;
 		double lower = 0, upper = 1 - double(K) / N;
 		for (int k = 0; k < 64; ++k) {
 			double middle = (lower + upper) / 2;
@@ -106,7 +114,8 @@ int main(int argc, char **argv)
 		std::cerr << "K = " << K << " erasure probability = " << lower << std::endl;
 	}
 	std::cerr << (violations ? "NOT nested, violations: " : "nested, violations: ") << violations << std::endl;
-	std::cout << "// bit i is frozen for K = " << STEP << " * j, if threshold[i] > j" << std::endl;
+	std::cout << "// bit i is frozen for a payload of " << STEP << " * j bits";
+	std::cout << " plus " << extra << " extra bits, if threshold[i] > j" << std::endl;
 	std::cout << "static const uint8_t threshold[" << N << "] = { ";
 	for (int i = 0; i < N; ++i)
 		std::cout << int(threshold[i]) << ", ";
