@@ -5,9 +5,11 @@ For each K = STEP * j + EXTRA, the largest erasure probability is chosen
 for which the erasure probabilities of the K most reliable bits sum up to
 at most EPSILON, the union bound on the block error rate of SC decoding.
 EXTRA counts redundant bits like CRC, so the payload stays at STEP * j.
-With STEP = N / 256, the 255 rates j = 1 .. 255 fill all 256 values of a byte.
+With BITS per entry and STEP = N >> BITS, the 2^BITS - 1 rates j = 1 .. 2^BITS - 1
+and the value for always frozen fill all values of an entry.
 If the resulting frozen sets are nested, a single table holds them all:
-bit i is frozen for a payload of STEP * j bits, if threshold[i] >= j.
+bit i is frozen for a payload of STEP * j bits, if entry i >= j.
+Entries are packed into bytes, the first entry in the lowest bits.
 
 Copyright 2026 Ahmet Inan <inan@aicodix.de>
 */
@@ -21,7 +23,7 @@ Copyright 2026 Ahmet Inan <inan@aicodix.de>
 #include <algorithm>
 #include "polar_freezer.hh"
 
-const int M = 16, N = 1 << M, RATES = 255, STEP = N / (RATES + 1);
+const int M = 16, N = 1 << M;
 
 // same recursion as the Bhattacharyya constructions in this library
 double complement(double pe)
@@ -69,20 +71,28 @@ double union_bound(double *prob, int K, double pe)
 
 int main(int argc, char **argv)
 {
-	if (argc > 3) {
-		std::cerr << "usage: " << argv[0] << " [EXTRA] [EPSILON]" << std::endl;
+	if (argc > 4) {
+		std::cerr << "usage: " << argv[0] << " [BITS] [EXTRA] [EPSILON]" << std::endl;
 		return 1;
 	}
-	int extra = 0;
+	int bits = 8;
 	if (argc >= 2)
-		extra = std::atoi(argv[1]);
+		bits = std::atoi(argv[1]);
+	if (bits != 1 && bits != 2 && bits != 4 && bits != 8) {
+		std::cerr << "BITS must be 1, 2, 4 or 8" << std::endl;
+		return 1;
+	}
+	const int RATES = (1 << bits) - 1, STEP = N >> bits, PER_BYTE = 8 / bits;
+	int extra = 0;
+	if (argc >= 3)
+		extra = std::atoi(argv[2]);
 	if (extra < 0 || extra >= STEP) {
 		std::cerr << "EXTRA must be between 0 and " << STEP - 1 << std::endl;
 		return 1;
 	}
 	double epsilon = 1e-3;
-	if (argc == 3)
-		epsilon = std::atof(argv[2]);
+	if (argc == 4)
+		epsilon = std::atof(argv[3]);
 	if (!(epsilon > 0 && epsilon < 1)) {
 		std::cerr << "EPSILON must be between 0 and 1" << std::endl;
 		return 1;
@@ -115,11 +125,18 @@ int main(int argc, char **argv)
 		std::cerr << "K = " << K << " erasure probability = " << lower << std::endl;
 	}
 	std::cerr << (violations ? "NOT nested, violations: " : "nested, violations: ") << violations << std::endl;
-	std::cout << "// bit i is frozen for a payload of " << STEP << " * j bits";
-	std::cout << " plus " << extra << " extra bits, if threshold[i] >= j" << std::endl;
-	std::cout << "static const uint8_t threshold[" << N << "] = { ";
-	for (int i = 0; i < N; ++i)
-		std::cout << int(threshold[i]) << ", ";
+	std::cout << "// bit i is frozen for a payload of " << STEP << " * j bits plus " << extra << " extra bits, if" << std::endl;
+	if (bits == 8)
+		std::cout << "// threshold[i] >= j" << std::endl;
+	else
+		std::cout << "// ((threshold[i/" << PER_BYTE << "] >> (i%" << PER_BYTE << "*" << bits << ")) & " << RATES << ") >= j" << std::endl;
+	std::cout << "static const uint8_t threshold[" << N / PER_BYTE << "] = { ";
+	for (int i = 0; i < N; i += PER_BYTE) {
+		int byte = 0;
+		for (int k = 0; k < PER_BYTE; ++k)
+			byte |= threshold[i+k] << (k * bits);
+		std::cout << byte << ", ";
+	}
 	std::cout << "};" << std::endl;
 	delete freeze;
 	delete[] threshold;
