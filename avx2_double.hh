@@ -1276,8 +1276,10 @@ template <>
 inline SIMD<int64_t, 8> vclamp(SIMD<int64_t, 8> x, int64_t a, int64_t b)
 {
 	SIMD<int64_t, 8> tmp;
-	for (int i = 0; i < 2; ++i)
-		tmp.m[i] = _mm256_min_epi64(_mm256_max_epi64(x.m[i], _mm256_set1_epi64x(a)), _mm256_set1_epi64x(b));
+	for (int i = 0; i < 2; ++i) {
+		tmp.m[i] = _mm256_blendv_epi8(x.m[i], _mm256_set1_epi64x(a), _mm256_cmpgt_epi64(_mm256_set1_epi64x(a), x.m[i]));
+		tmp.m[i] = _mm256_blendv_epi8(tmp.m[i], _mm256_set1_epi64x(b), _mm256_cmpgt_epi64(tmp.m[i], _mm256_set1_epi64x(b)));
+	}
 	return tmp;
 }
 
