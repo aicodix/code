@@ -1500,11 +1500,11 @@ static inline SIMD<double, WIDTH> vshuf(SIMD<double, WIDTH> a, SIMD<uint64_t, WI
 #include "avx2.hh"
 #include "avx2_double.hh"
 #else
-#ifdef __SSE4_1__
-#include "sse4_1.hh"
-#include "sse4_1_double.hh"
-#include "sse4_1_triple.hh"
-#include "sse4_1_quadruple.hh"
+#ifdef __SSE4_2__
+#include "sse4_2.hh"
+#include "sse4_2_double.hh"
+#include "sse4_2_triple.hh"
+#include "sse4_2_quadruple.hh"
 #endif
 #endif
 

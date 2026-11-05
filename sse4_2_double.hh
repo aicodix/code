@@ -1,5 +1,5 @@
 /*
-Intel SSE4.1 acceleration times two
+Intel SSE4.2 acceleration times two
 
 Copyright 2024 Ahmet Inan <inan@aicodix.de>
 */

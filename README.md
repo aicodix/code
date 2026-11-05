@@ -150,7 +150,7 @@ It computes the following, but having only O(N) complexity and using O(1) extra 
 
 Single instruction, multiple data ([SIMD](https://en.wikipedia.org/wiki/SIMD)) wrappers for:
 * [ARM NEON](https://en.wikipedia.org/wiki/ARM_architecture#Advanced_SIMD_(NEON)) ([neon.hh](neon.hh))
-* [Intel SSE4.1](https://en.wikipedia.org/wiki/SSE4) ([sse4_1.hh](sse4_1.hh))
+* [Intel SSE4.2](https://en.wikipedia.org/wiki/SSE4#SSE4.2) ([sse4_2.hh](sse4_2.hh))
 * [Intel AVX2](https://en.wikipedia.org/wiki/Advanced_Vector_Extensions) ([avx2.hh](avx2.hh))
 * [WebAssembly SIMD128](https://en.wikipedia.org/wiki/WebAssembly) ([simd128.hh](simd128.hh))
 

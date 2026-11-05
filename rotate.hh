@@ -110,7 +110,7 @@ public:
 	}
 };
 #else
-#ifdef __SSE4_1__
+#ifdef __SSE4_2__
 template <int WIDTH>
 class Rotate<SIMD<int8_t, 16>, WIDTH>
 {
