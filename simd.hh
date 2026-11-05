@@ -1514,5 +1514,12 @@ static inline SIMD<double, WIDTH> vshuf(SIMD<double, WIDTH> a, SIMD<uint64_t, WI
 #include "neon_triple.hh"
 #include "neon_quadruple.hh"
 #endif
+
+#ifdef __wasm_simd128__
+#include "simd128.hh"
+#include "simd128_double.hh"
+#include "simd128_triple.hh"
+#include "simd128_quadruple.hh"
+#endif
 #endif
 

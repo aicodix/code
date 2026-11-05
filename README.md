@@ -152,6 +152,7 @@ Single instruction, multiple data ([SIMD](https://en.wikipedia.org/wiki/SIMD)) w
 * [ARM NEON](https://en.wikipedia.org/wiki/ARM_architecture#Advanced_SIMD_(NEON)) ([neon.hh](neon.hh))
 * [Intel SSE4.1](https://en.wikipedia.org/wiki/SSE4) ([sse4_1.hh](sse4_1.hh))
 * [Intel AVX2](https://en.wikipedia.org/wiki/Advanced_Vector_Extensions) ([avx2.hh](avx2.hh))
+* [WebAssembly SIMD128](https://en.wikipedia.org/wiki/WebAssembly) ([simd128.hh](simd128.hh))
 
 ### [rotate.hh](rotate.hh)
 
