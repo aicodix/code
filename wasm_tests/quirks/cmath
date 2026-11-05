@@ -1,0 +1,21 @@
+/*
+Quirks for building without the standard library
+
+Copyright 2026 Ahmet Inan <inan@aicodix.de>
+*/
+
+#pragma once
+
+namespace std {
+
+static constexpr int abs(int a) { return a < 0 ? -a : a; }
+static constexpr long long abs(long long a) { return a < 0 ? -a : a; }
+static inline float abs(float a) { return __builtin_fabsf(a); }
+static inline double abs(double a) { return __builtin_fabs(a); }
+template <typename T>
+constexpr const T &min(const T &a, const T &b) { return b < a ? b : a; }
+template <typename T>
+constexpr const T &max(const T &a, const T &b) { return a < b ? b : a; }
+
+}
+

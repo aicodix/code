@@ -1,0 +1,8 @@
+/*
+Quirks for building without the standard library
+
+Copyright 2026 Ahmet Inan <inan@aicodix.de>
+*/
+
+#pragma once
+

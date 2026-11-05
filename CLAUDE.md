@@ -8,6 +8,8 @@ erasure coding, SIMD wrappers). See README.md for an overview of each header.
 
 - `*.hh` in the repository root: the library itself, all header-only.
 - `tests/`: one `*_test.cc` per test, built and run by `tests/Makefile`.
+- `wasm_tests/`: tests of the WebAssembly SIMD128 backend, built without the
+  standard library and run with Node.js.
 - `tools/`: small helper programs.
 
 ## Building and testing
@@ -22,6 +24,12 @@ Look for assertion messages on stderr.
 The default compiler is `clang++ -stdlib=libc++ -march=native`. The Makefile has
 commented-out lines for `g++` and for ARM cross-compilation under QEMU.
 Run `make clean` to remove the binaries.
+
+`cd wasm_tests && make` builds `simd_test.cc` twice with clang for `wasm32`,
+with `-msimd128` for the `simd128*.hh` backend and without it for the
+generic code in `simd.hh`, and compares their results with `simd_test.mjs`
+in Node.js. It needs no WASI toolchain: `wasm_tests/quirks/` stands in for
+the few standard headers `simd.hh` includes.
 
 Tests are compiled with `-std=c++17 -O2 -fno-exceptions -fno-rtti -ffast-math`,
 so code must:
