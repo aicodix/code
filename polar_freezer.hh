@@ -6,6 +6,7 @@ Copyright 2020 Ahmet Inan <inan@aicodix.de>
 
 #pragma once
 
+#include <cstdint>
 #include <limits>
 #include <algorithm>
 
