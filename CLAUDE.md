@@ -61,6 +61,32 @@ so code must:
   value, the same way as `ReedMullerSequence`.
   Keep new constructions consistent with this.
 
+## Tools
+
+- `tools/rank.cc` ranks the full period triples of `XorShiftMask` with 8 to
+  24 bits, as interleavers, by how evenly neighbouring indices spread.
+- `tools/burst.cc` ranks the full period triples of `XorShiftMask` with 3 to
+  10 bits, as permutations of the N = 1 << BITS bits of a codeword of
+  `HadamardEncoder<BITS+1>` on adjacent tones, index 0 fixed, by the least
+  Hamming distance left between the codewords outside a burst of erased
+  tones. The best triples below all reach the limit of N - BITS - 1 for the
+  longest burst, about twice the N / 2 - 1 without permutation, and the
+  triples listed for each BITS tie on all values. Mirrored triples, a b c
+  and c b a, tied in every case listed here:
+
+  | BITS | longest burst | best triples (a b c) |
+  |---|---|---|
+  | 3 | 4 | 1 1 1, 1 2 2, 2 2 1 |
+  | 4 | 11 | 1 3 2, 1 3 3, 2 1 3, 2 3 1, 3 1 2, 3 3 1 |
+  | 5 | 26 | 1 1 2, 1 4 2, 1 4 3, 1 4 4, 2 1 1, 2 4 1, 3 2 4, 3 4 1, 4 2 3, 4 4 1 |
+  | 6 | 57 | 1 3 3, 3 3 1 |
+  | 7 | 120 | 3 2 5, 5 2 3, 5 2 6, 6 2 5 |
+  | 8 | 247 | 1 7 3, 1 7 6, 1 7 7, 3 7 1, 6 7 1, 7 7 1 |
+  | 9 | 502 | 6 2 7, 7 2 6 |
+  | 10 | 1013 | 1 1 3, 3 1 1 |
+
+  The modem uses 6 1 3 3 for the 64 seed tones.
+
 ## Workflow
 
 - Commit messages are a single short lowercase line, such as
